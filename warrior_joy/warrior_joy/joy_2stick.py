@@ -12,8 +12,11 @@ A Node to convert the left and right joystick Y-axis of a gamepad to left and ri
 class Joy2Stick(Node):
     def __init__(self):
         super().__init__('joy_2stick')
-        self.left_cmd_pub = self.create_publisher(Twist, 'left_wheel/cmd_vel', 10)
-        self.right_cmd_pub = self.create_publisher(Twist, 'right_wheel/cmd_vel', 10)
+        left_stick_output = self.declare_parameter('left_stick_output', 'left_cmd_vel').value
+        right_stick_output = self.declare_parameter('right_stick_output', 'right_cmd_vel').value
+
+        self.left_cmd_pub = self.create_publisher(Twist, left_stick_output, 10)
+        self.right_cmd_pub = self.create_publisher(Twist,right_stick_output, 10)
 
         self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)
         self.get_logger().info("joy_2stick node has been started.")
@@ -28,7 +31,7 @@ class Joy2Stick(Node):
 
         self.left_cmd_pub.publish(left_cmd)
         self.right_cmd_pub.publish(right_cmd)
-        self.get_logger().info(f"Left Stick Y: {left_cmd.linear.x}, Right Stick Y: {right_cmd.linear.x}")
+        # self.get_logger().info(f"Left Stick Y: {left_cmd.linear.x}, Right Stick Y: {right_cmd.linear.x}")
 
 def main(args=None):
     rclpy.init(args=args)
