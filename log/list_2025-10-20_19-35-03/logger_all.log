@@ -1,0 +1,202 @@
+[0.250s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'list', '-p', '--base-paths', '/home/slum/ros2_ws/src/Warrior_2026', '--log-base', '/dev/null']
+[0.250s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='list', build_base='build', ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['/home/slum/ros2_ws/src/Warrior_2026', '--log-base', '/dev/null'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], topological_order=False, names_only=False, paths_only=True, topological_graph=False, topological_graph_dot=False, topological_graph_density=False, topological_graph_legend=False, topological_graph_dot_cluster=False, topological_graph_dot_include_skipped=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x79a62a69cbc0>, verb_extension=<colcon_package_information.verb.list.ListVerb object at 0x79a62a66bb30>, main=<bound method ListVerb.main of <colcon_package_information.verb.list.ListVerb object at 0x79a62a66bb30>>)
+[0.285s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.285s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.285s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.285s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.286s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.286s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/slum/ros2_ws/src/Warrior_2026', '/home/slum/ros2_ws/src/Warrior_2026/--log-base', '/dev/null'
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['ignore', 'ignore_ament_install']
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'ignore'
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'ignore_ament_install'
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['colcon_pkg']
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'colcon_pkg'
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['colcon_meta']
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'colcon_meta'
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['ros']
+[0.286s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'ros'
+[0.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['cmake', 'python']
+[0.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'cmake'
+[0.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'python'
+[0.319s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extensions ['python_setup_py']
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026) by extension 'python_setup_py'
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/log) by extensions ['ignore', 'ignore_ament_install']
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/log) by extension 'ignore'
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/log) ignored
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extensions ['ignore', 'ignore_ament_install']
+[0.320s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extension 'ignore'
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extension 'ignore_ament_install'
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extensions ['colcon_pkg']
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extension 'colcon_pkg'
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extensions ['colcon_meta']
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extension 'colcon_meta'
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extensions ['ros']
+[0.321s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup) by extension 'ros'
+[0.323s] DEBUG:colcon.colcon_core.package_identification:Package '/home/slum/ros2_ws/src/Warrior_2026/warrior_bringup' with type 'ros.ament_cmake' and name 'warrior_bringup'
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extensions ['ignore', 'ignore_ament_install']
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extension 'ignore'
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extension 'ignore_ament_install'
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extensions ['colcon_pkg']
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extension 'colcon_pkg'
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extensions ['colcon_meta']
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extension 'colcon_meta'
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extensions ['ros']
+[0.324s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_description) by extension 'ros'
+[0.325s] DEBUG:colcon.colcon_core.package_identification:Package '/home/slum/ros2_ws/src/Warrior_2026/warrior_description' with type 'ros.ament_cmake' and name 'warrior_description'
+[0.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extensions ['ignore', 'ignore_ament_install']
+[0.325s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extension 'ignore'
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extension 'ignore_ament_install'
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extensions ['colcon_pkg']
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extension 'colcon_pkg'
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extensions ['colcon_meta']
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extension 'colcon_meta'
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extensions ['ros']
+[0.326s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_drive) by extension 'ros'
+[0.326s] DEBUG:colcon.colcon_core.package_identification:Package '/home/slum/ros2_ws/src/Warrior_2026/warrior_drive' with type 'ros.ament_python' and name 'warrior_drive'
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extensions ['ignore', 'ignore_ament_install']
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extension 'ignore'
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extension 'ignore_ament_install'
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extensions ['colcon_pkg']
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extension 'colcon_pkg'
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extensions ['colcon_meta']
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extension 'colcon_meta'
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extensions ['ros']
+[0.327s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_joy) by extension 'ros'
+[0.328s] DEBUG:colcon.colcon_core.package_identification:Package '/home/slum/ros2_ws/src/Warrior_2026/warrior_joy' with type 'ros.ament_python' and name 'warrior_joy'
+[0.328s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extensions ['ignore', 'ignore_ament_install']
+[0.328s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extension 'ignore'
+[0.328s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extension 'ignore_ament_install'
+[0.328s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extensions ['colcon_pkg']
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extension 'colcon_pkg'
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extensions ['colcon_meta']
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extension 'colcon_meta'
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extensions ['ros']
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation) by extension 'ros'
+[0.329s] DEBUG:colcon.colcon_core.package_identification:Package '/home/slum/ros2_ws/src/Warrior_2026/warrior_simulation' with type 'ros.ament_python' and name 'warrior_simulation'
+[0.329s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['ignore', 'ignore_ament_install']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'ignore'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'ignore_ament_install'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['colcon_pkg']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'colcon_pkg'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['colcon_meta']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'colcon_meta'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['ros']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'ros'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['cmake', 'python']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'cmake'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'python'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extensions ['python_setup_py']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds) by extension 'python_setup_py'
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['ignore', 'ignore_ament_install']
+[0.330s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'ignore'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'ignore_ament_install'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['colcon_pkg']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'colcon_pkg'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['colcon_meta']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'colcon_meta'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['ros']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'ros'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['cmake', 'python']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'cmake'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'python'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extensions ['python_setup_py']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track) by extension 'python_setup_py'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['ignore', 'ignore_ament_install']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'ignore'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'ignore_ament_install'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['colcon_pkg']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'colcon_pkg'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['colcon_meta']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'colcon_meta'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['ros']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'ros'
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['cmake', 'python']
+[0.331s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'cmake'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'python'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extensions ['python_setup_py']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials) by extension 'python_setup_py'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'ignore'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'ignore_ament_install'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['colcon_pkg']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'colcon_pkg'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['colcon_meta']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'colcon_meta'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['ros']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'ros'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['cmake', 'python']
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'cmake'
+[0.332s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'python'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extensions ['python_setup_py']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/scripts) by extension 'python_setup_py'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['ignore', 'ignore_ament_install']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'ignore'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'ignore_ament_install'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['colcon_pkg']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'colcon_pkg'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['colcon_meta']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'colcon_meta'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['ros']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'ros'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['cmake', 'python']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'cmake'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'python'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extensions ['python_setup_py']
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/circle_track/materials/textures) by extension 'python_setup_py'
+[0.333s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['ignore', 'ignore_ament_install']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'ignore'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'ignore_ament_install'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['colcon_pkg']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'colcon_pkg'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['colcon_meta']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'colcon_meta'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['ros']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'ros'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['cmake', 'python']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'cmake'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'python'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extensions ['python_setup_py']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track) by extension 'python_setup_py'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['ignore', 'ignore_ament_install']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'ignore'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'ignore_ament_install'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['colcon_pkg']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'colcon_pkg'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['colcon_meta']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'colcon_meta'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['ros']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'ros'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['cmake', 'python']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'cmake'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'python'
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extensions ['python_setup_py']
+[0.334s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials) by extension 'python_setup_py'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['ignore', 'ignore_ament_install']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'ignore'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'ignore_ament_install'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['colcon_pkg']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'colcon_pkg'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['colcon_meta']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'colcon_meta'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['ros']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'ros'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['cmake', 'python']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'cmake'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'python'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extensions ['python_setup_py']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/scripts) by extension 'python_setup_py'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['ignore', 'ignore_ament_install']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'ignore'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'ignore_ament_install'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['colcon_pkg']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'colcon_pkg'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['colcon_meta']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'colcon_meta'
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['ros']
+[0.335s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'ros'
+[0.336s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['cmake', 'python']
+[0.336s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'cmake'
+[0.336s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'python'
+[0.336s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extensions ['python_setup_py']
+[0.336s] Level 1:colcon.colcon_core.package_identification:_identify(/home/slum/ros2_ws/src/Warrior_2026/worlds/igvc_empty_track/materials/textures) by extension 'python_setup_py'
+[0.336s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
