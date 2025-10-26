@@ -31,7 +31,7 @@ class SwerveSim(Node):
         linear_x = msg.linear.x
         angular_z = msg.angular.z
 
-        wheel_speed = linear_x  
+        wheel_speed = linear_x * 10  # Make this into a parameter later
         # steer_angle = angular_z 
         steer_angle = angular_z # for now
         self.get_logger().info(f"Calculated wheel_speed={wheel_speed}")

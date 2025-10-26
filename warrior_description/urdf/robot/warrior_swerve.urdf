@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="warrior_swerve" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="warrior" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:include filename="$(find cestra_description)/urdf/inertial_macros.xacro" />
   <xacro:include filename="$(find cestra_description)/urdf/swerve_wheel.xacro"/>

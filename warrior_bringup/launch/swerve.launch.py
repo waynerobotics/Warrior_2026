@@ -56,6 +56,20 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description',
                     '-name', 'warrior','-z', '1.0'],
         output='screen'
+    )   
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen',
+    )
+
+    joy_swerve_node = Node(
+        package='warrior_joy',
+        executable='joy_swerve',
+        name='joy_swerve',
+        output='screen',
     )
 
     bridge_params = os.path.join(bringup_pkg,'config','swerve_gz_bridge.yaml')
@@ -85,6 +99,8 @@ def generate_launch_description():
 
         spawn_entity,
         ros_gz_bridge,
-
+        
+        joy_node,
+        joy_swerve_node,
         swerve_drive_sim
     ])
