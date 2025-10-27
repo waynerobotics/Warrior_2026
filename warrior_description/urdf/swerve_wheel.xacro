@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+  <xacro:macro name="swerve_module" params="name xyz">
+
+    <!-- Steering link -->
+    <link name="${name}_steer_link">
+      <visual>
+        <geometry>
+          <cylinder radius="0.03" length="${steer_link_height}"/>
+        </geometry>
+        <material name="blue">
+          <color rgba="0.2 0.2 0.8 1.0"/>   
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="0.03" length="${steer_link_height}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.5"/>
+        <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+
+    <!-- Steering joint -->
+    <joint name="${name}_steer_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="${name}_steer_link"/>
+      <origin xyz="${xyz}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit lower="-3.1416" upper="3.1416" effort="10.0" velocity="3.0"/>
+    </joint>
+
+    <!-- Wheel link -->
+    <link name="${name}_wheel_link">
+      <visual>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <origin rpy="1.5708 0 0"/>
+        <material name="black">
+          <color rgba="0.0 0.0 0.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <origin rpy="1.5708 0 0"/>
+      </collision>
+      <inertial>
+        <mass value="0.2"/>
+        <inertia ixx="0.0001" iyy="0.0001" izz="0.0001" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+
+    <!-- Wheel joint -->
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="${name}_steer_link"/>
+      <child link="${name}_wheel_link"/>
+      <origin xyz="0 0 ${-steer_link_height/2}" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <!-- <limit effort="5.0" velocity="50.0"/> -->
+    </joint>
+
+
+<gazebo>
+  <!-- <plugin filename="gz-sim-joint-position-controller-system"
+          name="gz::sim::systems::JointPositionController">
+    <joint_name>${name}_steer_joint</joint_name>
+    <topic>/${name}/steer_joint/cmd_pos</topic>
+    <p_gain>50.0</p_gain>
+    <i_gain>0.0</i_gain>
+    <d_gain>0.0</d_gain>
+    <cmd_max>10.0</cmd_max>
+    <cmd_min>-10.0</cmd_min>
+  </plugin>
+
+  <plugin filename="gz-sim-joint-position-controller-system"
+          name="gz::sim::systems::JointPositionController">
+    <joint_name>${name}_wheel_joint</joint_name>
+    <topic>/${name}/wheel_joint/cmd_pos</topic>
+    <p_gain>50.0</p_gain>
+    <i_gain>0.0</i_gain>
+    <d_gain>0.0</d_gain>
+    <cmd_max>10.0</cmd_max>
+    <cmd_min>-10.0</cmd_min>
+  </plugin> -->
+
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>${name}_steer_joint</joint_name>
+    </plugin>
+
+    <plugin filename="gz-sim-joint-controller-system" name="gz::sim::systems::JointController">
+        <joint_name>${name}_wheel_joint</joint_name>
+    </plugin>
+</gazebo>
+
+  </xacro:macro>
+
+</robot>

@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'diff_drive_sim = warrior_simulation.diff_drive_sim:main',
+            'swerve_drive_sim = warrior_simulation.swerve_drive_sim:main',
         ],
     },
 )
