@@ -1,0 +1,298 @@
+<?xml version='1.0' encoding='ASCII'?>
+<sdf version='1.7'>
+  <world name='circle_track'>
+    <gravity>0 0 -9.8</gravity>
+    <physics type='ode'>
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+    
+    <plugin name='ignition::gazebo::systems::Physics' filename='libignition-gazebo-physics-system.so'/>
+    <plugin name='ignition::gazebo::systems::UserCommands' filename='libignition-gazebo-user-commands-system.so'/>
+    <plugin name='ignition::gazebo::systems::SceneBroadcaster' filename='libignition-gazebo-scene-broadcaster-system.so'/>
+
+    <gui fullscreen="0">
+      <plugin filename="GzScene3D" name="3D View">
+        <ignition-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </ignition-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.8 0.8 0.8</background_color>
+        <camera_pose>0 -25 15 0 0.5 1.57</camera_pose>
+      </plugin>
+
+      <plugin filename="WorldControl" name="World control">
+        <ignition-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </ignition-gui>
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+      </plugin>
+
+
+    </gui>
+
+    <scene>
+      <ambient>1 1 1 1</ambient>
+      <background>0.3 0.7 0.9 1</background>
+      <shadows>0</shadows>
+      <grid>false</grid>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>0</cast_shadows>
+      <pose>0 0 20 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.5 0.5 0.5 1</specular>
+      <direction>0 0 -1</direction>
+    </light>
+
+    <!-- Ground plane -->
+    <model name='ground_plane'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0.0 0.0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <plane>
+              <normal>0.0 0.0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.2 0.7 0.2 1</ambient>
+            <diffuse>0.2 0.7 0.2 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 0 0 0 0</pose>
+    </model>
+
+    <model name='track_oval'>
+      <static>true</static>
+      <link name='track_link'>
+        <visual name='oval_outer'>
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>16</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1.0</ambient>
+            <diffuse>1.0 1.0 1.0 1.0</diffuse>
+            <specular>0.0 0.0 0.0 1.0</specular>
+            <pbr>
+              <metal>
+                <albedo_map>materials/textures/track.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+        <collision name='oval_outer_collision'>
+          <pose>0 0 0.01 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>16</radius>
+              <length>0.02</length>
+            </cylinder>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_1</name>
+      <pose>0 15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_2</name>
+      <pose>7.5 13 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_3</name>
+      <pose>13 7.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_4</name>
+      <pose>15 0 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_5</name>
+      <pose>13 -7.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_6</name>
+      <pose>7.5 -13 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_7</name>
+      <pose>0 -15 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_8</name>
+      <pose>-7.5 -13 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_9</name>
+      <pose>-13 -7.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_10</name>
+      <pose>-15 0 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_11</name>
+      <pose>-13 7.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>outer_12</name>
+      <pose>-7.5 13 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_1</name>
+      <pose>0 11 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_2</name>
+      <pose>5.5 9.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_3</name>
+      <pose>9.5 5.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_4</name>
+      <pose>11 0 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_5</name>
+      <pose>9.5 -5.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_6</name>
+      <pose>5.5 -9.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_7</name>
+      <pose>0 -11 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_8</name>
+      <pose>-5.5 -9.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_9</name>
+      <pose>-9.5 -5.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_10</name>
+      <pose>-11 0 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_11</name>
+      <pose>-9.5 5.5 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>
+        https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/Construction Cone
+      </uri>
+      <name>inner_12</name>
+      <pose>-5.5 9.5 0 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>
