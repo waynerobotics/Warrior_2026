@@ -7,6 +7,8 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+# Swerve drive launch file
+
 def generate_launch_description():
 
     bringup_pkg = get_package_share_directory('warrior_bringup')
@@ -14,7 +16,7 @@ def generate_launch_description():
     drive_pkg = get_package_share_directory('warrior_drive')
     warrior_joy = get_package_share_directory('warrior_joy')
 
-    robot_description_dir = os.path.join(description_pkg, 'urdf/robot/', 'warrior.urdf')
+    robot_description_dir = os.path.join(description_pkg, 'urdf','robot', 'warrior_swerve.urdf')
     robot_description = xacro.process_file(robot_description_dir).toxml()
 
     default_world = os.path.join(description_pkg,'worlds','empty.world')    
@@ -54,9 +56,23 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description',
                     '-name', 'warrior','-z', '1.0'],
         output='screen'
+    )   
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen',
     )
 
-    bridge_params = os.path.join(bringup_pkg,'config','diff_gz_bridge.yaml')
+    joy_swerve_node = Node(
+        package='warrior_joy',
+        executable='joy_swerve',
+        name='joy_swerve',
+        output='screen',
+    )
+
+    bridge_params = os.path.join(bringup_pkg,'config','swerve_gz_bridge.yaml')
     ros_gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -67,27 +83,10 @@ def generate_launch_description():
         ]
     )
 
-    joy_node = Node(
-        package='joy',
-        executable='joy_node',
-        name='joy_node',
-        output='screen',
-        # parameters=[{'dev': '/dev/input/js0'}]
-    )
-
-    joy_2stick_node = Node(
-        package='warrior_joy',
-        executable='joy_2stick',
-        name='joy_2stick',
-        output='screen',
-        parameters=[{'left_stick_output': 'left_cmd_vel', 'right_stick_output': 'right_cmd_vel'}]
-
-    )
-
-    diff_drive_sim = Node(
+    swerve_drive_sim = Node(
         package='warrior_simulation',
-        executable='diff_drive_sim',
-        name='diff_drive_sim',
+        executable='swerve_drive_sim',
+        name='swerve_drive_sim',
         output='screen'
     )
 
@@ -100,8 +99,8 @@ def generate_launch_description():
 
         spawn_entity,
         ros_gz_bridge,
-
+        
         joy_node,
-        joy_2stick_node,
-        diff_drive_sim
+        joy_swerve_node,
+        swerve_drive_sim
     ])
