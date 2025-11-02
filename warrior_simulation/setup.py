@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+from glob import glob
+import os
 
 package_name = 'warrior_simulation'
 
@@ -7,9 +9,10 @@ setup(
     version='0.0.0',
     packages=find_packages(exclude=['test']),
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages',['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/worlds',
+        [f for f in glob('worlds/**/*', recursive=True) if os.path.isfile(f)]),        
     ],
     install_requires=['setuptools'],
     zip_safe=True,

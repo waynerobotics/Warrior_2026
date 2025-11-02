@@ -11,13 +11,14 @@ def generate_launch_description():
 
     bringup_pkg = get_package_share_directory('warrior_bringup')
     description_pkg = get_package_share_directory('warrior_description')
+    simulation_pkg = get_package_share_directory('warrior_simulation')
     drive_pkg = get_package_share_directory('warrior_drive')
     warrior_joy = get_package_share_directory('warrior_joy')
 
-    robot_description_dir = os.path.join(description_pkg, 'urdf/robot/', 'warrior.urdf')
+    robot_description_dir = os.path.join(description_pkg, 'urdf/robot', 'warrior.urdf')
     robot_description = xacro.process_file(robot_description_dir).toxml()
 
-    default_world = os.path.join(description_pkg,'worlds','empty.world')    
+    default_world = os.path.join(simulation_pkg,'worlds','empty.world')    
     world = LaunchConfiguration('world')
     
     world_arg = DeclareLaunchArgument(
