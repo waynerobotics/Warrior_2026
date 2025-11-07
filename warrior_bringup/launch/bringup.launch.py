@@ -14,7 +14,7 @@ def generate_launch_description():
     drive_pkg = get_package_share_directory('warrior_drive')
     warrior_joy = get_package_share_directory('warrior_joy')
 
-    robot_description_dir = os.path.join(description_pkg, 'urdf', 'warrior.urdf')
+    robot_description_dir = os.path.join(description_pkg, 'urdf/robot', 'warrior.urdf')
     robot_description = xacro.process_file(robot_description_dir).toxml()
 
     robot_state_publisher = Node(
