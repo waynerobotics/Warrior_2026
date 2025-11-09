@@ -1,29 +1,29 @@
 <?xml version="1.0"?>
-<robot name="test_robot">
+<robot name="wsu_warrior">
     <link name="base_link">
         <visual>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/model.stl" scale="0.003 0.003 0.003"/>
+                <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
             </geometry>
-        <material name="green">
-            <color rgba="0.5 0.5 0.5 1"/>
-        </material>
-    </visual>
-    <collision>
-        <geometry>
-            <mesh filename="file:///home/user/ros2_ws/model.stl" scale="0.003 0.003 0.003"/>
-        </geometry>
-    </collision>
-     <inertial>
-        <origin xyz="0 0 -0.04" rpy="0 0 0"/>
-        <mass value="15.0"/>
-        <inertia ixx="0.125" ixy="0" ixz="0" iyy="0.125" iyz="0" izz="0.225"/>
-    </inertial>
+            <material name="green">
+                <color rgba="0.5 0.5 0.5 1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="75.0"/>
+            <inertia ixx="0.125" ixy="0" ixz="0" iyy="0.125" iyz="0" izz="0.225"/>
+        </inertial>
     </link>
-     <link name="wheel_link">
+    <link name="left_steer_wheel_link">
         <visual>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003" />
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
             </geometry>
         <material name="blue">
             <color rgba="0.0 0.0 1.0 1"/>
@@ -31,25 +31,53 @@
         </visual>
         <collision>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003" />
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
             </geometry>
         </collision>
-           <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.5"/>
-        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
-    </inertial>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
     </link>
-    <joint name="base_to_wheel" type="continuous">
+    <joint name="left_steer_joint" type="continuous">
         <parent link="base_link"/>
-        <child link="wheel_link"/>
-        <origin xyz="2.2 0.5 0.014" rpy="0 0 -0.9"/>
-        <axis xyz="0 1 0"/>
+        <child link="left_steer_wheel_link"/>
+        <origin xyz="0 0.465 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
     </joint>
-    <link name="wheel_link2">
+
+    <link name="left_drive_wheel_link">
         <visual>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003"/>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+            </geometry>
+            <material name="yellow">
+                <color rgba="1.0 1.0 0.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </link>
+    <joint name="left_drive_wheel_joint" type="continuous">
+        <parent link="left_steer_wheel_link"/>
+        <child link="left_drive_wheel_link"/>
+        <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+    </joint>
+
+    <link name="right_steer_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
             </geometry>
             <material name="green">
                 <color rgba="0.0 1.0 0.0 1"/>
@@ -57,25 +85,25 @@
         </visual>
         <collision>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003"/>
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
             </geometry>
         </collision>
-         <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.5"/>
-        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
-    </inertial>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
     </link>
-    <joint name="base_to_wheel2" type="continuous">
+    <joint name="right_steer_joint" type="continuous">
         <parent link="base_link"/>
-        <child link="wheel_link2"/>
-        <origin xyz="1.5 1.7 0.014" rpy="0 0 0.785"/>
-        <axis xyz="0 1 0"/>
+        <child link="right_steer_wheel_link"/>
+        <origin xyz="0 -0.465 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
     </joint>
-    <link name="wheel_link3">
+    <link name="right_drive_wheel_link">
         <visual>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003"/>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
             </geometry>
             <material name="red">
                 <color rgba="1.0 0.0 0.0 1"/>
@@ -83,21 +111,76 @@
         </visual>
         <collision>
             <geometry>
-                <mesh filename="file:///home/user/ros2_ws/wheel.stl" scale="0.003 0.003 0.003"/>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </link>
+    <joint name="right_drive_joint" type="continuous">
+        <parent link="right_steer_wheel_link"/>
+        <child link="right_drive_wheel_link"/>
+        <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
+    </joint>
+
+
+    <link name="front_steer_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
+            </geometry>
+        <material name="cyan">
+            <color rgba="0.0 1.0 1.0 1"/>
+        </material>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
+            </geometry>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+            <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </link>
+    <joint name="front_steer_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="front_steer_wheel_link"/>
+        <origin xyz="0.845 0 0" rpy="0 0 0"/>
+        <axis xyz="0 0 1"/>
+    </joint>    
+    <link name="front_drive_wheel_link">
+        <visual>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+            </geometry>
+            <material name="magenta">
+                <color rgba="1.0 0.0 1.0 1"/>
+            </material>
+        </visual>
+        <collision>
+            <geometry>
+                <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
             </geometry>
         </collision>
          <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.5"/>
-        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
-    </inertial>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <mass value="0.5"/>
+                <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
     </link>
-    <joint name="base_to_wheel3" type="continuous">
-        <parent link="base_link"/>
-        <child link="wheel_link3"/>
-        <origin xyz="0.18 0.15 0.014" rpy="0 0 0"/>
-        <axis xyz="0 1 0"/>
+    <joint name="front_drive_wheel_joint" type="continuous">
+        <parent link="front_steer_wheel_link"/>
+        <child link="front_drive_wheel_link"/>
+        <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+        <axis xyz="1 0 0"/>
     </joint>
+
     <link name="pole_for_lidar">
         <visual>
             <geometry>
