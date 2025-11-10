@@ -1,0 +1,26 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names:
+      - "left_drive_joint"
+    right_wheel_names:
+      - "right_drive_joint"
+
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+
+    wheel_separation: 0.93  
+    wheel_radius: 0.1
+
+    enable_odom_tf: true
+    update_rate: 50
+    # Undone: Tune these parameters for your robot
