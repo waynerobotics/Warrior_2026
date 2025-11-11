@@ -4,7 +4,8 @@
   <!-- ========== Properties ========== -->
   
   <!-- Base properties -->
-  <xacro:property name="base_mass" value="75.0"/>
+  <xacro:property name="base_mass" value="5.0"/>
+  <xacro:property name="base_footprint_height" value="0.25"/>
   
   <!-- Wheel properties -->
   <xacro:property name="wheel_mass" value="0.5"/>
@@ -124,6 +125,16 @@
     
   </xacro:macro>
 
+  <!-- ========== Base Footprint Link ========== -->
+  <link name="base_footprint"/>
+    
+    <joint name="base_footprint_joint" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
+        <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
+    </joint>
+
   <!-- ========== Base Link ========== -->
   <link name="base_link">
     <visual>
@@ -166,22 +177,65 @@
   <joint name="base_to_pole" type="fixed">
     <parent link="base_link"/>
     <child link="pole_link"/>
-    <origin xyz="0 0 ${pole_height}" rpy="0 0 0"/>
+    <origin xyz="0 0 ${pole_height}" rpy="-1.5708 0 0"/>
   </joint>
 
   <!-- ========== LiDAR Link ========== -->
   <link name="lidar_link">
-    <!-- Visual/collision commented out in original -->
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
+      </geometry>
+      <material name="black">
+          <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.005"/>
+    </inertial> 
   </link>
-  
   <joint name="lidar_joint" type="fixed">
-    <parent link="pole_link"/>
+    <parent link="base_link"/>
     <child link="lidar_link"/>
-    <origin xyz="${lidar_offset_x} 0 0" rpy="0 0 0"/>
+    <origin xyz="0.32 0.015 0.875" rpy="-1.5708 0 0"/>
+  </joint>
+
+  <!-- ========== Camera Link ========= -->
+  <link name="camera_link">
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
+      </geometry>
+      <material name="light_grey">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.002"/>
+    </inertial> 
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.32 0.027 0.828" rpy="-1.5708 0 0"/>
   </joint>
 
   <!-- ========== Gazebo LiDAR Sensor ========== -->
-  <gazebo reference="lidar_link">
+  <!-- <gazebo reference="lidar_link">
     <sensor type="ray" name="lidar_sensor">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>5.0</update_rate>
@@ -205,6 +259,6 @@
         <frameName>lidar_link</frameName>
       </plugin>
     </sensor>
-  </gazebo>
+  </gazebo> -->
 
 </robot>
