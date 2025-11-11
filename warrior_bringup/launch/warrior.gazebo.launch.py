@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 import os
 from launch import LaunchDescription
-from launch.actions import TimerAction, IncludeLaunchDescription
+from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
 from launch_ros.actions import Node
-from launch.substitutions import Command, PathJoinSubstitution
+from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
+from launch.event_handlers import OnProcessExit
 
 
 def generate_launch_description():
+    # Launch Arguments
+    use_sim_time = LaunchConfiguration('use_sim_time', default=True)
+    
     # ----------------- path -----------------
     pkg_gz_ros = FindPackageShare("ros_gz_sim")
     pkg_warrior_description = FindPackageShare("warrior_description")
@@ -58,7 +62,6 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager-timeout", "10"],
-        parameters=[{"use_sim_time": True}],
         output="screen",
     )
 
@@ -103,7 +106,7 @@ def generate_launch_description():
         }.items(),
     )
     
-    spawn_entity = Node(
+    gz_spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
         arguments=[
@@ -115,25 +118,52 @@ def generate_launch_description():
         output="screen"
     )
     
+    # gz_bridge = Node(
+    #     package="ros_gz_bridge",
+    #     executable="parameter_bridge",
+    #     parameters=[gazebo_bridge_yaml],
+    #     output="screen"
+    # )
     gz_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        parameters=[gazebo_bridge_yaml],
-        output="screen"
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        output='screen'
     )
 
-    
 
     # ----------------- launch order -----------------
     return LaunchDescription([
         gazebo,
-        spawn_entity,
-        # gz_bridge,
+        
         robot_state_publisher,
         # joint_state_publisher,
-        ros2_control_node,
-        TimerAction(period=2.0, actions=[joint_state_broadcaster_spawner]),
-        TimerAction(period=2.0, actions=[diff_drive_controller_spawner]),
+        # ros2_control_node,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=gz_spawn_entity,
+                on_exit=[joint_state_broadcaster_spawner],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[diff_drive_controller_spawner],
+            )
+        ),
+        gz_bridge,
+        gz_spawn_entity,
+
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value=use_sim_time,
+            description='If true, use simulated clock'),
         rviz2,
-        teleop_node,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=diff_drive_controller_spawner,
+                on_exit=[teleop_node],
+            )
+        ),
+        
     ])

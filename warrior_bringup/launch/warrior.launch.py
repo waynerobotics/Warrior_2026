@@ -35,7 +35,10 @@ def generate_launch_description():
         package="joint_state_publisher",
         executable="joint_state_publisher",
         output="screen",
-        parameters=[{"use_gui": True}],
+        parameters=[
+            {"use_gui": True},
+            {"robot_description": robot_description}
+        ],
     )
 
     ros2_control_node = Node(
