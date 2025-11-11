@@ -11,6 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/joy_2stick.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/joy_swerve.launch.py']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,6 +23,7 @@ setup(
     entry_points={
         'console_scripts': [
             'joy_2stick = warrior_joy.joy_2stick:main',
+            'joy_swerve = warrior_joy.joy_swerve:main',
         ],
     },
 )

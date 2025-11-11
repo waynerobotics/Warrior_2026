@@ -4,6 +4,13 @@
 # 
 # #################################
 
+# Check if script is run as root/sudo
+if [ "$EUID" -ne 0 ]; then 
+    echo "ERROR: This script must be run with sudo"
+    echo "Usage: sudo bash $0"
+    exit 1
+fi
+
 # Set username variable
 USERNAME=fire
 

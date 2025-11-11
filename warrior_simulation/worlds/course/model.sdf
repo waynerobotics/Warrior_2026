@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="test">
+    <static>true</static>
+    <link name="testlink">
+      <visual name="Plane">
+        <geometry>
+          <mesh>
+            <uri>meshes/model.dae</uri>
+            <submesh>
+              <name>Plane</name>
+            </submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>1 0 0 1.0</ambient>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>0.0 0.0 0.0 1.0</specular>
+          <texture>materials/textures/igvc_empty_track.png</texture>
+          <pbr>
+            <metal>
+              <albedo_map>materials/textures/igvc_empty_track.png</albedo_map>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+      <light name="Light" type="point">
+        <diffuse>1.0 1.0 1.0 1.0</diffuse>
+        <color>1.0 1.0 1.0</color>
+        <cutoff_distance>25.0</cutoff_distance>
+        <intensity>1.0</intensity>
+        <specular_factor>1.0</specular_factor>
+        <volume_factor>1.0</volume_factor>
+        <cast_shadows>true</cast_shadows>
+        <intensity>1.0</intensity>
+      </light>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>meshes/model.dae</uri>
+          </mesh>
+        </geometry>
+        <surface/>
+        <contact/>
+        <collide_bitmask>0x01</collide_bitmask>
+      </collision>
+    </link>
+  </model>
+</sdf>

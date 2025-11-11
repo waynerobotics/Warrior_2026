@@ -17,8 +17,8 @@
     <xacro:include filename="$(find warrior_description)/urdf/inertial_macros.xacro"/>
     <xacro:include filename="$(find warrior_description)/urdf/diff_wheels.urdf.xacro"/>
 
-    <xacro:include filename="$(find warrior_description)/urdf/sensors/lidar.xacro"/>
-    <xacro:include filename="$(find warrior_description)/urdf/sensors/imu.xacro"/>
+    <!-- <xacro:include filename="$(find warrior_description)/urdf/sensors/lidar.xacro"/>
+    <xacro:include filename="$(find warrior_description)/urdf/sensors/imu.xacro"/> -->
 
 
     <link name="base_link"> </link> 

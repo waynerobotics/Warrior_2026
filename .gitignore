@@ -1,0 +1,61 @@
+# Editor/project files
+.vscode/
+.idea/
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pyc
+.Python
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ROS / colcon
+build/
+install/
+log/
+log/*
+
+# Test / coverage
+.coverage
+.cache
+.pytest_cache/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.swp
+*~
+tags
+
+# Local environment files
+.env
+.venv/
+
+# Ignore generated/temporary mesh or model files
+*.dae
+*.stl
+*.obj
+
+# End of file
+
