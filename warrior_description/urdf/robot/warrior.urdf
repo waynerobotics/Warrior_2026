@@ -27,42 +27,44 @@
         <parent link="base_link"/>
         <child link="chassis"/>
         <origin xyz="0 0 0"/>
-    </joint>
+        </joint>
 
-    <link name="chassis">
+        <link name="chassis">
         <visual>
         <origin xyz="-7.5 -7.25 0.1" rpy="0 0 0"/>            
         <geometry>
-                <!-- <box size="${base_length} ${base_width} ${base_height}"/> -->
-                <mesh filename="file://$(find warrior_description)/meshes/triangle_base_V4.stl"/>
+            <!-- <box size="${base_length} ${base_width} ${base_height}"/> -->
+            <!-- <mesh filename="file://$(find warrior_description)/meshes/swerve_I1_Assembly v4.stl" scale="0.002 0.002 0.002"/> -->
+            <mesh filename="file://$(find warrior_description)/meshes/triangle_base_V4.stl"/>
+
             </geometry>
         </visual>
 
         <collision>
         <origin xyz="-7.5 -7.25 0.1" rpy="0 0 0"/>            
             <geometry>
-                    <!-- <box size="${base_length} ${base_width} ${base_height}"/> -->
-                <mesh filename="file://$(find warrior_description)/meshes/triangle_base_V4.stl" />
+                <!-- <box size="${base_length} ${base_width} ${base_height}"/> -->
+            <mesh filename="file://$(find warrior_description)/meshes/triangle_base_V4.stl"/>
             </geometry>
         </collision>
 
         <xacro:inertial_box mass="1.0" x="${base_length}" y="${base_width}" z="${base_height}">
             <origin xyz="0 0 0" rpy="0 0 0"/>
         </xacro:inertial_box>
-    </link>
+        </link>
 
-    <xacro:diff_wheel prefix="left" reflect="1" />
-    <xacro:diff_wheel prefix="right" reflect="-1" />
+        <xacro:diff_wheel prefix="left" reflect="1" />
+        <xacro:diff_wheel prefix="right" reflect="-1" />
 
     <link name="caster_wheel">
-    <visual>
-        <origin xyz="${caster_x} 0 ${caster_z}" rpy="0 0 0"/>  <!-- slightly below chassis -->
-        <geometry>
-        <sphere radius="${caster_radius}"/>  
-        </geometry>
-        <material name="grey">
-            <color rgba="0.5 0.5 0.5 1.0"/>
-        </material>
+        <visual>
+            <origin xyz="${caster_x} 0 ${caster_z}" rpy="0 0 0"/>  <!-- slightly below chassis -->
+            <geometry>
+                <sphere radius="${caster_radius}"/>  
+            </geometry>
+            <material name="grey">
+                <color rgba="0.5 0.5 0.5 1.0"/>
+            </material>
     </visual>
 
     <collision>
