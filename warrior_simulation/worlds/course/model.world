@@ -4,25 +4,277 @@
 
     <!-- Light source -->
     <light type="directional" name="sun">
-    <cast_shadows>true</cast_shadows>
-    <pose>0 0 10 0 0 0</pose>
-    <diffuse>0.8 0.8 0.8 1</diffuse>
-    <specular>0.2 0.2 0.2 1</specular>
-    <attenuation>
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.6 0.6 0.6 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
         <range>1000</range>
         <constant>0.9</constant>
         <linear>0.01</linear>
         <quadratic>0.001</quadratic>
-    </attenuation>
-    <direction>-0.5 0.1 -0.9</direction>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
     </light>
 
-    <!-- Include the custom course model -->
+    <!-- Original model -->
     <include>
       <uri>file://./model.sdf</uri>
-      <pose>2.5 0 0.15 0 0 -1.57</pose>
+      <pose>0 0 0 0 0 0</pose>
+      <name>barrel1</name>
     </include>
-   
+
+    <!-- Barrel models -->
+      <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_1</name>
+      <pose>-29.915800094604492 -9.5540056228637695 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_2</name>
+      <pose>-28.836496353149414 -10.132699966430664 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_3</name>
+      <pose>-31.22547721862793 -9.116459846496582 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_4</name>
+      <pose>-30.122974395751953 -18.580699920654297 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_5</name>
+      <pose>-20.959999084472656 -25.255212783813477 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_6</name>
+      <pose>-15.199999809265137 -29.895071029663086 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_7</name>
+      <pose>-15.514035224914551 23.153600692749023 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_8</name>
+      <pose>-10.459935188293457 23.565999984741211 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_9</name>
+      <pose>2.0799999237060547 23.687314987182617 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_10</name>
+      <pose>-1.4063700437545776 23.863000869750977 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_11</name>
+      <pose>2.4163875579833984 23.637500762939453 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_12</name>
+      <pose>10.557160377502441 22.836599349975586 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_13</name>
+      <pose>28.152008056640625 -19.896200180053711 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_14</name>
+      <pose>29.673128128051758 -26.158000946044922 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_15</name>
+      <pose>29.311616897583008 -19.957199096679688 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_16</name>
+      <pose>31.420942306518555 -14.104900360107422 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_17</name>
+      <pose>29.49266242980957 -14.099599838256836 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_18</name>
+      <pose>30.499481201171875 -14.136899948120117 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_19</name>
+      <pose>26.399253845214844 -10.446399688720703 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_20</name>
+      <pose>27.397146224975586 -9.9945201873779297 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_21</name>
+      <pose>29.615579605102539 -0.80000001192092896 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_22</name>
+      <pose>27.822694778442383 4.9600000381469727 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_23</name>
+      <pose>30.354148864746094 13.161999702453613 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_24</name>
+      <pose>27.142299652099609 18.070499420166016 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_25</name>
+      <pose>23.276599884033203 24.808107376098633 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_26</name>
+      <pose>6.6402897834777832 23.428520202636719 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_27</name>
+      <pose>18.655136108398438 23.037900924682617 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_28</name>
+      <pose>18.605569839477539 28 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_29</name>
+      <pose>13.942899703979492 23.316377639770508 0.18610100448131561 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_30</name>
+      <pose>20.960000000000001 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_31</name>
+      <pose>15.199999999999999 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_32</name>
+      <pose>9.4399999999999995 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_33</name>
+      <pose>3.6800000000000002 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_34</name>
+      <pose>-2.0800000000000001 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_35</name>
+      <pose>-7.8399999999999999 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_36</name>
+      <pose>-13.6 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_37</name>
+      <pose>-19.359999999999999 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_38</name>
+      <pose>-25.120000000000001 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_39</name>
+      <pose>-30.879999999999999 28 0.14999999999999999 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_40</name>
+      <pose>-25.476720809936523 22.241500854492188 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_41</name>
+      <pose>-20.950799942016602 22.219236373901367 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_42</name>
+      <pose>-30.38916015625 23.840000152587891 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_43</name>
+      <pose>-35.010669708251953 18.079999923706055 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_44</name>
+      <pose>-30.368865966796875 12.319999694824219 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_45</name>
+      <pose>-33.246616363525391 6.559999942779541 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_46</name>
+      <pose>-29.466890335083008 -2.939039945602417 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_47</name>
+      <pose>-30.938899993896484 -2.8671488761901855 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_48</name>
+      <pose>-31.599100112915039 -6.2671284675598145 0.43046298623085022 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_49</name>
+      <pose>-30.811100006103516 -6.7236881256103516 0.15000000596046448 0 0 0</pose>
+    </include>
+    <include>
+      <uri>file://./barrel/barrel.sdf</uri>
+      <name>barrel_50</name>
+      <pose>-32.755599975585938 -5.8812699317932129 0.15000000596046448 0 0 0</pose>
+    </include>
 
 
     <physics type="ode">
@@ -31,11 +283,9 @@
     </physics>
 
     <scene>
-      <ambient>0.8 0.8 0.8 1</ambient>
+      <ambient>0.4 0.4 0.4 1</ambient>
       <background>0.7 0.7 0.7 1</background>
     </scene>
-
-    
 
   </world>
 </sdf>
