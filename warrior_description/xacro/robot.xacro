@@ -242,30 +242,26 @@
   </joint>
 
   <!-- ========== Gazebo LiDAR Sensor ========== -->
-  <!-- <gazebo reference="lidar_link">
-    <sensor type="ray" name="lidar_sensor">
-      <pose>0 0 0 0 0 0</pose>
-      <update_rate>5.0</update_rate>
-      <ray>
-        <scan>
-          <horizontal>
-            <samples>180</samples>
-            <resolution>1</resolution>
-            <min_angle>-3.14</min_angle>
-            <max_angle>3.14</max_angle>
-          </horizontal>
-        </scan>
+  <gazebo reference="lidar_link">
+    <sensor name="lidar_sensor" type="gpu_lidar">
+      <update_rate>10.0</update_rate>
+      <lidar>
+        <horizontal>
+          <samples>720</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.1415</min_angle>
+          <max_angle>3.1415</max_angle>
+        </horizontal>
         <range>
           <min>0.12</min>
-          <max>5</max>
-          <resolution>0.02</resolution>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
         </range>
-      </ray>
-      <plugin name="gazebo_ros_laser_controller" filename="libgazebo_ros_laser.so">
-        <topicName>/scan</topicName>
-        <frameName>lidar_link</frameName>
-      </plugin>
+      </lidar>
+      <topic>/lidar</topic>
+      <visualize>true</visualize>
     </sensor>
-  </gazebo> -->
+  </gazebo>
+
 
 </robot>

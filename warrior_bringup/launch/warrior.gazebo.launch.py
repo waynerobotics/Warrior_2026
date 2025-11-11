@@ -17,7 +17,7 @@ def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
 
     world_file = PathJoinSubstitution([pkg_warrior_description, "worlds", "empty.world"])
-    xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gazebo.urdf.xacro"])
+    xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
 
@@ -118,7 +118,7 @@ def generate_launch_description():
     gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
-        parameters=[gazebo_bridge_yaml, {"use_sim_time": True}],
+        parameters=[gazebo_bridge_yaml],
         output="screen"
     )
 
@@ -128,10 +128,10 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo,
         spawn_entity,
-        gz_bridge,
+        # gz_bridge,
         robot_state_publisher,
-        joint_state_publisher,
-        # ros2_control_node,
+        # joint_state_publisher,
+        ros2_control_node,
         TimerAction(period=2.0, actions=[joint_state_broadcaster_spawner]),
         TimerAction(period=2.0, actions=[diff_drive_controller_spawner]),
         rviz2,

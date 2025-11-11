@@ -35,7 +35,7 @@ def generate_launch_description():
         package="joint_state_publisher",
         executable="joint_state_publisher",
         output="screen",
-        parameters=[{"use_gui": False}],
+        parameters=[{"use_gui": True}],
     )
 
     ros2_control_node = Node(
@@ -88,7 +88,7 @@ def generate_launch_description():
     # ----------------- launch order -----------------
     return LaunchDescription([
         robot_state_publisher,
-        joint_state_publisher,
+        # joint_state_publisher,
         ros2_control_node,
         TimerAction(period=2.0, actions=[joint_state_broadcaster_spawner]),
         TimerAction(period=2.0, actions=[diff_drive_controller_spawner]),

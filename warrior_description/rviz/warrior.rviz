@@ -75,6 +75,11 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         front_drive_wheel_link:
           Alpha: 1
           Show Axes: false
@@ -99,6 +104,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         pole_link:
           Alpha: 1
           Show Axes: false
@@ -132,9 +138,25 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
+        camera_link:
+          Value: true
+        front_drive_wheel_link:
+          Value: true
+        front_steer_wheel_link:
+          Value: true
+        left_drive_wheel_link:
+          Value: true
+        left_steer_wheel_link:
+          Value: true
         lidar_link:
           Value: true
+        odom:
+          Value: true
         pole_link:
+          Value: true
+        right_drive_wheel_link:
+          Value: true
+        right_steer_wheel_link:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -144,15 +166,29 @@ Visualization Manager:
       Tree:
         base_footprint:
           base_link:
-            pole_link:
-              lidar_link:
+            camera_link:
+              {}
+            front_steer_wheel_link:
+              front_drive_wheel_link:
                 {}
+            left_steer_wheel_link:
+              left_drive_wheel_link:
+                {}
+            lidar_link:
+              {}
+            pole_link:
+              {}
+            right_steer_wheel_link:
+              right_drive_wheel_link:
+                {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_footprint
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -195,7 +231,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 10
+      Distance: 7.74399995803833
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -210,10 +246,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.030398253351449966
+      Pitch: 0.7903980612754822
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5503973960876465
+      Yaw: 1.2253977060317993
     Saved: ~
 Window Geometry:
   Displays:

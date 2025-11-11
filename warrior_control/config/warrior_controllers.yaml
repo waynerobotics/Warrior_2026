@@ -18,7 +18,7 @@ diff_drive_controller:
     wheel_radius: 0.1
 
     odom_frame_id: "odom"
-    base_frame_id: "base_link"
+    base_frame_id: "base_footprint"
 
     enable_odom_tf: true   
     enable_odom: true      
