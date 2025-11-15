@@ -26,7 +26,7 @@ def generate_launch_description():
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
 
     rviz2_config_file = PathJoinSubstitution(
-        [pkg_warrior_description, "rviz", "warrior.rviz"]
+        [pkg_warrior_bringup, "rviz", "warrior.rviz"]
     )
 
     robot_description = Command(["xacro ", xacro_file])
@@ -36,16 +36,15 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="screen",
-        parameters=[{"robot_description": robot_description},
-                    {"use_sim_time": True}],
+        parameters=[{"robot_description": robot_description}, 
+                    {"use_sim_time": use_sim_time}],
     )
 
     joint_state_publisher = Node(
         package="joint_state_publisher",
         executable="joint_state_publisher",
         output="screen",
-        parameters=[{"use_gui": True},
-                    {"use_sim_time": True}],
+        parameters=[{"use_gui": True}],
     )
 
     ros2_control_node = Node(
@@ -69,7 +68,6 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["diff_drive_controller", "--controller-manager-timeout", "10"],
-        parameters=[{"use_sim_time": True}],
         output="screen",
     )
 
@@ -78,8 +76,8 @@ def generate_launch_description():
         executable="rviz2",
         output="screen",
         arguments=["-d", rviz2_config_file],
-        parameters=[{"robot_description": robot_description}, 
-                    {"use_sim_time": True}],
+        parameters=[{"robot_description": robot_description},
+                    {"use_sim_time": use_sim_time}],
     )
     
     teleop_node = Node(
@@ -93,7 +91,7 @@ def generate_launch_description():
         ],
         parameters=[
             {'stamped': True},
-            {"use_sim_time": True}
+            # {'use_sim_time': use_sim_time}
         ]
     )
     
@@ -114,9 +112,10 @@ def generate_launch_description():
             "-name", "warrior",
             "-allow_renaming", "true"
         ],
-        parameters=[{"use_sim_time": True}],
-        output="screen"
+        output="screen",
+        # parameters=[{"use_sim_time": use_sim_time}],
     )
+    
     
     # gz_bridge = Node(
     #     package="ros_gz_bridge",
@@ -128,14 +127,17 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
-        output='screen'
+        output='screen',
     )
 
 
     # ----------------- launch order -----------------
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value=use_sim_time,
+            description='If true, use simulated clock'),
         gazebo,
-        
         robot_state_publisher,
         # joint_state_publisher,
         # ros2_control_node,
@@ -151,13 +153,9 @@ def generate_launch_description():
                 on_exit=[diff_drive_controller_spawner],
             )
         ),
+        
         gz_bridge,
         gz_spawn_entity,
-
-        DeclareLaunchArgument(
-            'use_sim_time',
-            default_value=use_sim_time,
-            description='If true, use simulated clock'),
         rviz2,
         RegisterEventHandler(
             event_handler=OnProcessExit(

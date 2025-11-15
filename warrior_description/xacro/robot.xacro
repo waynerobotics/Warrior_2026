@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- ========== Properties ========== -->
-  
+
   <!-- Base properties -->
   <xacro:property name="base_mass" value="5.0"/>
   <xacro:property name="base_footprint_height" value="0.25"/>
@@ -76,7 +76,7 @@
   </xacro:macro>
 
   <!-- ========== Swerve Module Macro ========== -->
-  <xacro:macro name="swerve_module" params="prefix offset_x offset_y initial_yaw steer_color drive_color">
+  <xacro:macro name="swerve_module" params="prefix offset_x offset_y initial_yaw steer_color drive_color drive_rpy drive_axis">
     
     <!-- Steer Link -->
     <link name="${prefix}_steer_wheel_link">
@@ -122,8 +122,8 @@
     <joint name="${prefix}_drive_joint" type="continuous">
       <parent link="${prefix}_steer_wheel_link"/>
       <child link="${prefix}_drive_wheel_link"/>
-      <origin xyz="0 0 ${wheel_offset_z}" rpy="0 0 0"/>
-      <axis xyz="1 0 0"/>
+      <origin xyz="0 0 ${wheel_offset_z}" rpy="${drive_rpy}"/>
+      <axis xyz="${drive_axis}"/>
     </joint>
     
   </xacro:macro>
@@ -161,15 +161,15 @@
   <!-- ========== Instantiate Swerve Modules ========== -->
   
   <!-- Left Module -->
-  <xacro:swerve_module prefix="left" offset_x="${left_x}" offset_y="${left_y}" 
+  <xacro:swerve_module prefix="left" offset_x="${left_x}" offset_y="${left_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
     initial_yaw="${left_initial_angle}" steer_color="blue" drive_color="gray"/>
 
   <!-- Right Module -->
-  <xacro:swerve_module prefix="right" offset_x="${right_x}" offset_y="${right_y}" 
+  <xacro:swerve_module prefix="right" offset_x="${right_x}" offset_y="${right_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
     initial_yaw="${right_initial_angle}" steer_color="green" drive_color="gray"/>
 
   <!-- Front Module -->
-  <xacro:swerve_module prefix="front" offset_x="${front_x}" offset_y="0" 
+  <xacro:swerve_module prefix="front" offset_x="${front_x}" offset_y="0" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
     initial_yaw="${front_initial_angle}" steer_color="cyan" drive_color="gray"/>
 
   <!-- ========== Pole Link ========== -->
