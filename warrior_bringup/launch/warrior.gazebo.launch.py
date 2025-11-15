@@ -91,7 +91,7 @@ def generate_launch_description():
         ],
         parameters=[
             {'stamped': True},
-            # {'use_sim_time': use_sim_time}
+            {'use_sim_time': use_sim_time}
         ]
     )
     

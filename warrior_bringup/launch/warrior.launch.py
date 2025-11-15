@@ -20,7 +20,6 @@ def generate_launch_description():
         [pkg_warrior_description, "rviz", "warrior.rviz"]
     )
 
-
     robot_description = Command(["xacro ", xacro_file])
 
     # ----------------- nodes -----------------
