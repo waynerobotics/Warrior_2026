@@ -40,23 +40,6 @@ def generate_launch_description():
                     {"use_sim_time": use_sim_time}],
     )
 
-    joint_state_publisher = Node(
-        package="joint_state_publisher",
-        executable="joint_state_publisher",
-        output="screen",
-        parameters=[{"use_gui": True}],
-    )
-
-    ros2_control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        output="screen",
-        parameters=[
-            {"robot_description": robot_description},
-            controller_yaml  # ← This line actually loads the YAML file
-        ],
-    )
-
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -68,13 +51,6 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["diff_drive_controller", "--controller-manager-timeout", "10"],
-        output="screen",
-    )
-    
-    swerve_drive_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["swerve_drive_controller", "--controller-manager-timeout", "10"],
         output="screen",
     )
 
@@ -120,7 +96,7 @@ def generate_launch_description():
             "-allow_renaming", "true"
         ],
         output="screen",
-        # parameters=[{"use_sim_time": use_sim_time}],
+        parameters=[{"use_sim_time": use_sim_time}],
     )
     
     
@@ -137,9 +113,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    applied_controller_spawner = swerve_drive_controller_spawner
-    # applied_controller_spawner = diff_drive_controller_spawner
-
     # ----------------- launch order -----------------
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -148,8 +121,7 @@ def generate_launch_description():
             description='If true, use simulated clock'),
         gazebo,
         robot_state_publisher,
-        # joint_state_publisher,
-        # ros2_control_node,
+
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
@@ -159,7 +131,7 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
-                on_exit=[applied_controller_spawner],
+                on_exit=[diff_drive_controller_spawner],
             )
         ),
         

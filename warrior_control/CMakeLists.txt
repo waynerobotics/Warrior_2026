@@ -7,13 +7,58 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(controller_interface REQUIRED)
+find_package(hardware_interface REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+
+add_library(${PROJECT_NAME} SHARED
+  src/swerve_drive_controller.cpp
+)
+
+ament_target_dependencies(${PROJECT_NAME}
+  rclcpp
+  geometry_msgs
+  controller_interface
+  hardware_interface
+  pluginlib
+  Eigen3
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+  include
+)
+
+ament_export_include_directories(include)
+ament_export_dependencies(rclcpp geometry_msgs controller_interface hardware_interface pluginlib Eigen3)
+
+
+pluginlib_export_plugin_description_file(controller_interface swerve_drive_controller.xml)
+
+
+# ---- INSTALLATION ----
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 
 install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}/
 )
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
