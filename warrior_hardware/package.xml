@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>The hardware interface for the Warrior 2026 robot by ros2_control</description>
   <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
