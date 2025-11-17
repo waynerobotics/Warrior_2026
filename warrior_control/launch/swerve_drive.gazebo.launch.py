@@ -70,7 +70,7 @@ def generate_launch_description():
         output='screen',
         prefix='gnome-terminal --', 
         remappings=[
-            ('/cmd_vel', '/diff_drive_controller/cmd_vel')
+            ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
         ],
         parameters=[
             {'stamped': True},

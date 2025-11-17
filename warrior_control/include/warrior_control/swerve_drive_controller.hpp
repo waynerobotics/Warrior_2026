@@ -4,7 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <nav_msgs/msg/odometry.hpp>
-#include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
@@ -28,8 +28,11 @@ public:
         const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
+    // Node namespace
+    std::string controller_namespace_ = "swerve_drive_controller";
+
     // ROS2 Subscription for cmd_vel
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_sub_;
 
     // Desired velocities
     double vx_cmd_ = 0.0;
@@ -41,14 +44,24 @@ private:
     double y_ = 0.0;
     double yaw_ = 0.0;
 
-    // ROS odometry publisher and TF broadcaster
-    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    // wheel angular speeds (read from state)
+    double front_wheel_w_ = 0.0;
+    double left_wheel_w_ = 0.0;
+    double right_wheel_w_ = 0.0;
 
+    // steering angles (computed from kinematics) rad
+    double front_steer_angle_ = 0.0;
+    double left_steer_angle_ = 0.0;
+    double right_steer_angle_ = 0.0;
+
+    // ROS odometry publisher and TF broadcaster
     std::string odom_frame_;
     std::string base_frame_;
 
-    void updateOdometry(double vx, double vy, double wz, double dt);
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+
+    void updateOdometry(double dt);
 
     // Joint names
     std::vector<std::string> steer_joint_names_;
@@ -67,6 +80,7 @@ private:
     std::unordered_map<std::string, std::pair<double, double>> wheel_dist_from_center_;
 
     void computeJointCommand(double vx, double vy, double wz);
+    void readWheelAngularVel();
 };
 
     
