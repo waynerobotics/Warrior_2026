@@ -11,6 +11,8 @@ from launch.event_handlers import OnProcessExit
 
 
 def generate_launch_description():
+    namespace = LaunchConfiguration('namespace', default='warrior')
+    
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
     

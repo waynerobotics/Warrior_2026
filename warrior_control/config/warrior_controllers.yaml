@@ -30,7 +30,10 @@ diff_drive_controller:
 
 swerve_drive_controller:
   ros__parameters:
-    update_rate: 50
+    update_rate: 100
+
+    odom_frame_id: "odom"
+    base_frame_id: "base_footprint"
 
     steer_joint_names:
       - "front_steer_joint"
@@ -50,3 +53,17 @@ swerve_drive_controller:
       - "position"
       - "velocity"
       - "effort"
+    
+    wheel_radius: 0.1
+
+    # Positions of wheels relative to robot center of mass
+    distance_to_com:
+      front:
+        x: 0.34
+        y: 0.0
+      left:
+        x: -0.17
+        y: 0.294
+      right:
+        x: -0.17
+        y: -0.294

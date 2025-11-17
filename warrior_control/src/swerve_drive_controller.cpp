@@ -1,8 +1,7 @@
 
-#include "warrior_control/swerve_drive_controller.hpp"
 #include <cmath>
-// #include <Eigen/Dense>
 #include <eigen3/Eigen/Dense>
+#include "warrior_control/swerve_drive_controller.hpp"
 
 namespace warrior::control {
 
@@ -45,8 +44,24 @@ controller_interface::InterfaceConfiguration SwerveDriveController::state_interf
 controller_interface::CallbackReturn SwerveDriveController::on_init() {
     auto logger = get_node()->get_logger();
 
+    wheel_radius_ = auto_declare<double>("wheel_radius", 0.1);
     steer_joint_names_ = auto_declare<std::vector<std::string>>("steer_joint_names", {});
     drive_joint_names_ = auto_declare<std::vector<std::string>>("drive_joint_names", {});
+
+    odom_frame_ = auto_declare<std::string>("odom_frame_id", "odom");
+    base_frame_ = auto_declare<std::string>("base_frame_id", "base_footprint");
+    
+    auto load_xy = [&](const std::string &wheel)
+    {
+        double x = auto_declare<double>("distance_to_com." + wheel + ".x", 0.0);
+        double y = auto_declare<double>("distance_to_com." + wheel + ".y", 0.0);
+        return std::make_pair(x, y);
+    };
+
+    wheel_dist_from_center_["front"] = load_xy("front");
+    wheel_dist_from_center_["left"]  = load_xy("left");
+    wheel_dist_from_center_["right"] = load_xy("right");
+
 
     RCLCPP_INFO(logger, "SwerveDriveController initialized with %zu steer joints and %zu drive joints.",
                 steer_joint_names_.size(), drive_joint_names_.size());
@@ -84,6 +99,13 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
             vy_cmd_ = msg->linear.y;
             wz_cmd_ = msg->angular.z;
         });
+
+    odom_pub_ =
+        get_node()->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+
+    tf_broadcaster_ = 
+        std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
+
 
     RCLCPP_INFO(logger, "SwerveDriveController configured.");
     return controller_interface::CallbackReturn::SUCCESS;
@@ -123,22 +145,77 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
 controller_interface::return_type SwerveDriveController::update(
     const rclcpp::Time & time, const rclcpp::Duration & period) {
     
+    double dt = period.seconds();
+
     RCLCPP_INFO(get_node()->get_logger(), "Updating SwerveDriveController with vx: %.2f, vy: %.2f, wz: %.2f",
                     vx_cmd_, vy_cmd_, wz_cmd_);
     computeJointCommand(vx_cmd_, vy_cmd_, wz_cmd_);
 
+    updateOdometry(vx_cmd_, vy_cmd_, wz_cmd_, dt);
+
     return controller_interface::return_type::OK;
 }
+
+void SwerveDriveController::updateOdometry(double vx, double vy, double wz, double dt)
+{
+    // update odometry based on commanded velocities
+    yaw_ += wz * dt;
+
+    //transform local velocities to global frame
+    double cos_yaw = cos(yaw_);
+    double sin_yaw = sin(yaw_);
+
+    double global_vx = vx * cos_yaw - vy * sin_yaw;
+    double global_vy = vx * sin_yaw + vy * cos_yaw;
+
+    // update position integration
+    x_ += global_vx * dt;
+    y_ += global_vy * dt;
+
+    // Publish Odometry
+    nav_msgs::msg::Odometry odom;
+    odom.header.stamp = get_node()->now();
+    odom.header.frame_id = odom_frame_;
+    odom.child_frame_id = base_frame_;
+
+    odom.pose.pose.position.x = x_;
+    odom.pose.pose.position.y = y_;
+    odom.pose.pose.position.z = 0.0;
+
+    odom.pose.pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, sin(yaw_/2), cos(yaw_/2)));
+
+    odom.twist.twist.linear.x = vx;
+    odom.twist.twist.linear.y = vy;
+    odom.twist.twist.angular.z = wz;
+
+    odom_pub_->publish(odom);
+
+    // TF transform
+    geometry_msgs::msg::TransformStamped tf;
+    tf.header.stamp = get_node()->now();
+    tf.header.frame_id = odom_frame_;
+    tf.child_frame_id = base_frame_;
+
+    tf.transform.translation.x = x_;
+    tf.transform.translation.y = y_;
+    tf.transform.translation.z = 0.0;
+
+    tf.transform.rotation = odom.pose.pose.orientation;
+    tf_broadcaster_->sendTransform(tf);
+}
+
 
 
 void SwerveDriveController::computeJointCommand(double vx, double vy, double wz) {
     // Implement swerve kinematics calculations
-    double x1 = wheel_dist_from_center_["front_dist"].first;
-    double y1 = wheel_dist_from_center_["front_dist"].second;
-    double x2 = wheel_dist_from_center_["left_dist"].first;
-    double y2 = wheel_dist_from_center_["left_dist"].second;
-    double x3 = wheel_dist_from_center_["right_dist"].first;
-    double y3 = wheel_dist_from_center_["right_dist"].second;   
+    double x1 = wheel_dist_from_center_["front"].first;
+    double y1 = wheel_dist_from_center_["front"].second;
+
+    double x2 = wheel_dist_from_center_["left"].first;
+    double y2 = wheel_dist_from_center_["left"].second;
+    
+    double x3 = wheel_dist_from_center_["right"].first;
+    double y3 = wheel_dist_from_center_["right"].second;   
 
     // std::pair<double, double> f_d = wheel_dist_from_center_["front_dist"];
     // std::pair<double, double> l_d = wheel_dist_from_center_["left_dist"];
@@ -167,11 +244,11 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
     // Set commands to interfaces
     for (size_t i = 0; i < drive_cmd_.size(); ++i) {
         if (drive_cmd_[i].get().get_prefix_name().find("front") != std::string::npos) {
-            drive_cmd_[i].get().set_value(wheel_velocity(0));
+            drive_cmd_[i].get().set_value(wheel_velocity(0) / wheel_radius_);
         } else if (drive_cmd_[i].get().get_prefix_name().find("left") != std::string::npos) {
-            drive_cmd_[i].get().set_value(wheel_velocity(1));
+            drive_cmd_[i].get().set_value(wheel_velocity(1) / wheel_radius_);
         } else if (drive_cmd_[i].get().get_prefix_name().find("right") != std::string::npos) {
-            drive_cmd_[i].get().set_value(wheel_velocity(2));
+            drive_cmd_[i].get().set_value(wheel_velocity(2) / wheel_radius_);
         }
         // RCLCPP_INFO(get_node()->get_logger(), "Wheel %s velocity command set to %.2f",
         //             drive_cmd_[i].get().get_prefix_name().c_str(),

@@ -3,7 +3,11 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <controller_interface/controller_interface.hpp>
 
 namespace warrior::control {
@@ -32,6 +36,21 @@ private:
     double vy_cmd_ = 0.0;
     double wz_cmd_ = 0.0;
 
+    // Odom estimation variables
+    double x_ = 0.0;
+    double y_ = 0.0;
+    double yaw_ = 0.0;
+
+    // ROS odometry publisher and TF broadcaster
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+
+    std::string odom_frame_;
+    std::string base_frame_;
+
+    void updateOdometry(double vx, double vy, double wz, double dt);
+
+    // Joint names
     std::vector<std::string> steer_joint_names_;
     std::vector<std::string> drive_joint_names_;
 
@@ -44,11 +63,8 @@ private:
     std::vector<hardware_interface::LoanedCommandInterface> steering_position_interfaces_;
 
     // Swerve kinematics parameters
-    std::unordered_map<std::string, std::pair<double, double>> wheel_dist_from_center_ = {
-        {"front_dist", {0.34, 0.}},
-        {"left_dist",  {-0.17, 0.294}},
-        {"right_dist", {-0.17, -0.294}},
-    };
+    double wheel_radius_;
+    std::unordered_map<std::string, std::pair<double, double>> wheel_dist_from_center_;
 
     void computeJointCommand(double vx, double vy, double wz);
 };

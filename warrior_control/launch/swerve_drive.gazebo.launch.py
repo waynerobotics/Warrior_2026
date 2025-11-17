@@ -69,6 +69,9 @@ def generate_launch_description():
         name='teleop_twist_keyboard',
         output='screen',
         prefix='gnome-terminal --', 
+        remappings=[
+            ('/cmd_vel', '/diff_drive_controller/cmd_vel')
+        ],
         parameters=[
             {'stamped': True},
             {'use_sim_time': use_sim_time}
@@ -93,7 +96,7 @@ def generate_launch_description():
             "-allow_renaming", "true"
         ],
         output="screen",
-        parameters=[{"use_sim_time": use_sim_time}],
+        # parameters=[{"use_sim_time": use_sim_time}],
     )
     
     
@@ -118,6 +121,8 @@ def generate_launch_description():
             description='If true, use simulated clock'),
         gazebo,
         robot_state_publisher,
+        # joint_state_publisher,
+        # ros2_control_node,
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
@@ -134,10 +139,11 @@ def generate_launch_description():
         gz_bridge,
         gz_spawn_entity,
         rviz2,
-        # Start a helper which waits for the swerve controller to become ACTIVE
-        # and then launches teleop. This avoids fragile timing/race issues.
-        ExecuteProcess(
-            cmd=['python3', PathJoinSubstitution([pkg_warrior_control, 'scripts', 'wait_and_start_teleop.py'])],
-            output='screen',
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=swerve_drive_controller_spawner,
+                on_exit=[teleop_node],
+            )
         ),
+        
     ])

@@ -13,6 +13,11 @@ find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+
 
 
 add_library(${PROJECT_NAME} SHARED
@@ -21,12 +26,16 @@ add_library(${PROJECT_NAME} SHARED
 
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
-  geometry_msgs
+  rclcpp_lifecycle
   controller_interface
   hardware_interface
-  pluginlib
-  Eigen3
+  geometry_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
+
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   include

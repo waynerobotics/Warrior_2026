@@ -3,7 +3,7 @@
 <package format="3">
   <name>warrior_control</name>
   <version>0.0.0</version>
-  <description>ros2_control package for Warrior robot (swerve drive)</description>
+  <description>A ROS 2 package that implements ros2_control-based controllers for the Warrior robot.</description>
   <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
   <license>TODO: License declaration</license>
 
@@ -13,8 +13,6 @@
   <build_depend>pluginlib</build_depend>
   <build_depend>rclcpp</build_depend>
   <build_depend>geometry_msgs</build_depend>
-  <build_depend>ros2_control_core</build_depend>
-  <build_depend>ros2_control_interfaces</build_depend>
   <build_depend>Eigen3</build_depend>
 
   <exec_depend>rclcpp</exec_depend>
