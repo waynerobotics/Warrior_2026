@@ -3,11 +3,18 @@
 <package format="3">
   <name>warrior_bringup</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="alimyust@gmail.com">alimyust</maintainer>
-  <license>TODO: License declaration</license>
+  <description>The bringup package for the Warrior robot</description>
+  <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>warrior_description</depend>
+  <depend>warrior_control</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>controller_manager</depend>
+  <depend>diff_drive_controller</depend>
+  <depend>rviz2</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

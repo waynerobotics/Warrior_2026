@@ -1,0 +1,69 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+    swerve_drive_controller:
+      type: swerve_drive_controller/SwerveDriveController
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_drive_joint"]
+    right_wheel_names: ["right_drive_joint"]
+
+    wheel_separation: 0.93
+    wheel_radius: 0.1
+
+    odom_frame_id: "odom"
+    base_frame_id: "base_footprint"
+
+    enable_odom_tf: true   
+    enable_odom: true      
+    publish_rate: 50.0       
+    use_stamped_vel: true     
+    cmd_vel_timeout: 0.25     
+
+swerve_drive_controller:
+  ros__parameters:
+    update_rate: 100
+
+    odom_frame_id: "odom"
+    base_frame_id: "base_footprint"
+
+    steer_joint_names:
+      - "front_steer_joint"
+      - "left_steer_joint"
+      - "right_steer_joint"  
+
+    drive_joint_names:
+      - "front_drive_joint"
+      - "left_drive_joint"
+      - "right_drive_joint"
+
+    command_interface_names:
+      - "position"
+      - "velocity"
+
+    state_interface_names:
+      - "position"
+      - "velocity"
+      - "effort"
+    
+    wheel_radius: 0.1
+
+    # Positions of wheels relative to robot center of mass
+    distance_to_com:
+      front:
+        x: 0.34
+        y: 0.0
+      left:
+        x: -0.17
+        y: 0.294
+      right:
+        x: -0.17
+        y: -0.294

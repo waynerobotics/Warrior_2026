@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+<robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========== Properties ========== -->
+
+  <!-- Base properties -->
+  <xacro:property name="base_mass" value="5.0"/>
+  <xacro:property name="base_footprint_height" value="0.25"/>
+  
+  <!-- Wheel properties -->
+  <xacro:property name="wheel_mass" value="0.5"/>
+  <xacro:property name="wheel_offset_z" value="-0.15"/>
+  <xacro:property name="wheel_radius" value="0.1"/>
+  
+  <!-- Module positions -->
+  <xacro:property name="left_y" value="0.465"/>
+  <xacro:property name="right_y" value="-0.465"/>
+  <xacro:property name="left_x" value="0.03" />
+  <xacro:property name="right_x" value="0.03" />
+  <xacro:property name="front_x" value="0.845"/>
+
+  <!-- Camera -->
+  <xacro:property name="camera_offset_z" value="-0.09"/>
+  
+  <!-- Initial orientations (radians) -->
+  <!-- <xacro:property name="left_initial_angle" value="-1.0472"/> -->   <!-- -60° -->
+  <!-- <xacro:property name="right_initial_angle" value="-2.0944"/> -->  <!-- -120° -->
+  <!-- <xacro:property name="front_initial_angle" value="-1.5708"/> -->  <!-- -90° -->
+
+  <xacro:property name="left_initial_angle" value="-1.5708"/>   <!-- -90° -->
+  <xacro:property name="right_initial_angle" value="-1.5708"/>  <!-- -90° -->
+  <xacro:property name="front_initial_angle" value="-1.5708"/>  <!-- -90° -->
+
+  
+  <!-- Sensor properties -->
+  <xacro:property name="pole_height" value="0.9"/>
+  <xacro:property name="lidar_offset_x" value="0.36"/>
+
+  <!-- ========== Material Definitions ========== -->
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
+  
+  <material name="blue">
+    <color rgba="0.0 0.0 1.0 1"/>
+  </material>
+  
+  <material name="yellow">
+    <color rgba="1.0 1.0 0.0 1"/>
+  </material>
+  
+  <material name="green">
+    <color rgba="0.0 1.0 0.0 1"/>
+  </material>
+  
+  <material name="red">
+    <color rgba="1.0 0.0 0.0 1"/>
+  </material>
+  
+  <material name="cyan">
+    <color rgba="0.0 1.0 1.0 1"/>
+  </material>
+  
+  <material name="magenta">
+    <color rgba="1.0 0.0 1.0 1"/>
+  </material>
+
+  <!-- ========== Inertia Macros ========== -->
+  <xacro:macro name="wheel_inertia" params="mass">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${mass}"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" 
+               iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- ========== Swerve Module Macro ========== -->
+  <xacro:macro name="swerve_module" params="prefix offset_x offset_y initial_yaw steer_color drive_color drive_rpy drive_axis">
+    
+    <!-- Steer Link -->
+    <link name="${prefix}_steer_wheel_link">
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
+        </geometry>
+        <material name="${steer_color}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
+        </geometry>
+      </collision>
+      <xacro:wheel_inertia mass="${wheel_mass}"/>
+    </link>
+    
+    <!-- Steer Joint -->
+    <joint name="${prefix}_steer_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${prefix}_steer_wheel_link"/>
+      <origin xyz="${offset_x} ${offset_y} 0" rpy="0 0 ${initial_yaw}"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+    <!-- Drive Wheel Link -->
+    <link name="${prefix}_drive_wheel_link">
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+        </geometry>
+        <material name="${drive_color}"/>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
+        </geometry>
+      </collision>
+      <xacro:wheel_inertia mass="${wheel_mass}"/>
+    </link>
+    
+    <!-- Drive Joint -->
+    <joint name="${prefix}_drive_joint" type="continuous">
+      <parent link="${prefix}_steer_wheel_link"/>
+      <child link="${prefix}_drive_wheel_link"/>
+      <origin xyz="0 0 ${wheel_offset_z}" rpy="${drive_rpy}"/>
+      <axis xyz="${drive_axis}"/>
+    </joint>
+    
+  </xacro:macro>
+
+  <!-- ========== Base Footprint Link ========== -->
+  <link name="base_footprint"/>
+    
+    <joint name="base_footprint_joint" type="fixed">
+        <parent link="base_footprint"/>
+        <child link="base_link"/>
+        <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
+        <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
+    </joint>
+
+  <!-- ========== Base Link ========== -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${base_mass}"/>
+      <inertia ixx="0.125" ixy="0" ixz="0" iyy="0.125" iyz="0" izz="0.225"/>
+    </inertial>
+  </link>
+
+  <!-- ========== Instantiate Swerve Modules ========== -->
+  
+  <!-- Left Module -->
+  <xacro:swerve_module prefix="left" offset_x="${left_x}" offset_y="${left_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
+    initial_yaw="${left_initial_angle}" steer_color="blue" drive_color="gray"/>
+
+  <!-- Right Module -->
+  <xacro:swerve_module prefix="right" offset_x="${right_x}" offset_y="${right_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
+    initial_yaw="${right_initial_angle}" steer_color="green" drive_color="gray"/>
+
+  <!-- Front Module -->
+  <xacro:swerve_module prefix="front" offset_x="${front_x}" offset_y="0" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
+    initial_yaw="${front_initial_angle}" steer_color="cyan" drive_color="gray"/>
+
+  <!-- ========== Pole Link ========== -->
+  <link name="pole_link">
+    <!-- Visual/collision commented out in original -->
+  </link>
+  
+  <joint name="base_to_pole" type="fixed">
+    <parent link="base_link"/>
+    <child link="pole_link"/>
+    <origin xyz="0 0 ${pole_height}" rpy="3.1415 0 0"/>
+  </joint>
+
+  <!-- ========== LiDAR Link ========== -->
+  <link name="lidar_link">
+    <visual>
+      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
+      </geometry>
+      <material name="black">
+          <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.005"/>
+    </inertial> 
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_link"/>
+    <origin xyz="0.32 0 0.875" rpy="3.1415 0 0"/>
+  </joint>
+
+  <!-- ========== Camera Link ========= -->
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
+      </geometry>
+      <material name="light_grey">
+        <color rgba="0.8 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+        <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
+        <mass value="0.5"/>
+        <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.002"/>
+    </inertial> 
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.32 0 ${0.828 + camera_offset_z}" rpy="3.1415 0 0"/>
+  </joint>
+
+  <!-- ========== Gazebo LiDAR Sensor ========== -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar_sensor" type="gpu_lidar">
+      <update_rate>10.0</update_rate>
+      <lidar>
+        <horizontal>
+          <samples>720</samples>
+          <resolution>1</resolution>
+          <min_angle>-3.1415</min_angle>
+          <max_angle>3.1415</max_angle>
+        </horizontal>
+        <range>
+          <min>0.12</min>
+          <max>10.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </lidar>
+      <topic>/lidar</topic>
+      <visualize>true</visualize>
+    </sensor>
+  </gazebo>
+
+
+</robot>

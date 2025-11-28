@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+<!-- ===== diff_wheels.urdf.xacro macro (replace your macro) ===== -->
+<xacro:macro name="diff_wheel" params="prefix reflect">
+  <!-- joint origin is at the wheel center:
+       x = forward offset (0 if centered), y = ±(half_base_width + half_wheel_width), z = wheel_radius -->
+  <joint name="${prefix}_wheel_joint" type="continuous">
+    <parent link="chassis"/>
+    <child  link="${prefix}_wheel"/>
+    <!-- Place axle at chassis frame: x=0, y = lateral position, z = wheel radius -->
+    <origin xyz="0 ${diff_wheel_y * reflect} ${diff_wheel_radius}" rpy="0 0 0"/>
+    <!-- Wheel rotates about local Y (axle running along Y) -->
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="${prefix}_wheel">
+    <!-- Rotate the cylinder so its length axis is along the Y axis:
+         URDF cylinder length is along the link's Z axis by default.
+         To make the cylinder 'thickness' be along wheel axle (Y), rotate +90deg about X. -->
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/> <!-- rotate 90deg about X -->
+      <geometry>
+        <cylinder length="${diff_wheel_width}" radius="${diff_wheel_radius}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <geometry>
+        <cylinder length="${diff_wheel_width}" radius="${diff_wheel_radius}"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <!-- keep inertial origin at the wheel center -->
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <!-- rough cylinder inertia (about center). Adjust as needed or compute accurately -->
+      <!-- For a thin cylinder rotating about axis through center (axis = Y here),
+           I_axial = 0.5*m*r^2 ; I_perp = (1/12)*m*(3*r^2 + length^2) -->
+      <inertia ixx="0.0005" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0"
+               izz="0.0005"/>
+    </inertial>
+  </link>
+</xacro:macro>
+
+</robot>
