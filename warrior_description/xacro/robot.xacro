@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:include filename="$(find warrior_description)/xacro/material.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <!-- ========== Properties ========== -->
 
@@ -40,35 +41,6 @@
   <!-- Sensor properties -->
   <xacro:property name="pole_height" value="0.9"/>
   <xacro:property name="lidar_offset_x" value="0.36"/>
-
-  <!-- ========== Material Definitions ========== -->
-  <material name="gray">
-    <color rgba="0.5 0.5 0.5 1"/>
-  </material>
-  
-  <material name="blue">
-    <color rgba="0.0 0.0 1.0 1"/>
-  </material>
-  
-  <material name="yellow">
-    <color rgba="1.0 1.0 0.0 1"/>
-  </material>
-  
-  <material name="green">
-    <color rgba="0.0 1.0 0.0 1"/>
-  </material>
-  
-  <material name="red">
-    <color rgba="1.0 0.0 0.0 1"/>
-  </material>
-  
-  <material name="cyan">
-    <color rgba="0.0 1.0 1.0 1"/>
-  </material>
-  
-  <material name="magenta">
-    <color rgba="1.0 0.0 1.0 1"/>
-  </material>
 
 
   <!-- ========== Base Footprint Link ========== -->
