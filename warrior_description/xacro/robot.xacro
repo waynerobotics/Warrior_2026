@@ -1,7 +1,12 @@
 <?xml version="1.0"?>
 <robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <!-- ========== Properties ========== -->
+
+   <xacro:property name="front_plate_offset" value="0.838 0.003 -0.349"/>
+   <xacro:property name="left_plate_offset" value="0.025 0.47 -0.349"/>
+   <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
 
   <!-- Base properties -->
   <xacro:property name="base_mass" value="5.0"/>
@@ -65,68 +70,6 @@
     <color rgba="1.0 0.0 1.0 1"/>
   </material>
 
-  <!-- ========== Inertia Macros ========== -->
-  <xacro:macro name="wheel_inertia" params="mass">
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="${mass}"/>
-      <inertia ixx="0.01" ixy="0" ixz="0" 
-               iyy="0.01" iyz="0" izz="0.01"/>
-    </inertial>
-  </xacro:macro>
-
-  <!-- ========== Swerve Module Macro ========== -->
-  <xacro:macro name="swerve_module" params="prefix offset_x offset_y initial_yaw steer_color drive_color drive_rpy drive_axis">
-    
-    <!-- Steer Link -->
-    <link name="${prefix}_steer_wheel_link">
-      <visual>
-        <geometry>
-          <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
-        </geometry>
-        <material name="${steer_color}"/>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="file://$(find warrior_description)/meshes/steer_wheel.stl"/>
-        </geometry>
-      </collision>
-      <xacro:wheel_inertia mass="${wheel_mass}"/>
-    </link>
-    
-    <!-- Steer Joint -->
-    <joint name="${prefix}_steer_joint" type="continuous">
-      <parent link="base_link"/>
-      <child link="${prefix}_steer_wheel_link"/>
-      <origin xyz="${offset_x} ${offset_y} 0" rpy="0 0 ${initial_yaw}"/>
-      <axis xyz="0 0 1"/>
-    </joint>
-
-    <!-- Drive Wheel Link -->
-    <link name="${prefix}_drive_wheel_link">
-      <visual>
-        <geometry>
-          <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
-        </geometry>
-        <material name="${drive_color}"/>
-      </visual>
-      <collision>
-        <geometry>
-          <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
-        </geometry>
-      </collision>
-      <xacro:wheel_inertia mass="${wheel_mass}"/>
-    </link>
-    
-    <!-- Drive Joint -->
-    <joint name="${prefix}_drive_joint" type="continuous">
-      <parent link="${prefix}_steer_wheel_link"/>
-      <child link="${prefix}_drive_wheel_link"/>
-      <origin xyz="0 0 ${wheel_offset_z}" rpy="${drive_rpy}"/>
-      <axis xyz="${drive_axis}"/>
-    </joint>
-    
-  </xacro:macro>
 
   <!-- ========== Base Footprint Link ========== -->
   <link name="base_footprint"/>
@@ -142,13 +85,13 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
+        <mesh filename="file://$(find warrior_description)/meshes/warrior_body.stl"/>
       </geometry>
       <material name="gray"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/warrior_base_with_pedal.stl"/>
+        <mesh filename="file://$(find warrior_description)/meshes/warrior_body.stl"/>
       </geometry>
     </collision>
     <inertial>
@@ -159,18 +102,40 @@
   </link>
 
   <!-- ========== Instantiate Swerve Modules ========== -->
-  
-  <!-- Left Module -->
-  <xacro:swerve_module prefix="left" offset_x="${left_x}" offset_y="${left_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
-    initial_yaw="${left_initial_angle}" steer_color="blue" drive_color="gray"/>
 
-  <!-- Right Module -->
-  <xacro:swerve_module prefix="right" offset_x="${right_x}" offset_y="${right_y}" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
-    initial_yaw="${right_initial_angle}" steer_color="green" drive_color="gray"/>
+  <!-- Front Plate Joint -->
+  <joint name="base_to_front_plate" type="fixed">
+    <parent link="base_link"/>
+    <child link="front_slewing_plate_link"/>
+    <origin xyz="${front_plate_offset}" rpy="0 0 0"/>
+  </joint>
 
-  <!-- Front Module -->
-  <xacro:swerve_module prefix="front" offset_x="${front_x}" offset_y="0" drive_rpy="0 0 ${pi}" drive_axis="1 0 0"
-    initial_yaw="${front_initial_angle}" steer_color="cyan" drive_color="gray"/>
+  <!-- Front Swerve Module -->
+  <xacro:swerve_module prefix="front" initial_yaw="${front_initial_angle}" drive_rpy="0 0 ${pi}" 
+    steer_color="cyan" drive_color="gray"/>
+
+  <!-- Left Plate Joint -->
+  <joint name="base_to_left_plate" type="fixed">
+    <parent link="base_link"/>
+    <child link="left_slewing_plate_link"/>
+    <origin xyz="${left_plate_offset}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Left Swerve Module -->
+  <xacro:swerve_module prefix="left" initial_yaw="${left_initial_angle}" drive_rpy="0 0 ${pi}"
+     steer_color="blue" drive_color="gray"/>
+
+  <!-- Right Plate Joint -->
+  <joint name="base_to_right_plate" type="fixed">
+    <parent link="base_link"/>
+    <child link="right_slewing_plate_link"/>
+    <origin xyz="${right_plate_offset}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Right Swerve Module -->
+  <xacro:swerve_module prefix="right" initial_yaw="${right_initial_angle}" drive_rpy="0 0 ${pi}" 
+    steer_color="green" drive_color="gray"/>
+
 
   <!-- ========== Pole Link ========== -->
   <link name="pole_link">
