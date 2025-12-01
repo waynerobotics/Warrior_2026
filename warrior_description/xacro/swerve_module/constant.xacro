@@ -8,10 +8,11 @@
    <xacro:property name="steer_assembly_color" value="gray"/>
    <xacro:property name="slewing_plate_color" value="gray"/>
 
-   <xacro:property name="swerve_offset_to_plate" value="0 0 0.011"/>
+   <xacro:property name="swerve_offset_to_plate" value="0 0 -0.011"/>
 
-   <xacro:property name="drive_wheel_offset" value="-0.025 0 0.147"/>
+   <xacro:property name="drive_wheel_offset" value="0.025 0 -0.147"/>
 
+    <xacro:property name="drive_rpy" value="0 0 0"/>
     <xacro:property name="drive_axis" value="1 0 0"/>
 
     <!-- ========== Inertia Macros ========== -->

@@ -4,17 +4,19 @@
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/constant.xacro"/>
 
   <!-- ========== Swerve Module Macro ========== -->
-  <xacro:macro name="swerve_module" params="prefix initial_yaw steer_color drive_color drive_rpy">
+  <xacro:macro name="swerve_module" params="prefix initial_yaw steer_color drive_color">
     
     <!-- Slewing Plate Link -->
     <link name="${prefix}_slewing_plate_link">
       <visual>
-        <geometry>
+        <origin xyz="0 0 0" rpy="${pi} 0 ${pi}"/>
+        <geometry> 
           <mesh filename="file://$(find warrior_description)/meshes/slewing_plate.stl"/>
         </geometry>
         <material name="${slewing_plate_color}"/>
       </visual>
       <collision>
+        <origin xyz="0 0 0" rpy="${pi} 0 ${pi}"/>
         <geometry>
           <mesh filename="file://$(find warrior_description)/meshes/slewing_plate.stl"/>
         </geometry>
@@ -59,12 +61,14 @@
     <!-- Drive Wheel Link -->
     <link name="${prefix}_drive_wheel_link">
       <visual>
+       <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
         </geometry>
         <material name="${drive_color}"/>
       </visual>
       <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
         </geometry>

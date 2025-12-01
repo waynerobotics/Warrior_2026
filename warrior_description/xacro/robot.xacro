@@ -9,14 +9,14 @@
    <xacro:property name="left_plate_offset" value="0.025 0.47 -0.349"/>
    <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
 
-  <!-- Base properties -->
-  <xacro:property name="base_mass" value="5.0"/>
-  <xacro:property name="base_footprint_height" value="0.25"/>
-  
   <!-- Wheel properties -->
   <xacro:property name="wheel_mass" value="0.5"/>
   <xacro:property name="wheel_offset_z" value="-0.15"/>
   <xacro:property name="wheel_radius" value="0.1"/>
+
+  <!-- Base properties -->
+  <xacro:property name="base_mass" value="5.0"/>
+  <xacro:property name="base_footprint_height" value="${0.508 + wheel_radius}"/>
   
   <!-- Module positions -->
   <xacro:property name="left_y" value="0.465"/>
@@ -33,9 +33,9 @@
   <!-- <xacro:property name="right_initial_angle" value="-2.0944"/> -->  <!-- -120° -->
   <!-- <xacro:property name="front_initial_angle" value="-1.5708"/> -->  <!-- -90° -->
 
-  <xacro:property name="left_initial_angle" value="-1.5708"/>   <!-- -90° -->
-  <xacro:property name="right_initial_angle" value="-1.5708"/>  <!-- -90° -->
-  <xacro:property name="front_initial_angle" value="-1.5708"/>  <!-- -90° -->
+  <xacro:property name="left_initial_angle" value="0"/>   <!-- -90° -->
+  <xacro:property name="right_initial_angle" value="0"/>  <!-- -90° -->
+  <xacro:property name="front_initial_angle" value="0"/>  <!-- -90° -->
 
   
   <!-- Sensor properties -->
@@ -46,12 +46,12 @@
   <!-- ========== Base Footprint Link ========== -->
   <link name="base_footprint"/>
     
-    <joint name="base_footprint_joint" type="fixed">
-        <parent link="base_footprint"/>
-        <child link="base_link"/>
-        <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
-        <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
-    </joint>
+  <joint name="base_footprint_joint" type="fixed">
+      <parent link="base_footprint"/>
+      <child link="base_link"/>
+      <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
+      <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
+  </joint>
 
   <!-- ========== Base Link ========== -->
   <link name="base_link">
@@ -83,7 +83,7 @@
   </joint>
 
   <!-- Front Swerve Module -->
-  <xacro:swerve_module prefix="front" initial_yaw="${front_initial_angle}" drive_rpy="0 0 ${pi}" 
+  <xacro:swerve_module prefix="front" initial_yaw="${front_initial_angle}"
     steer_color="cyan" drive_color="gray"/>
 
   <!-- Left Plate Joint -->
@@ -94,7 +94,7 @@
   </joint>
 
   <!-- Left Swerve Module -->
-  <xacro:swerve_module prefix="left" initial_yaw="${left_initial_angle}" drive_rpy="0 0 ${pi}"
+  <xacro:swerve_module prefix="left" initial_yaw="${left_initial_angle}" 
      steer_color="blue" drive_color="gray"/>
 
   <!-- Right Plate Joint -->
@@ -105,7 +105,7 @@
   </joint>
 
   <!-- Right Swerve Module -->
-  <xacro:swerve_module prefix="right" initial_yaw="${right_initial_angle}" drive_rpy="0 0 ${pi}" 
+  <xacro:swerve_module prefix="right" initial_yaw="${right_initial_angle}"
     steer_color="green" drive_color="gray"/>
 
 
