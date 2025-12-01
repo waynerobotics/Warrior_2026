@@ -54,7 +54,7 @@ tags
 
 # Ignore generated/temporary mesh or model files
 *.dae
-*.stl
+# *.stl
 *.obj
 
 # End of file
