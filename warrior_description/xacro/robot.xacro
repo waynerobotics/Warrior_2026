@@ -31,17 +31,12 @@
   <xacro:property name="camera_offset_z" value="-0.09"/>
   
   <!-- Initial orientations (radians) -->
-  <!-- <xacro:property name="left_initial_angle" value="-1.0472"/> -->   <!-- -60° -->
-  <!-- <xacro:property name="right_initial_angle" value="-2.0944"/> -->  <!-- -120° -->
-  <!-- <xacro:property name="front_initial_angle" value="-1.5708"/> -->  <!-- -90° -->
-
-  <xacro:property name="left_initial_angle" value="0"/>   <!-- -90° -->
-  <xacro:property name="right_initial_angle" value="0"/>  <!-- -90° -->
-  <xacro:property name="front_initial_angle" value="0"/>  <!-- -90° -->
-
+  <xacro:property name="left_initial_angle" value="${pi/2}"/>   <!-- 90° -->
+  <xacro:property name="right_initial_angle" value="-${pi/2}"/>  <!-- 90° -->
+  <xacro:property name="front_initial_angle" value="${pi/2}"/>  <!-- 90° -->
   
   <!-- Sensor properties -->
-  <xacro:property name="pole_height" value="0.9"/>
+  <xacro:property name="pole_height" value="0.535"/>
   <xacro:property name="lidar_offset_x" value="0.36"/>
 
 
@@ -85,8 +80,7 @@
   </joint>
 
   <!-- Front Swerve Module -->
-  <xacro:swerve_module prefix="front" initial_yaw="${front_initial_angle}"
-    steer_color="cyan" drive_color="gray"/>
+  <xacro:swerve_module prefix="front" initial_yaw="${front_initial_angle}" />
 
   <!-- Left Plate Joint -->
   <joint name="base_to_left_plate" type="fixed">
@@ -96,8 +90,7 @@
   </joint>
 
   <!-- Left Swerve Module -->
-  <xacro:swerve_module prefix="left" initial_yaw="${left_initial_angle}" 
-     steer_color="blue" drive_color="gray"/>
+  <xacro:swerve_module prefix="left" initial_yaw="${left_initial_angle}" />
 
   <!-- Right Plate Joint -->
   <joint name="base_to_right_plate" type="fixed">
@@ -107,19 +100,17 @@
   </joint>
 
   <!-- Right Swerve Module -->
-  <xacro:swerve_module prefix="right" initial_yaw="${right_initial_angle}"
-    steer_color="green" drive_color="gray"/>
+  <xacro:swerve_module prefix="right" initial_yaw="${right_initial_angle}" />
 
 
-  <!-- ========== Pole Link ========== -->
+  <!-- =================== Pole Link ==================== -->
   <link name="pole_link">
-    <!-- Visual/collision commented out in original -->
   </link>
   
   <joint name="base_to_pole" type="fixed">
     <parent link="base_link"/>
     <child link="pole_link"/>
-    <origin xyz="0 0 ${pole_height}" rpy="3.1415 0 0"/>
+    <origin xyz="0 0 ${pole_height}" rpy="${pi} 0 0"/>
   </joint>
 
   <!-- ========== LiDAR Link ========== -->
@@ -146,9 +137,9 @@
     </inertial> 
   </link>
   <joint name="lidar_joint" type="fixed">
-    <parent link="base_link"/>
+    <parent link="pole_link"/>
     <child link="lidar_link"/>
-    <origin xyz="0.32 0 0.875" rpy="3.1415 0 0"/>
+    <origin xyz="0.32 0 0.05" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== Camera Link ========= -->
@@ -174,10 +165,11 @@
         <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.002"/>
     </inertial> 
   </link>
+
   <joint name="camera_joint" type="fixed">
-    <parent link="base_link"/>
+    <parent link="pole_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.32 0 ${0.828 + camera_offset_z}" rpy="3.1415 0 0"/>
+    <origin xyz="0.32 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== Gazebo LiDAR Sensor ========== -->

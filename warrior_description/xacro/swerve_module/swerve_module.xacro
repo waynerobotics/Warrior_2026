@@ -4,7 +4,7 @@
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/constant.xacro"/>
 
   <!-- ========== Swerve Module Macro ========== -->
-  <xacro:macro name="swerve_module" params="prefix initial_yaw steer_color drive_color">
+  <xacro:macro name="swerve_module" params="prefix initial_yaw">
     
     <!-- Slewing Plate Link -->
     <link name="${prefix}_slewing_plate_link">
