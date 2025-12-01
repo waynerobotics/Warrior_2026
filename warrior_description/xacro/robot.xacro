@@ -5,6 +5,8 @@
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <!-- ========== Properties ========== -->
 
+  <xacro:property name="angle_offset" value="${pi/6}"/>
+
    <xacro:property name="front_plate_offset" value="0.838 0.003 -0.349"/>
    <xacro:property name="left_plate_offset" value="0.025 0.47 -0.349"/>
    <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
@@ -90,7 +92,7 @@
   <joint name="base_to_left_plate" type="fixed">
     <parent link="base_link"/>
     <child link="left_slewing_plate_link"/>
-    <origin xyz="${left_plate_offset}" rpy="0 0 0"/>
+    <origin xyz="${left_plate_offset}" rpy="0 0 ${angle_offset}"/>
   </joint>
 
   <!-- Left Swerve Module -->
@@ -101,7 +103,7 @@
   <joint name="base_to_right_plate" type="fixed">
     <parent link="base_link"/>
     <child link="right_slewing_plate_link"/>
-    <origin xyz="${right_plate_offset}" rpy="0 0 0"/>
+    <origin xyz="${right_plate_offset}" rpy="0 0 ${-angle_offset}"/>
   </joint>
 
   <!-- Right Swerve Module -->
