@@ -1,37 +1,92 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-   <xacro:property name="front_plate_offset" value="0.838 0.003 -0.349"/>
-   <xacro:property name="left_plate_offset" value="0.025 0.47 -0.349"/>
-   <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
-
-  <!-- ========== Material Definitions ========== -->
+  <!-- ========== Basic Colors ========== -->
   <material name="gray">
     <color rgba="0.5 0.5 0.5 1"/>
   </material>
-  
+
+  <material name="dark_gray">
+    <color rgba="0.2 0.2 0.2 1"/>
+  </material>
+
+  <material name="light_gray">
+    <color rgba="0.8 0.8 0.8 1"/>
+  </material>
+
+  <material name="white">
+    <color rgba="1.0 1.0 1.0 1"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1"/>
+  </material>
+
+  <!-- ========== Saturated Colors ========== -->
   <material name="blue">
     <color rgba="0.0 0.0 1.0 1"/>
   </material>
-  
-  <material name="yellow">
-    <color rgba="1.0 1.0 0.0 1"/>
-  </material>
-  
+
   <material name="green">
     <color rgba="0.0 1.0 0.0 1"/>
   </material>
-  
+
   <material name="red">
     <color rgba="1.0 0.0 0.0 1"/>
   </material>
-  
+
+  <material name="yellow">
+    <color rgba="1.0 1.0 0.0 1"/>
+  </material>
+
   <material name="cyan">
     <color rgba="0.0 1.0 1.0 1"/>
   </material>
-  
+
   <material name="magenta">
     <color rgba="1.0 0.0 1.0 1"/>
+  </material>
+
+  <material name="orange">
+    <color rgba="1.0 0.5 0.0 1"/>
+  </material>
+
+  <material name="purple">
+    <color rgba="0.5 0.0 0.8 1"/>
+  </material>
+
+  <!-- ========== Low-Saturation Engineering Colors ========== -->
+  <material name="steel_blue">
+    <color rgba="0.27 0.51 0.71 1"/>
+  </material>
+
+  <material name="olive">
+    <color rgba="0.5 0.5 0.0 1"/>
+  </material>
+
+  <material name="teal">
+    <color rgba="0.0 0.5 0.5 1"/>
+  </material>
+
+  <material name="brown">
+    <color rgba="0.4 0.26 0.13 1"/>
+  </material>
+
+  <material name="pink">
+    <color rgba="1.0 0.75 0.8 1"/>
+  </material>
+
+  <!-- ========== Metallic / Robotics Colors ========== -->
+  <material name="silver">
+    <color rgba="0.75 0.75 0.75 1"/>
+  </material>
+
+  <material name="gold">
+    <color rgba="1.0 0.84 0.0 1"/>
+  </material>
+
+  <material name="copper">
+    <color rgba="0.72 0.45 0.20 1"/>
   </material>
 
 </robot>

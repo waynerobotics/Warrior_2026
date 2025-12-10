@@ -65,7 +65,7 @@
         <geometry>
           <mesh filename="file://$(find warrior_description)/meshes/drive_wheel.stl"/>
         </geometry>
-        <material name="${drive_color}"/>
+        <material name="${drive_wheel_color}"/>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>

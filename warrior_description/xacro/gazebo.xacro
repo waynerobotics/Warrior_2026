@@ -5,15 +5,15 @@
         <material>Gazebo/Grey</material>
     </gazebo>
 
-    <gazebo reference="left_steer_wheel_link">
+    <gazebo reference="left_steer_assembly_link">
         <material>Gazebo/Blue</material>
     </gazebo>
 
-    <gazebo reference="right_steer_wheel_link">
+    <gazebo reference="right_steer_assembly_link">
         <material>Gazebo/Green</material>
     </gazebo>
 
-    <gazebo reference="front_steer_wheel_link">
+    <gazebo reference="front_steer_assembly_link">
         <material>Gazebo/Cyan</material>
     </gazebo>
 
