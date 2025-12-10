@@ -1,10 +1,13 @@
 <?xml version="1.0"?>
 <robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- ========== Includes ========== -->
   <xacro:include filename="$(find warrior_description)/xacro/material.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
-  <!-- ========== Properties ========== -->
+  <xacro:include filename="$(find warrior_description)/xacro/sensors/lidar.xacro"/>
 
+
+  <!-- ========== Properties ========== -->
   <xacro:property name="angle_offset" value="${pi/6}"/>
 
    <xacro:property name="front_plate_offset" value="0.838 0.003 -0.349"/>
@@ -113,34 +116,11 @@
     <origin xyz="0 0 ${pole_height}" rpy="${pi} 0 0"/>
   </joint>
 
-  <!-- ========== LiDAR Link ========== -->
-  <link name="lidar_link">
-    <visual>
-      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
-      </geometry>
-      <material name="black">
-          <color rgba="0 0 0 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/unitree_lidar.stl"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin xyz="0 -0.015 0" rpy="0 0 0"/>
-      <mass value="1.0"/>
-      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.005"/>
-    </inertial> 
-  </link>
-  <joint name="lidar_joint" type="fixed">
-    <parent link="pole_link"/>
-    <child link="lidar_link"/>
-    <origin xyz="0.32 0 0.05" rpy="0 0 0"/>
-  </joint>
+  
+  <!-- ========== LiDAR Sensor ========== -->
+  <xacro:lidar_macro parent="pole_link" lidar_name="L1_lidar" 
+                     xyz="${lidar_offset_x} 0 0" rpy="0 0 0" mass="0.5"/>
+
 
   <!-- ========== Camera Link ========= -->
   <link name="camera_link">
@@ -172,27 +152,6 @@
     <origin xyz="0.32 0 0" rpy="0 0 0"/>
   </joint>
 
-  <!-- ========== Gazebo LiDAR Sensor ========== -->
-  <gazebo reference="lidar_link">
-    <sensor name="lidar_sensor" type="gpu_lidar">
-      <update_rate>10.0</update_rate>
-      <lidar>
-        <horizontal>
-          <samples>720</samples>
-          <resolution>1</resolution>
-          <min_angle>-3.1415</min_angle>
-          <max_angle>3.1415</max_angle>
-        </horizontal>
-        <range>
-          <min>0.12</min>
-          <max>10.0</max>
-          <resolution>0.01</resolution>
-        </range>
-      </lidar>
-      <topic>/lidar</topic>
-      <visualize>true</visualize>
-    </sensor>
-  </gazebo>
 
 
 </robot>
