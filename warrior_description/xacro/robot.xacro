@@ -5,6 +5,7 @@
   <xacro:include filename="$(find warrior_description)/xacro/material.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/sensors/lidar.xacro"/>
+  <xacro:include filename="$(find warrior_description)/xacro/sensors/camera.xacro"/>
 
 
   <!-- ========== Properties ========== -->
@@ -29,18 +30,21 @@
   <xacro:property name="left_x" value="0.03" />
   <xacro:property name="right_x" value="0.03" />
   <xacro:property name="front_x" value="0.845"/>
-
-  <!-- Camera -->
-  <xacro:property name="camera_offset_z" value="-0.09"/>
   
   <!-- Initial orientations (radians) -->
   <xacro:property name="left_initial_angle" value="${pi/2}"/>   <!-- 90° -->
   <xacro:property name="right_initial_angle" value="-${pi/2}"/>  <!-- 90° -->
   <xacro:property name="front_initial_angle" value="${pi/2}"/>  <!-- 90° -->
   
-  <!-- Sensor properties -->
-  <xacro:property name="pole_height" value="0.535"/>
-  <xacro:property name="lidar_offset_x" value="0.36"/>
+  <!-- lidar properties -->
+  <xacro:property name="pole_height" value="0.527"/>
+  <xacro:property name="lidar_offset_x" value="0.32"/>
+  <xacro:property name="lidar_offset_z" value="0.005"/>
+
+  <!-- camera properties -->
+  <xacro:property name="camera_offset_x" value="0.32"/>
+  <xacro:property name="camera_offset_y" value="0.0"/>
+  <xacro:property name="camera_offset_z" value="-0.115"/>
 
 
   <!-- ========== Base Footprint Link ========== -->
@@ -119,38 +123,12 @@
   
   <!-- ========== LiDAR Sensor ========== -->
   <xacro:lidar_macro parent="pole_link" lidar_name="L1_lidar" 
-                     xyz="${lidar_offset_x} 0 0" rpy="0 0 0" mass="0.5"/>
+                     xyz="${lidar_offset_x} 0 ${lidar_offset_z}" rpy="0 0 0" mass="0.5"/>
 
 
-  <!-- ========== Camera Link ========= -->
-  <link name="camera_link">
-    <visual>
-      <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
-      </geometry>
-      <material name="light_grey">
-        <color rgba="0.8 0.8 0.8 1"/>
-      </material>
-    </visual>
-    <collision>
-      <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
-      </geometry>
-    </collision>
-    <inertial>
-        <origin xyz="0 -0.027 ${camera_offset_z}" rpy="0 0 0"/>
-        <mass value="0.5"/>
-        <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.002"/>
-    </inertial> 
-  </link>
-
-  <joint name="camera_joint" type="fixed">
-    <parent link="pole_link"/>
-    <child link="camera_link"/>
-    <origin xyz="0.32 0 0" rpy="0 0 0"/>
-  </joint>
+  <!-- ========== Camera Sensor ========== -->
+  <xacro:camera_macro parent="pole_link" camera_name="insta360_camera" 
+                      xyz="${camera_offset_x} ${camera_offset_y} ${camera_offset_z}" rpy="-${pi/2} 0 -${pi/2}" mass="0.5"/>
 
 
 
