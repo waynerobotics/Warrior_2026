@@ -1,7 +1,5 @@
 # Warrior Control
 
----
-
 A ROS 2 control package implementing swerve drive kinematics for a three-wheel omnidirectional warrior robot.
 
 ## Overview
@@ -9,7 +7,7 @@ A ROS 2 control package implementing swerve drive kinematics for a three-wheel o
 This module provides inverse and forward kinematics solutions for a three-wheel swerve drive system, enabling omnidirectional movement with independent wheel steering and velocity control.
 
 ### Features
-- ✅ Inverse kinematics: Convert body velocity (vx, vy, ω) to wheel commands
+- ✅ Inverse kinematics: Convert body velocity ($v_x$, $v_y$, $\omega_z$) to wheel commands
 - ✅ Forward kinematics: Calculate odometry from wheel states
 - ✅ Configurable wheel geometry and constraints
 - ✅ Real-time velocity control interface
@@ -27,7 +25,7 @@ The swerve drive kinematics is derived from rigid body dynamics principles.
 
 For a rigid body moving in 2D space, the velocity at any point can be expressed as:
 
-$\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i$
+$$\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i$$
 
 where:
 - $\mathbf{v}_i$: velocity of wheel $i$
@@ -78,7 +76,6 @@ Edit `config/warrior_params.yaml` to configure:
 - `/cmd_vel` (geometry_msgs/Twist): Desired robot velocity
 
 **Published Topics:**
-- `/wheel_states` (custom_msgs/WheelStates): Commanded wheel angles and velocities
 - `/odom` (nav_msgs/Odometry): Robot odometry
 
 ## 📝 References
