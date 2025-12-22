@@ -52,18 +52,15 @@ controller_interface::CallbackReturn SwerveDriveController::on_init() {
 
     odom_frame_ = auto_declare<std::string>("odom_frame_id", "odom");
     base_frame_ = auto_declare<std::string>("base_frame_id", "base_footprint");
-    
-    auto load_xy = [&](const std::string &wheel)
-    {
-        double x = auto_declare<double>("distance_to_com." + wheel + ".x", 0.0);
-        double y = auto_declare<double>("distance_to_com." + wheel + ".y", 0.0);
-        return std::make_pair(x, y);
-    };
 
-    wheel_dist_from_center_["front"] = load_xy("front");
-    wheel_dist_from_center_["left"]  = load_xy("left");
-    wheel_dist_from_center_["right"] = load_xy("right");
+    wheel_to_center_["front"] = auto_declare<double>("wheel_to_center.front", 0.0);
+    wheel_to_center_["left"]  = auto_declare<double>("wheel_to_center.left", 0.0);
+    wheel_to_center_["right"] = auto_declare<double>("wheel_to_center.right", 0.0);
 
+    // Angles to wheels
+    alpha_front_ = auto_declare<double>("alpha.front", 0.0);
+    alpha_left_  = auto_declare<double>("alpha.left", 0.0);
+    alpha_right_ = auto_declare<double>("alpha.right", 0.0);
 
     RCLCPP_INFO(logger, "SwerveDriveController initialized with %zu steer joints and %zu drive joints.",
                 steer_joint_names_.size(), drive_joint_names_.size());
@@ -105,7 +102,6 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
     odom_pub_ = get_node()->create_publisher<nav_msgs::msg::Odometry>("~/odom", 10);
 
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
-
 
     RCLCPP_INFO(logger, "SwerveDriveController configured.");
     return controller_interface::CallbackReturn::SUCCESS;
@@ -223,50 +219,40 @@ void SwerveDriveController::updateOdometry(double dt)
     tf_broadcaster_->sendTransform(tf_msg);
 }
 
-
-
-
-
 void SwerveDriveController::computeJointCommand(double vx, double vy, double wz) {
+
+    auto df_ = wheel_to_center_["front"];
+    auto dl_ = wheel_to_center_["left"];
+    auto dr_ = wheel_to_center_["right"];
+
     // Implement swerve kinematics calculations
-    double x1 = wheel_dist_from_center_["front"].first;
-    double y1 = wheel_dist_from_center_["front"].second;
+    double lf_x = df_ * sin(alpha_front_);
+    double lf_y = df_ * cos(alpha_front_);
 
-    double x2 = wheel_dist_from_center_["left"].first;
-    double y2 = wheel_dist_from_center_["left"].second;
-    
-    double x3 = wheel_dist_from_center_["right"].first;
-    double y3 = wheel_dist_from_center_["right"].second;   
-
+    double ll_x = dl_ * cos(alpha_left_);
+    double ll_y = dl_ * sin(alpha_left_);   
+    double lr_x = dr_ * cos(alpha_right_);
+    double lr_y = dr_ * sin(alpha_right_);
 
     // Calculate wheel angles for steering
-    double f_th = atan2(vy + wz * y1, vx - wz * x1);
-    double l_th = atan2(vy + wz * y2, vx - wz * x2);
-    double r_th = atan2(vy + wz * y3, vx - wz * x3);
+    double f_th = atan2(vy - wz * df_ * lf_y, vx + wz * lf_x);
+    double l_th = atan2(vy + wz * dl_ * ll_y, vx + wz * ll_x);
+    double r_th = atan2(vy + wz * dr_ * lr_y, vx - wz * lr_x);
     
 
-    Eigen::Matrix3d  forward_matrix;
-    forward_matrix << cos(f_th), sin(f_th), -y1 * cos(f_th) + x1 * sin(f_th),
-                      cos(l_th), sin(l_th), -y2 * cos(l_th) + x2 * sin(l_th),
-                      cos(r_th), sin(r_th), -y3 * cos(r_th) + x3 * sin(r_th);
-
-    // Store steering angles
-    front_steer_angle_ = f_th;
-    left_steer_angle_ = l_th;
-    right_steer_angle_ = r_th;
-
-    Eigen::Vector3d velocity_vector(vx, vy, wz);
-    Eigen::Vector3d wheel_linear_velocity = forward_matrix * velocity_vector;
+    double front_wheel_v = sqrt(pow(vx + wz * lf_x, 2) + pow(vy - wz * lf_y, 2));
+    double left_wheel_v  = sqrt(pow(vx + wz * ll_x, 2) + pow(vy + wz * ll_y, 2));
+    double right_wheel_v = sqrt(pow(vx - wz * lr_x, 2) + pow(vy + wz * lr_y, 2));
 
     RCLCPP_INFO(get_node()->get_logger(), "Computed wheel steering angles (radians): Front: %.2f, Left: %.2f, Right: %.2f",
                 f_th, l_th, r_th);
     RCLCPP_INFO(get_node()->get_logger(), "Computed wheel velocities: Front: %.2f, Left: %.2f, Right: %.2f",
-                wheel_linear_velocity(0), wheel_linear_velocity(1), wheel_linear_velocity(2));
+                front_wheel_v, left_wheel_v, right_wheel_v);
     
     // Update wheel angular speeds
-    front_wheel_w_ = wheel_linear_velocity(0) / wheel_radius_;
-    left_wheel_w_  = wheel_linear_velocity(1) / wheel_radius_;
-    right_wheel_w_ = wheel_linear_velocity(2) / wheel_radius_;
+    front_wheel_w_ = front_wheel_v / wheel_radius_;
+    left_wheel_w_  = left_wheel_v / wheel_radius_;
+    right_wheel_w_ = right_wheel_v / wheel_radius_;
 
     // Set commands to interfaces
     for (size_t i = 0; i < drive_cmd_.size(); ++i) {
@@ -290,6 +276,7 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
     }
     
 }   
+
 
 }  // namespace warrior::control
 

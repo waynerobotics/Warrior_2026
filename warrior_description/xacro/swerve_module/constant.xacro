@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+   <!-- <xacro:include filename="$(find warrior_description)/xacro/material.xacro"/> -->
+
+   <xacro:property name="slewing_plate_mass" value="0.5"/>
+   <xacro:property name="steer_assembly_mass" value="0.7"/>
+
+   <xacro:property name="steer_assembly_color" value="light_gray"/>
+   <xacro:property name="slewing_plate_color" value="silver"/>
+   <xacro:property name="drive_wheel_color" value="cyan"/>
+
+   <xacro:property name="swerve_offset_to_plate" value="0 0 -0.011"/>
+
+   <xacro:property name="drive_wheel_offset" value="0.025 0 -0.147"/>
+    <xacro:property name="drive_rpy" value="0 0 0"/>
+    <xacro:property name="drive_axis" value="1 0 0"/>
+
+    <!-- ========== Inertia Macros ========== -->
+    <xacro:macro name="wheel_inertia" params="mass">
+        <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${mass}"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" 
+                iyy="0.01" iyz="0" izz="0.01"/>
+        </inertial>
+    </xacro:macro>
+
+</robot>

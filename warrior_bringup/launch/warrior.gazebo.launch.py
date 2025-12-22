@@ -22,6 +22,7 @@ def launch_setup(context, *args, **kwargs):
     controller_type = LaunchConfiguration("controller_type").perform(context)
 
     warrior_description_pkg = FindPackageShare("warrior_description")
+    
     warrior_control_pkg = FindPackageShare("warrior_control")
 
     xacro_file = PathJoinSubstitution([warrior_description_pkg, "urdf", "gzsim.urdf.xacro"])

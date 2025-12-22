@@ -19,8 +19,9 @@ def generate_launch_description():
     pkg_warrior_description = FindPackageShare("warrior_description")
     pkg_warrior_control = FindPackageShare("warrior_control")
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
+    pkg_world_models = FindPackageShare("warrior_simulation")
 
-    world_file = PathJoinSubstitution([pkg_warrior_description, "worlds", "empty.world"])
+    world_file = PathJoinSubstitution([pkg_world_models, "worlds", "empty.world"])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
@@ -109,7 +110,10 @@ def generate_launch_description():
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
+        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo'],
+        parameters=[{"use_sim_time": use_sim_time}],
         output='screen',
     )
 

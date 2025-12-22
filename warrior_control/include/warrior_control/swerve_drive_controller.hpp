@@ -77,7 +77,11 @@ private:
 
     // Swerve kinematics parameters
     double wheel_radius_;
-    std::unordered_map<std::string, std::pair<double, double>> wheel_dist_from_center_;
+    std::unordered_map<std::string, double> wheel_to_center_;
+
+    double alpha_front_;
+    double alpha_left_;
+    double alpha_right_;
 
     void computeJointCommand(double vx, double vy, double wz);
     void readWheelAngularVel();

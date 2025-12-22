@@ -14,7 +14,7 @@ def generate_launch_description():
 
     declare_model_arg = DeclareLaunchArgument(
         name="model",
-        default_value=PathJoinSubstitution([pkg_warrior_description, "xacro", "robot.xacro"]),
+        default_value=PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"]),
         description="Path to robot.xacro file"
     )
 
