@@ -21,7 +21,7 @@ The swerve drive kinematics is derived from rigid body dynamics principles.
 ### Rigid Body Dynamics
 
 <p align="center">
- <img src="./docs/rigid_body_dynamics.png" height="540" alt="Rigid body dynamics diagram"/> 
+ <img src="./docs/rigid_body_dynamics.png" width="540" alt="Rigid body dynamics diagram"/> 
  <br><b>Fig 1. Rigid Body Dynamics</b>
 </p>
 
@@ -40,7 +40,7 @@ Where:
 ### Inverse Kinematics
 
 <p align="center">
- <img src="./docs/inverse_kinematics.png" height="540" alt="Inverse kinematics for three-wheel swerve"/> 
+ <img src="./docs/inverse_kinematics.png" width="540" alt="Inverse kinematics for three-wheel swerve"/> 
  <br><b>Fig 2. Inverse Kinematics for Warrior</b>
 </p>
 
