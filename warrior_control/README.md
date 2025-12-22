@@ -84,4 +84,4 @@ Edit `config/warrior_params.yaml` to configure:
 
 [2] Using Inverse Kinematics to become a Master-Swerver. Available at: https://abhinavwastaken.medium.com/using-inverse-kinematics-to-become-a-master-swerver-1026759d81b0
 
-[3] Ether, J. (2014). *Modern Robotics: Mechanics, Planning, and Control*. Cambridge University Press.
+[3] Lynch, K. M. and Park, F. C. (2017). *Modern Robotics: Mechanics, Planning, and Control*. Cambridge University Press.
