@@ -25,9 +25,9 @@
   <xacro:property name="base_footprint_height" value="${0.508 + wheel_radius}"/>
   
   <!-- Initial orientations (radians) -->
-  <xacro:property name="left_initial_angle" value="${pi/3}"/>    <!-- 90° -->
-  <xacro:property name="right_initial_angle" value="-${pi/3 + pi}"/>  <!-- 90° -->
-  <xacro:property name="front_initial_angle" value="${pi/2}"/>   <!-- 90° -->
+  <xacro:property name="front_initial_angle" value="${pi/2}"/>   <!-- forwarding -->
+  <xacro:property name="left_initial_angle" value="${pi/3}"/>    <!-- forwarding -->
+  <xacro:property name="right_initial_angle" value="-${pi/3 + pi}"/>  <!-- forwarding -->
   
   <!-- lidar properties -->
   <xacro:property name="pole_height" value="0.527"/>
