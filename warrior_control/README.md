@@ -27,15 +27,14 @@ The swerve drive kinematics is derived from rigid body dynamics principles.
 
 For a rigid body moving in 2D space, the velocity at any point can be expressed as:
 
-\[
-\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i
-\]
+
+$\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i$
 
 Where:
-- \[\mathbf{v}_i\]: Velocity of wheel \[i\]
-- \[\mathbf{v}_{center}\]: Linear velocity of robot center
-- \[\boldsymbol{\omega}\]: Angular velocity of the robot
-- \[\mathbf{r}_i\]: Position vector from center to wheel \[i\]
+- $\mathbf{v}_i$: Velocity of wheel $i$
+- $\mathbf{v}_{center}$: Linear velocity of robot center
+- $\boldsymbol{\omega}$: Angular velocity of the robot
+- $\mathbf{r}_i$: Position vector from center to wheel $i$
 
 ### Inverse Kinematics
 
@@ -44,11 +43,11 @@ Where:
  <br><b>Fig 2. Inverse Kinematics for Warrior</b>
 </p>
 
-Given desired body velocities \[(v_x, v_y, \omega)\], the module calculates:
-- Wheel steering angles \[\theta_i\]
-- Wheel driving velocities \[v_i\]
+Given desired body velocities $(v_x, v_y, \omega)$, the module calculates:
+- Wheel steering angles $\theta_i$
+- Wheel driving velocities $v_i$
 
-For each wheel \[i\]:
+For each wheel $i$:
 ```
 v_ix = v_x - ω * r_iy
 v_iy = v_y + ω * r_ix
