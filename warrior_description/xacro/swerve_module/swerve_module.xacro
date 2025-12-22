@@ -48,7 +48,6 @@
       <xacro:wheel_inertia mass="${steer_assembly_mass}"/>
     </link>
 
-
      <!-- Drive Joint -->
     <joint name="${prefix}_drive_joint" type="continuous">
       <parent link="${prefix}_steer_assembly_link"/>
@@ -56,7 +55,6 @@
       <origin xyz="${drive_wheel_offset}" rpy="${drive_rpy}"/>
       <axis xyz="${drive_axis}"/>
     </joint>
-
 
     <!-- Drive Wheel Link -->
     <link name="${prefix}_drive_wheel_link">
