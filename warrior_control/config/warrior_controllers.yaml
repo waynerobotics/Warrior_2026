@@ -57,20 +57,9 @@ swerve_drive_controller:
     wheel_radius: 0.1015
 
     # Positions of wheels relative to robot center of mass
-    distance_to_com:
-      front:
-        x: 0.34
-        y: 0.0
-      left:
-        x: -0.17
-        y: 0.294
-      right:
-        x: -0.17
-        y: -0.294
-
     wheel_to_center:
       front: 0.538   # m
-      left: 0.545   # m
+      left: 0.545    # m
       right: 0.545   # m
 
     alpha:
