@@ -52,13 +52,6 @@ controller_interface::CallbackReturn SwerveDriveController::on_init() {
 
     odom_frame_ = auto_declare<std::string>("odom_frame_id", "odom");
     base_frame_ = auto_declare<std::string>("base_frame_id", "base_footprint");
-    
-    // auto load_xy = [&](const std::string &wheel)
-    // {
-    //     double x = auto_declare<double>("distance_to_com." + wheel + ".x", 0.0);
-    //     double y = auto_declare<double>("distance_to_com." + wheel + ".y", 0.0);
-    //     return std::make_pair(x, y);
-    // };
 
     wheel_to_center_["front"] = auto_declare<double>("wheel_to_center.front", 0.0);
     wheel_to_center_["left"]  = auto_declare<double>("wheel_to_center.left", 0.0);
