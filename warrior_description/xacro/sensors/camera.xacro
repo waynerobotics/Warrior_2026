@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-  <!-- ========== camera Macro ========== -->
+  <!-- ========== Camera Macro ========== -->
   <xacro:macro name="camera_macro" params="parent camera_name xyz rpy:='0 0 0' mass:=1.0">
 
   <link name="camera_link">
