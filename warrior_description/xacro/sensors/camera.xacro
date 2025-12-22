@@ -6,6 +6,7 @@
 
   <link name="camera_link">
     <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 -${pi/2}"/>
       <geometry>
         <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
       </geometry>
@@ -14,6 +15,7 @@
       </material>
     </visual>
     <collision>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 -${pi/2}"/>
       <geometry>
         <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
       </geometry>
