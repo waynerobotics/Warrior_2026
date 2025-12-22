@@ -21,7 +21,7 @@ The swerve drive kinematics is derived from rigid body dynamics principles.
 ### Rigid Body Dynamics
 
 <p align="center">
- <img src="./docs/rigid_body_dynamics.png" height="460" alt="Rigid body dynamics diagram"/> 
+ <img src="./docs/rigid_body_dynamics.png" height="540" alt="Rigid body dynamics diagram"/> 
  <br><b>Fig 1. Rigid Body Dynamics</b>
 </p>
 
@@ -40,7 +40,7 @@ Where:
 ### Inverse Kinematics
 
 <p align="center">
- <img src="./docs/inverse_kinematics.png" height="460" alt="Inverse kinematics for three-wheel swerve"/> 
+ <img src="./docs/inverse_kinematics.png" height="540" alt="Inverse kinematics for three-wheel swerve"/> 
  <br><b>Fig 2. Inverse Kinematics for Warrior</b>
 </p>
 
@@ -61,7 +61,6 @@ v_i = sqrt(v_ix² + v_iy²)
 
 ### Dependencies
 ```bash
-# Add your dependencies here
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
@@ -92,37 +91,6 @@ Edit `config/warrior_params.yaml` to configure:
 - `/wheel_states` (custom_msgs/WheelStates): Commanded wheel angles and velocities
 - `/odom` (nav_msgs/Odometry): Robot odometry
 
-## Project Structure
-
-```
-warrior_control/
-├── config/              # Configuration files
-├── docs/                # Documentation and diagrams
-├── include/             # Header files
-├── src/                 # Source files
-├── launch/              # Launch files
-├── test/                # Unit tests
-└── README.md
-```
-
-## Testing
-
-```bash
-colcon test --packages-select warrior_control
-```
-
-## Known Issues
-
-- [ ] Add issue tracking if any
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request.
-
-## License
-
-[Specify your license here, e.g., Apache 2.0, MIT, BSD]
-
 ## 📝 References
 
 [1] Wheeled Mobile Robot Kinematics. Available at: https://control.ros.org/rolling/doc/ros2_controllers/doc/mobile_robot_kinematics.html
@@ -130,13 +98,3 @@ Contributions are welcome! Please open an issue or submit a pull request.
 [2] Using Inverse Kinematics to become a Master-Swerver. Available at: https://abhinavwastaken.medium.com/using-inverse-kinematics-to-become-a-master-swerver-1026759d81b0
 
 [3] Ether, J. (2014). *Modern Robotics: Mechanics, Planning, and Control*. Cambridge University Press.
-
-## Acknowledgments
-
-[Add any acknowledgments here]
-
----
-
-**Maintainer:** [Your Name] ([your.email@example.com](mailto:your.email@example.com))
-
-**Status:** Development / Stable / Experimental
