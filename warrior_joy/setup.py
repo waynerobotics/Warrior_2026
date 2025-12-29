@@ -12,6 +12,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/joy_2stick.launch.py']),
         ('share/' + package_name + '/launch', ['launch/joy_swerve.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/joy_turtle.launch.py']),
+        ('share/' + package_name + '/config', ['config/joystick.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
