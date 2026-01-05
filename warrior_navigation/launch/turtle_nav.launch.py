@@ -6,22 +6,6 @@ from launch.substitutions import PathJoinSubstitution
 
 def generate_launch_description():
 
-
-
-    # --- Robot bringup (drivers, robot_state_publisher, TF) ---
-    robot_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare('turtlebot3_bringup'),
-                'launch',
-                'robot.launch.py'
-            ])
-        ),
-        launch_arguments={
-            'use_sim_time': 'true'
-        }.items()
-    )
-
     # --- Gazebo world (TurtleBot3) ---
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -52,11 +36,7 @@ def generate_launch_description():
                 'launch',
                 'bringup_launch.py'
             ])
-        ),
-        launch_arguments={
-            'use_sim_time': 'true',
-            # 'slam': 'false'
-        }.items()
+        )
     )
 
     # --- RViz ---
@@ -73,6 +53,6 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo_launch,
         slam_launch,
-        nav2_launch,
-        rviz_launch
+        # nav2_launch,
+        # rviz_launch
     ])
