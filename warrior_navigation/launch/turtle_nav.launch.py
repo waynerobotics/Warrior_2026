@@ -3,6 +3,7 @@ from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch.substitutions import PathJoinSubstitution
+from launch_ros.actions import Node
 
 def generate_launch_description():
 
@@ -17,7 +18,7 @@ def generate_launch_description():
         )
     )
 
-    # --- SLAM Toolbox (your wrapper launch) ---
+    # --- SLAM Toolbox ---
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -26,6 +27,23 @@ def generate_launch_description():
                 'online_async_launch.py'
             ])
         )
+    )
+
+    costmap_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('warrior_navigation'),
+                'launch',
+                'costmap.launch.py'
+            ])
+        )
+    )
+
+    robot_map_pose_node = Node(
+        package='warrior_navigation',
+        executable='map_robot_pose',
+        name='map_robot_pose',
+        output='screen',
     )
 
     # --- Nav2 bringup ---
@@ -53,6 +71,8 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo_launch,
         slam_launch,
+        costmap_launch,
+        robot_map_pose_node,
         # nav2_launch,
         # rviz_launch
     ])
