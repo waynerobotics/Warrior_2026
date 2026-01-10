@@ -30,8 +30,12 @@ setup(
         'console_scripts': [
             'waypoint_follower = warrior_navigation.waypoint_follower:main',
             'direct_path_generator = warrior_navigation.direct_path_generator:main',
-            'map_robot_pose = warrior_navigation.map_robot_pose:main'
-
+            'map_robot_pose = warrior_navigation.map_robot_pose:main',
+            'linear_path_controller = warrior_navigation.linear_path_controller:main',
+            'complex_path_generator = warrior_navigation.complex_path_generator:main',
+            'astar_planner = warrior_navigation.astar_planner:main',
+            'map_to_grid = warrior_navigation.map_to_grid:main',
+            
         ],
     },
 )

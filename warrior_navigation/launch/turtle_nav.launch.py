@@ -39,10 +39,17 @@ def generate_launch_description():
         )
     )
 
-    robot_map_pose_node = Node(
+    robot_map_pose_node = Node(  # publishes map -> robot transform
         package='warrior_navigation',
         executable='map_robot_pose',
         name='map_robot_pose',
+        output='screen',
+    )
+
+    complex_path_generator_node = Node(   
+        package='warrior_navigation',
+        executable='complex_path_generator',
+        name='complex_path_generator',
         output='screen',
     )
 
@@ -73,6 +80,7 @@ def generate_launch_description():
         slam_launch,
         costmap_launch,
         robot_map_pose_node,
+        # complex_path_generator_node
         # nav2_launch,
         # rviz_launch
     ])
