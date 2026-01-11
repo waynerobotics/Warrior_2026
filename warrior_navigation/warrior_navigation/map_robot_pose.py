@@ -17,21 +17,35 @@ class MapRobotPoseNode(Node):
         self.timer = self.create_timer(0.1, self.publish_robot_map_pose)
 
     def publish_robot_map_pose(self):
-        try:
-            transform = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
-            pose_msg = PoseStamped()
+        if not self.tf_buffer.can_transform('map', 'base_link', rclpy.time.Time()):
+            self.get_logger().warn('TF not ready: map → base_link')
+            return
 
-            pose_msg.header.stamp = self.get_clock().now().to_msg()
-            pose_msg.header.frame_id = 'map'
+        t = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+        ps = PoseStamped()
+        ps.header.stamp = self.get_clock().now().to_msg()
+        ps.header.frame_id = 'map'
+        ps.pose.position.x = t.transform.translation.x
+        ps.pose.position.y = t.transform.translation.y
+        ps.pose.position.z = t.transform.translation.z
+        ps.pose.orientation = t.transform.rotation
+        self.get_logger().info(f'Publishing robot map pose {ps}')
+        self.robot_map_pose.publish(ps)
+        # try:
+        #     transform = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+        #     pose_msg = PoseStamped()
 
-            pose_msg.pose.position.x = transform.transform.translation.x
-            pose_msg.pose.position.y = transform.transform.translation.y
-            pose_msg.pose.position.z = transform.transform.translation.z
-            pose_msg.pose.orientation = transform.transform.rotation
+        #     pose_msg.header.stamp = self.get_clock().now().to_msg()
+        #     pose_msg.header.frame_id = 'map'
+
+        #     pose_msg.pose.position.x = transform.transform.translation.x
+        #     pose_msg.pose.position.y = transform.transform.translation.y
+        #     pose_msg.pose.position.z = transform.transform.translation.z
+        #     pose_msg.pose.orientation = transform.transform.rotation
             
-            self.robot_map_pose.publish(pose_msg)
-        except Exception as e:
-            self.get_logger().warn(f'Transform lookup failed: {e}')
+        #     self.robot_map_pose.publish(pose_msg)
+        # except Exception as e:
+        #     self.get_logger().warn(f'Transform lookup failed: {e}')
 
 def main(args=None):
     rclpy.init(args=args)

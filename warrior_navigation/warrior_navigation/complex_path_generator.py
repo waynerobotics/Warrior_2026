@@ -29,7 +29,7 @@ class ComplexPathGenerator(Node):
         super().__init__('complex_path_generator')
         self.get_logger().info('Complex Path Generator Node has been started.')
 
-        self.robot_pose = self.create_subscription(PoseStamped, 'robot_map_pose', self.robot_pose_callback, 10)
+        self.robot_pose_sub = self.create_subscription(PoseStamped, 'robot_map_pose', self.robot_pose_callback, 10)
         self.goal_subscription = self.create_subscription(PoseStamped, 'goal_pose', self.goal_callback, 10)
         self.path_pub = self.create_publisher(Path, '/a_star_path', 10)
 
@@ -44,19 +44,24 @@ class ComplexPathGenerator(Node):
     def cost_map_callback(self, msg: OccupancyGrid):
         self.costmap = msg
         self.map_info = msg.info
+        self.publish_complex_path()
         
     def goal_callback(self, msg: PoseStamped):
         self.goal_pose = msg
-        self.publish_complex_path()
 
     def robot_pose_callback(self, msg: PoseStamped):
         self.robot_pose = msg
+        self.publish_complex_path()
 
     def publish_complex_path(self):
-        if self.goal_pose is None or self.robot_pose is None:
+        if self.goal_pose is None:
+            self.get_logger().info('Goal pose is None, cannot generate path.')
             return
-        if self.costmap is None or self.map_info is None:
+        if self.robot_pose is None:
+            self.get_logger().info('Robot pose is None, cannot generate path.')
             return
+        # if self.costmap is None or self.map_info is None:
+        #     return
         try:
             path = Path()
             path.header.frame_id = 'map'
@@ -67,7 +72,7 @@ class ComplexPathGenerator(Node):
             start = self.world_to_grid(self.robot_pose.pose.position.x ,self.robot_pose.pose.position.y)
             goal = self.world_to_grid( self.goal_pose.pose.position.x, self.goal_pose.pose.position.y)
 
-            grid_path = a_star(grid, start, goal, threshold=50)
+            grid_path = a_star(grid, start, goal, max_cost=90, alpha=5.0)
 
             poses = []
             for r, c in grid_path:
@@ -81,6 +86,7 @@ class ComplexPathGenerator(Node):
 
             path.poses = poses
             self.path_pub.publish(path)
+            self.get_logger().info('Published complex path using A* algorithm.')
             
         except Exception as e:
             self.get_logger().warn(f'Path generation failed: {e}')
@@ -96,23 +102,23 @@ class ComplexPathGenerator(Node):
         y = row * self.map_info.resolution + self.map_info.origin.position.y
         return x, y
 
-def a_star(grid, start, goal, threshold):
+def a_star(grid, start, goal, max_cost=90, alpha=5.0):
     height, width = grid.shape
 
     def heuristic(a, b):
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])  # Manhattan
+        # Manhattan distance
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
     open_set = []
     heapq.heappush(open_set, (0, start))
 
     came_from = {}
-    g_score = {start: 0}
+    g_score = {start: 0.0}
 
     while open_set:
         _, current = heapq.heappop(open_set)
 
         if current == goal:
-            # reconstruct path
             path = [current]
             while current in came_from:
                 current = came_from[current]
@@ -120,17 +126,26 @@ def a_star(grid, start, goal, threshold):
             return path[::-1]
 
         r, c = current
+
         for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
             nr, nc = r + dr, c + dc
 
             if not (0 <= nr < height and 0 <= nc < width):
                 continue
 
-            if grid[nr, nc] < 0 or grid[nr, nc] >= threshold:
+            cell_cost = grid[nr, nc]
+
+            # Block obstacles and unknown
+            if cell_cost < 0 or cell_cost >= max_cost:
                 continue
 
             neighbor = (nr, nc)
-            tentative_g = g_score[current] + 1
+
+            # --- COST-AWARE STEP COST ---
+            normalized_cost = cell_cost / max_cost  # 0 → 1
+            step_cost = 1.0 + alpha * normalized_cost
+
+            tentative_g = g_score[current] + step_cost
 
             if tentative_g < g_score.get(neighbor, float('inf')):
                 came_from[neighbor] = current
@@ -138,7 +153,7 @@ def a_star(grid, start, goal, threshold):
                 f = tentative_g + heuristic(neighbor, goal)
                 heapq.heappush(open_set, (f, neighbor))
 
-    return []  # no path
+    return []
 
 def main(args=None):
     rclpy.init(args=args)

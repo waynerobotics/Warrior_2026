@@ -35,6 +35,7 @@ setup(
             'complex_path_generator = warrior_navigation.complex_path_generator:main',
             'astar_planner = warrior_navigation.astar_planner:main',
             'map_to_grid = warrior_navigation.map_to_grid:main',
+            'complex_path_controller = warrior_navigation.complex_path_controller:main',
             
         ],
     },

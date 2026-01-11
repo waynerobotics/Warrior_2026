@@ -76,7 +76,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        gazebo_launch,
+        # gazebo_launch,
         slam_launch,
         costmap_launch,
         robot_map_pose_node,
