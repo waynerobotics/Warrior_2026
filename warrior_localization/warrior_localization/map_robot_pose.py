@@ -29,23 +29,7 @@ class MapRobotPoseNode(Node):
         ps.pose.position.y = t.transform.translation.y
         ps.pose.position.z = t.transform.translation.z
         ps.pose.orientation = t.transform.rotation
-        self.get_logger().info(f'Publishing robot map pose {ps}')
         self.robot_map_pose.publish(ps)
-        # try:
-        #     transform = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
-        #     pose_msg = PoseStamped()
-
-        #     pose_msg.header.stamp = self.get_clock().now().to_msg()
-        #     pose_msg.header.frame_id = 'map'
-
-        #     pose_msg.pose.position.x = transform.transform.translation.x
-        #     pose_msg.pose.position.y = transform.transform.translation.y
-        #     pose_msg.pose.position.z = transform.transform.translation.z
-        #     pose_msg.pose.orientation = transform.transform.rotation
-            
-        #     self.robot_map_pose.publish(pose_msg)
-        # except Exception as e:
-        #     self.get_logger().warn(f'Transform lookup failed: {e}')
 
 def main(args=None):
     rclpy.init(args=args)

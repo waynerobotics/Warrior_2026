@@ -20,8 +20,8 @@ class ComplexPathController(Node):
         self.path = None
         self.robot_pose = None
 
-        self.lookahead_distance = 0.05
-        self.max_linear_vel = 0.2
+        self.lookahead_distance = 0.01
+        self.max_linear_vel = 0.1
         self.max_angular_vel = 1.0
         
         self.timer = self.create_timer(0.1, self.control_loop)

@@ -40,47 +40,33 @@ def generate_launch_description():
     )
 
     robot_map_pose_node = Node(  # publishes map -> robot transform
-        package='warrior_navigation',
+        package='warrior_localization',
         executable='map_robot_pose',
         name='map_robot_pose',
         output='screen',
     )
 
-    complex_path_generator_node = Node(   
+    direct_path_generator_node = Node(   
         package='warrior_navigation',
-        executable='complex_path_generator',
-        name='complex_path_generator',
+        executable='direct_path_generator',
+        name='direct_path_generator',
         output='screen',
     )
 
-    # --- Nav2 bringup ---
-    nav2_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare('nav2_bringup'),
-                'launch',
-                'bringup_launch.py'
-            ])
-        )
-    )
-
-    # --- RViz ---
-    rviz_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare('turtlebot3_bringup'),
-                'launch',
-                'rviz2.launch.py'
-            ])
-        )
+    direct_path_controller_node = Node(   
+        package='warrior_navigation',
+        executable='direct_path_controller',
+        name='direct_path_controller',
+        output='screen',
     )
 
     return LaunchDescription([
-        # gazebo_launch,
+        gazebo_launch,
         slam_launch,
         costmap_launch,
         robot_map_pose_node,
-        # complex_path_generator_node
+        direct_path_generator_node,
+        direct_path_controller_node,
         # nav2_launch,
         # rviz_launch
     ])

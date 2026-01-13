@@ -1,7 +1,7 @@
 from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'warrior_navigation'
+package_name = 'warrior_localization'
 
 setup(
     name=package_name,
@@ -13,7 +13,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', glob('launch/*.py')),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
-        ('share/' + package_name + '/maps', glob('maps/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,14 +27,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'waypoint_follower = warrior_navigation.waypoint_follower:main',
-            'direct_path_generator = warrior_navigation.direct_path_generator:main',
-            'map_robot_pose = warrior_navigation.map_robot_pose:main',
-            'linear_path_controller = warrior_navigation.linear_path_controller:main',
-            'complex_path_generator = warrior_navigation.complex_path_generator:main',
-            'astar_planner = warrior_navigation.astar_planner:main',
-            'complex_path_controller = warrior_navigation.complex_path_controller:main',
-            
+            "map_robot_pose = warrior_localization.map_robot_pose:main",
         ],
     },
 )

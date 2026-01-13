@@ -8,10 +8,10 @@ import math
 
 
 
-class LinearPathController(Node):
+class DirectPathController(Node):
     def __init__(self):
-        super().__init__('linear_path_controller')
-        self.get_logger().info('Linear Path Controller Node started')
+        super().__init__('direct_path_controller')
+        self.get_logger().info('Direct Path Controller Node started')
 
         self.lookahead_point = None
         self.current_pose = None
@@ -66,7 +66,7 @@ class LinearPathController(Node):
     
 def main():
     rclpy.init()
-    node = LinearPathController()
+    node = DirectPathController()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
