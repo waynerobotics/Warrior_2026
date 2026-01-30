@@ -4,7 +4,11 @@ from geometry_msgs.msg import TwistStamped
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from tf2_ros import TransformListener, Buffer
+from tf2_ros import TransformException
+
 import math
+
+
 
 # Implement a pure pursuit to take a path and output velocity to cmd_vel to follow it
 
@@ -15,7 +19,10 @@ class ComplexPathController(Node):
 
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
         self.path_sub = self.create_subscription(Path, 'a_star_path', self.path_callback, 10)
-        self.robot_pose_sub = self.create_subscription(PoseStamped, 'robot_map_pose', self.robot_pose_callback, 10)
+
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
 
         self.path = None
         self.robot_pose = None
@@ -26,30 +33,59 @@ class ComplexPathController(Node):
         self.goal_tolerance = 0.1
 
         self.timer = self.create_timer(0.05, self.control_loop)
+
+    def get_robot_pose_map(self):
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                target_frame='map',
+                source_frame='base_link',
+                time=rclpy.time.Time()
+            )
+
+            x = tf.transform.translation.x
+            y = tf.transform.translation.y
+            return x, y
+
+        except TransformException as ex:
+            self.get_logger().warn(f'TF lookup failed: {ex}')
+            return None
+
     
     def path_callback(self, msg):
         self.path = msg
     
-    def robot_pose_callback(self, msg: PoseStamped):
-        self.robot_pose = msg
-
     def yaw_from_quaternion(self, q):
         return math.atan2(
             2.0 * (q.w * q.z + q.x * q.y),
             1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     )
 
-    def control_loop(self):
-        if self.path is None or self.robot_pose is None or len(self.path.poses) == 0:
-            return
-        # --- Current robot pose ---
-        rx = self.robot_pose.pose.position.x
-        ry = self.robot_pose.pose.position.y
-        q = self.robot_pose.pose.orientation
-        yaw = self.yaw_from_quaternion(q)
+    def get_robot_pose_map(self):
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                target_frame='odometry/filtered',
+                source_frame='base_link',
+                time=rclpy.time.Time()
+            )
 
+            x = tf.transform.translation.x
+            y = tf.transform.translation.y
+            yaw = self.yaw_from_quaternion(tf.transform.rotation)
+
+            return x, y, yaw
+
+        except TransformException as ex:
+            self.get_logger().warn(f'TF lookup failed: {ex}')
+            return None
+
+    def control_loop(self):
+        robot_pose = self.get_robot_pose_map()
+        if self.path is None or robot_pose is None or len(self.path.poses) == 0:
+            return
+        # --- Current robot pose 
+        rx, ry, yaw = robot_pose
         # --- Goal check ---
-        self.get_logger().info(f"Current Path: ({len(self.path.poses)} poses)")
+        # self.get_logger().info(f"Current Path: ({len(self.path.poses)} poses)")
         goal_pose = self.path.poses[-1].pose.position
         goal_dist = math.hypot(goal_pose.x - rx, goal_pose.y - ry)
 
@@ -143,7 +179,7 @@ class ComplexPathController(Node):
         twist.twist.linear.x = 0.0
         twist.twist.angular.z = 0.0
         self.cmd_vel_pub.publish(twist)
-        self.get_logger().info('Published stop command to cmd_vel.')
+        # self.get_logger().info('Published stop command to cmd_vel.')
 
 def main(args=None):
     rclpy.init(args=args)

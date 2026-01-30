@@ -1,9 +1,12 @@
+from collections.abc import Buffer
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid
 
 from nav_msgs.msg import Path
+from tf2_ros import TransformListener, Buffer
+from tf2_ros import TransformException
 import numpy as np
 import heapq
 import math
@@ -29,18 +32,20 @@ class ComplexPathGenerator(Node):
         super().__init__('complex_path_generator')
         self.get_logger().info('Complex Path Generator Node has been started.')
 
-        self.robot_pose_sub = self.create_subscription(PoseStamped, 'robot_map_pose', self.robot_pose_callback, 10)
         self.goal_subscription = self.create_subscription(PoseStamped, 'goal_pose', self.goal_callback, 10)
         self.path_pub = self.create_publisher(Path, '/a_star_path', 10)
 
         self.cost_map_subscriber = self.create_subscription(OccupancyGrid,
                                 'global_costmap/costmap', self.cost_map_callback, 10)
 
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+        
         self.costmap = None
         self.map_info = None
         self.robot_pose = None
         self.goal_pose = None
-
+    
     def cost_map_callback(self, msg: OccupancyGrid):
         self.costmap = msg
         self.map_info = msg.info
@@ -49,19 +54,34 @@ class ComplexPathGenerator(Node):
     def goal_callback(self, msg: PoseStamped):
         self.goal_pose = msg
 
-    def robot_pose_callback(self, msg: PoseStamped):
-        self.robot_pose = msg
-        self.publish_complex_path()
+    def get_robot_pose_map(self):
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                target_frame='map',
+                source_frame='base_link',
+                time=rclpy.time.Time()
+            )
+
+            x = tf.transform.translation.x
+            y = tf.transform.translation.y
+            return x, y
+
+        except TransformException as ex:
+            self.get_logger().warn(f'TF lookup failed: {ex}')
+            return None
 
     def publish_complex_path(self):
         if self.goal_pose is None:
             self.get_logger().info('Goal pose is None, cannot generate path.')
             return
-        if self.robot_pose is None:
-            self.get_logger().info('Robot pose is None, cannot generate path.')
+        robot_xy = self.get_robot_pose_map()
+        if robot_xy is None:
             return
-        # if self.costmap is None or self.map_info is None:
-        #     return
+
+        robot_x, robot_y = robot_xy
+
+        if self.costmap is None or self.map_info is None:
+            return
         try:
             path = Path()
             path.header.frame_id = 'map'
@@ -69,9 +89,9 @@ class ComplexPathGenerator(Node):
 
             grid = np.array(self.costmap.data).reshape((self.map_info.height, self.map_info.width))
 
-            start = self.world_to_grid(self.robot_pose.pose.position.x ,self.robot_pose.pose.position.y)
+            start = self.world_to_grid(robot_x, robot_y)
             goal = self.world_to_grid( self.goal_pose.pose.position.x, self.goal_pose.pose.position.y)
-
+            
             grid_path = a_star(grid, start, goal, max_cost=90, alpha=5.0)
 
             poses = []
