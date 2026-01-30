@@ -20,11 +20,12 @@ class ComplexPathController(Node):
         self.path = None
         self.robot_pose = None
 
-        self.lookahead_distance = 0.01
-        self.max_linear_vel = 0.1
-        self.max_angular_vel = 1.0
-        
-        self.timer = self.create_timer(0.1, self.control_loop)
+        self.lookahead_distance = 0.1
+        self.max_linear_vel = 0.2
+        self.max_angular_vel = 2.0
+        self.goal_tolerance = 0.1
+
+        self.timer = self.create_timer(0.05, self.control_loop)
     
     def path_callback(self, msg):
         self.path = msg
@@ -52,7 +53,7 @@ class ComplexPathController(Node):
         goal_pose = self.path.poses[-1].pose.position
         goal_dist = math.hypot(goal_pose.x - rx, goal_pose.y - ry)
 
-        if goal_dist < 0.05:
+        if goal_dist < self.goal_tolerance:
             self.publish_stop()
             return
 
@@ -134,7 +135,7 @@ class ComplexPathController(Node):
                 return (px, py)
 
         # --- Step 3: fallback to goal ---
-        last_pose = self.current_path.poses[-1].pose.position
+        last_pose = self.path.poses[-1].pose.position
         return (last_pose.x, last_pose.y)
 
     def publish_stop(self):

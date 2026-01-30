@@ -7,6 +7,9 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+
+    localization_pkg = FindPackageShare("warrior_localization")
+    navigation_pkg = FindPackageShare("warrior_navigation")
     # --- Gazebo world (TurtleBot3) ---
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -22,7 +25,7 @@ def generate_launch_description():
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('warrior_navigation'),
+                localization_pkg,
                 'launch',
                 'online_async_launch.py'
             ])
@@ -32,7 +35,7 @@ def generate_launch_description():
     costmap_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('warrior_navigation'),
+                navigation_pkg,
                 'launch',
                 'costmap.launch.py'
             ])
@@ -63,10 +66,8 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo_launch,
         slam_launch,
-        costmap_launch,
         robot_map_pose_node,
+        costmap_launch,
         direct_path_generator_node,
         direct_path_controller_node,
-        # nav2_launch,
-        # rviz_launch
     ])

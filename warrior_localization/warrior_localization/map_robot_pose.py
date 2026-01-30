@@ -3,6 +3,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import PoseStamped
 from rclpy.publisher import Publisher
+from rclpy.time import Time
 import tf2_ros
 
 class MapRobotPoseNode(Node):
@@ -17,11 +18,11 @@ class MapRobotPoseNode(Node):
         self.timer = self.create_timer(0.1, self.publish_robot_map_pose)
 
     def publish_robot_map_pose(self):
-        if not self.tf_buffer.can_transform('map', 'base_link', rclpy.time.Time()):
-            self.get_logger().warn('TF not ready: map → base_link')
+        try:
+            t = self.tf_buffer.lookup_transform('map', 'base_link', Time())
+        except Exception as e:
+            self.get_logger().warn(f'TF lookup failed: {e}')
             return
-
-        t = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
         ps = PoseStamped()
         ps.header.stamp = self.get_clock().now().to_msg()
         ps.header.frame_id = 'map'
