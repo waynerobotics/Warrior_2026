@@ -1,6 +1,9 @@
 <sdf version="1.6">
   <world name="empty">
-  
+    <!-- <scene>
+      <ambient>1 1 1</ambient>
+      <grid>false</grid>
+    </scene> -->
     <physics name="1ms" type="ODE">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>

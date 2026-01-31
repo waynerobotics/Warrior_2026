@@ -14,6 +14,7 @@ from launch.event_handlers import OnProcessExit
 def generate_launch_description():
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
+    gazebo_world = LaunchConfiguration('world_name', default='competition.world')
     
     # ----------------- path -----------------
     pkg_gz_ros = FindPackageShare("ros_gz_sim")
@@ -22,7 +23,7 @@ def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
     pkg_gazebo = FindPackageShare("warrior_gazebo")
 
-    world_file = PathJoinSubstitution([pkg_gazebo, "worlds", "competition.world"])
+    world_file = PathJoinSubstitution([pkg_gazebo, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
@@ -134,7 +135,14 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_sim_time',
             default_value=use_sim_time,
-            description='If true, use simulated clock'),
+            description='If true, use simulated clock'
+        ),
+        DeclareLaunchArgument(
+            'world_name',
+            default_value=world_file,
+            description='Gazebo world file to load'
+        ),
+        
         gazebo,
         robot_state_publisher,
         # joint_state_publisher,
