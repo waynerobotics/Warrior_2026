@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="ground_plane">
+    <static>true</static>
+
+    <link name="link">
+      <!-- Collision Geometry -->
+      <collision name="collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>120 120</size>
+          </plane>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>100</mu>
+              <mu2>50</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- Visual Geometry -->
+      <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>120 120</size>
+          </plane>
+        </geometry>
+
+        <!-- Modern PBR Material -->
+        <material>
+          <ambient>0.65 0.65 0.65 1</ambient>
+          <diffuse>0.65 0.65 0.65 1</diffuse>
+          <specular>0.05 0.05 0.05 1</specular>
+        </material>
+
+      </visual>
+    </link>
+  </model>
+</sdf>

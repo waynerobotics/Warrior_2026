@@ -1,21 +1,13 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>warrior_bringup</name>
+  <name>warrior_gazebo</name>
   <version>0.0.0</version>
-  <description>The bringup package for the Warrior robot</description>
+  <description>The simulation environment for the Warrior robot using Gazebo</description>
   <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <depend>warrior_description</depend>
-  <depend>warrior_control</depend>
-  <depend>warrior_gazebo</depend>
-  <depend>robot_state_publisher</depend>
-  <depend>joint_state_publisher</depend>
-  <depend>controller_manager</depend>
-  <depend>diff_drive_controller</depend>
-  <depend>rviz2</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

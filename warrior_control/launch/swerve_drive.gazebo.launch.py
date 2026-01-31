@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
 from launch_ros.actions import Node
@@ -19,12 +20,23 @@ def generate_launch_description():
     pkg_warrior_description = FindPackageShare("warrior_description")
     pkg_warrior_control = FindPackageShare("warrior_control")
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
-    pkg_world_models = FindPackageShare("warrior_simulation")
+    pkg_gazebo = FindPackageShare("warrior_gazebo")
 
-    world_file = PathJoinSubstitution([pkg_world_models, "worlds", "empty.world"])
+    world_file = PathJoinSubstitution([pkg_gazebo, "worlds", "competition.world"])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
+
+
+    # Set GAZEBO model path
+    pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
+    model_resource_path = os.path.join(pkg_gazebo_path, "models")
+
+    os.environ["IGN_GAZEBO_RESOURCE_PATH"] = \
+        os.environ.get("IGN_GAZEBO_RESOURCE_PATH", "") + ":" + model_resource_path
+
+    os.environ["GZ_SIM_RESOURCE_PATH"] = \
+        os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
 
     rviz2_config_file = PathJoinSubstitution(
         [pkg_warrior_bringup, "rviz", "warrior.rviz"]
