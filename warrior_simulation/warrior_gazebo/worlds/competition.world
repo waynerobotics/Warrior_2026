@@ -33,6 +33,12 @@
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
 
+    <include>
+      <uri>model://first_2015_trash_can</uri>
+      <name>Trash Can</name>
+      <pose>10 0 0 0 0 0</pose>
+    </include>
+
     <!-- Ground Plane -->
     <include>
       <uri>model://ground_plane</uri>
@@ -283,5 +289,7 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
+
+
   </world>
 </sdf>
