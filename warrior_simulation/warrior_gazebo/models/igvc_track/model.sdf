@@ -3,13 +3,13 @@
   <model name="igvc_track">
     <static>true</static>
     <link name="link">
-      <collision name="collision">
+      <!-- <collision name="collision">
         <geometry>
           <box>
             <size>60 60 .005</size>
           </box>
         </geometry>
-      </collision>
+      </collision> -->
       <visual name="visual">
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -18,30 +18,28 @@
           </box>
         </geometry>
         <material>
-          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <ambient>0.5 0.5 0.5 1.0</ambient>
+          <diffuse>0.5 0.5 0.5 1.0</diffuse>
           <specular>0.2 0.2 0.2 1.0</specular>
           <pbr>
             <metal>
-              <albedo_map>model://igvc_track/textures/igvc.png</albedo_map>
+              <albedo_map>model://igvc_track/textures/course_color.png</albedo_map>
               <roughness>0.8</roughness>
               <metalness>0.0</metalness>
             </metal>
           </pbr>
-          <uv_map>
-            <scale>0.1 0.1</scale>
-          </uv_map>
         </material>
       </visual>
     </link>
     <link name="link2">
       <pose>0 0 0.0 0 0 0</pose> 
-      <collision name="collision">
+      <!-- <collision name="collision">
         <geometry>
           <box>
             <size>60 60 .007</size>
           </box>
         </geometry>
-      </collision>
+      </collision> -->
       <visual name="visual">
         <cast_shadows>false</cast_shadows>
         <geometry>
@@ -50,7 +48,8 @@
           </box>
         </geometry>
         <material>
-          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <diffuse>0.5 0.5 0.5 1.0</diffuse>
+          <ambient>0.5 0.5 0.5 1.0</ambient>
           <specular>0.2 0.2 0.2 1.0</specular>
           <pbr>
             <metal>

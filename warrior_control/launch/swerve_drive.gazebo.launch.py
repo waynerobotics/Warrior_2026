@@ -57,14 +57,14 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager-timeout", "10"],
+        arguments=["joint_state_broadcaster", "--controller-manager-timeout", "120"],
         output="screen",
     )
     
     swerve_drive_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["swerve_drive_controller", "--controller-manager-timeout", "10"],
+        arguments=["swerve_drive_controller", "--controller-manager-timeout", "120"],
         output="screen",
     )
 
@@ -107,7 +107,8 @@ def generate_launch_description():
         arguments=[
             "-topic", "robot_description",
             "-name", "warrior",
-            "-allow_renaming", "true"
+            "-allow_renaming", "true",
+            '-x', '0.', '-y', '0.', '-z', '0.3'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -147,6 +148,9 @@ def generate_launch_description():
         robot_state_publisher,
         # joint_state_publisher,
         # ros2_control_node,
+        gz_bridge,
+        gz_spawn_entity,
+        
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
@@ -160,9 +164,13 @@ def generate_launch_description():
             )
         ),
         
-        gz_bridge,
-        gz_spawn_entity,
-        rviz2,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=swerve_drive_controller_spawner,
+                on_exit=[rviz2],
+            )
+        ),
+
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=swerve_drive_controller_spawner,

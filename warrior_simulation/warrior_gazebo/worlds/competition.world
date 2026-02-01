@@ -11,6 +11,10 @@
       <grid>false</grid>
     </scene>
 
+    <frame name='course_frame'>
+      <pose relative_to='world'>-15 28.7 0 0 0 0</pose>
+    </frame>
+
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
       <latitude_deg>42.66791</latitude_deg>
@@ -33,12 +37,6 @@
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
 
-    <include>
-      <uri>model://first_2015_trash_can</uri>
-      <name>Trash Can</name>
-      <pose>10 0 0 0 0 0</pose>
-    </include>
-
     <!-- Ground Plane -->
     <include>
       <uri>model://ground_plane</uri>
@@ -46,28 +44,41 @@
       <pose>0 0 0 0 0 0</pose>
     </include>
 
+    <!-- Stop Sign -->
+    <include>
+      <uri>model://stop_sign</uri>
+      <name>Stop Sign</name>
+      <pose relative_to='course_frame'>0 10 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- Trash Can -->
+    <include>
+      <uri>model://first_2015_trash_can</uri>
+      <name>Trash Can</name>
+      <pose relative_to='course_frame'>10 0 0 0 0 0</pose>
+    </include>
+
     <!-- IGVC Track-->
     <include>
       <uri>model://igvc_track</uri>
       <name>IGVC Track</name>
-      <pose>0 -16 0 0 0 0</pose>
+      <pose relative_to='course_frame'>12.5 -11.5 0 0 0 3.1415</pose>
     </include>
 
     <!-- Ramp -->
     <include>
       <uri>model://ramp</uri>
       <name>Ramp</name>
-      <pose>48.944 35.1802 0 0 0 -1.5708</pose>
+      <pose relative_to='course_frame'>6.5 -29 0 0 0 0</pose>
       <!-- <pose>-3 7 0 0 0 -1.5708</pose> -->
     </include>
     
     <!-- Construction Barrels Group -->
     <model name="construction_barrels_group">
       <static>1</static>
-      <pose>37.1634 53.7469 0 0 -0 1.5708</pose>
-      <!-- <pose>0 0 0 0 0 0</pose> -->
+      <pose relative_to='course_frame'>-2.8924 -7.3591 0 0 0 -1.5792</pose>
       <link name="link">
-        <pose>0 0 0 0 0 0</pose>
+        <pose>-2.8924 -7.3591 0 0 0 -1.5792</pose>
         <inertial>
           <mass>1.0</mass>
           <inertia>
@@ -83,172 +94,171 @@
       
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel</name>
-        <pose>1 -21 0 0 0 0</pose>
+        <name>Construction_Barrel</name>
+        <pose>-13.6357 23.2323 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_0</name>
-        <pose>-39 -14 0 0 0 0</pose>
+        <name>Construction_Barrel_0</name>
+        <pose>-16.0307 35.7528 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_1</name>
-        <pose>-39 -11 0 0 0 0</pose>
+        <name>Construction_Barrel_1</name>
+        <pose>-18.4272 24.2726 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_2</name>
-        <pose>-44 -9 0 0 0 0</pose>
+        <name>Construction_Barrel_2</name>
+        <pose>-11.5476 33.7151 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_3</name>
-        <pose>-44 -10 0 0 0 0</pose>
+        <name>Construction_Barrel_3</name>
+        <pose>-12.5224 36.7234 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_4</name>
-        <pose>-42 -12 0 0 0 0</pose>
+        <name>Construction_Barrel_4</name>
+        <pose>-13.5391 34.7318 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_5</name>
-        <pose>-43 -11 0 0 0 0</pose>
+        <name>Construction_Barrel_5</name>
+        <pose>-18.602 27.2741 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_6</name>
-        <pose>-43 14 0 0 0 0</pose>
+        <name>Construction_Barrel_6</name>
+        <pose>-17.8079 2.76661 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_7</name>
-        <pose>-40 -2 0 0 0 0</pose>
+        <name>Construction_Barrel_7</name>
+        <pose>-18.1566 20.7701 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_8</name>
-        <pose>-45 6 0 0 0 0</pose>
+        <name>Construction_Barrel_8</name>
+        <pose>-17.707 14.7661 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_9</name>
-        <pose>-40 -3 0 0 0 0</pose>
+        <name>Construction_Barrel_9</name>
+        <pose>-5.54936 33.4647 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_10</name>
-        <pose>-43 6 0 0 0 0</pose>
+        <name>Construction_Barrel_10</name>
+        <pose>-13.6694 19.2324 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_11</name>
-        <pose>-35 -12 0 0 0 0</pose>
+        <name>Construction_Barrel_11</name>
+        <pose>-13.7895 28.7337 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_12</name>
-        <pose>-38 -14 0 0 0 0</pose>
+        <name>Construction_Barrel_12</name>
+        <pose>-16.2559 32.7546 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_13</name>
-        <pose>-4 -11 0 0 0 0</pose>
+        <name>Construction_Barrel_13</name>
+        <pose>-7.8796 -5.81719 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_14</name>
-        <pose>-32 -12 0 0 0 0</pose>
+        <name>Construction_Barrel_14</name>
+        <pose>-13.6148 25.7321 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_15</name>
-        <pose>-6 24 0 0 0 0</pose>
+        <name>Construction_Barrel_15</name>
+        <pose>-1.87559 -5.3676 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_16</name>
-        <pose>-41 13 0 0 0 0</pose>
+        <name>Construction_Barrel_16</name>
+        <pose>-5.85869 -3.3341 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_17</name>
-        <pose>-43 12 0 0 0 0</pose>
+        <name>Construction_Barrel_17</name>
+        <pose>-13.7072 14.7325 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_18</name>
-        <pose>-44 14 0 0 0 0</pose>
+        <name>Construction_Barrel_18</name>
+        <pose>-7.8754 -5.31719 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_19</name>
-        <pose>-43 16 0 0 0 0</pose>
+        <name>Construction_Barrel_19</name>
+        <pose>10.1223 -5.66841 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_20</name>
-        <pose>-42 16 0 0 0 0</pose>
+        <name>Construction_Barrel_20</name>
+        <pose>20.1194 -6.05242 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_21</name>
-        <pose>-42 17 0 0 0 0</pose>
+        <name>Construction_Barrel_21</name>
+        <pose>-17.7406 10.7663 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_22</name>
-        <pose>-41 16 0 0 0 0</pose>
+        <name>Construction_Barrel_22</name>
+        <pose>-1.87139 -4.8676 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_23</name>
-        <pose>-41 22 0 0 0 0</pose>
+        <name>Construction_Barrel_23</name>
+        <pose>11.1197 -5.97681 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_24</name>
-        <pose>-41 12 0 0 0 0</pose>
+        <name>Construction_Barrel_24</name>
+        <pose>-7.8712 -4.81719 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_25</name>
-        <pose>-42 12 0 0 0 0</pose>
+        <name>Construction_Barrel_25</name>
+        <pose>-17.6818 17.766 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_26</name>
-        <pose>-41 25 0 0 0 0</pose>
+        <name>Construction_Barrel_26</name>
+        <pose>11.1239 -5.47681 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_27</name>
-        <pose>-22 26 0 0 0 0</pose>
+        <name>Construction_Barrel_27</name>
+        <pose>-13.808 2.73291 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_28</name>
-        <pose>-22 23 0 0 0 0</pose>
+        <name>Construction_Barrel_28</name>
+        <pose>-13.7408 10.7327 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_29</name>
-        <pose>-11 25 0 0 0 0</pose>
+        <name>Construction_Barrel_29</name>
+        <pose>-3.86296 -3.8508 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_30</name>
-        <pose>-10 25 0 0 0 0</pose>
+        <name>Construction_Barrel_30</name>
+        <pose>-13.7744 6.73282 0 0 0 -1.5792</pose>
       </include>
       <include>
         <uri>model://construction_barrel</uri>
-        <name>Construction Barrel_31</name>
-        <pose>-6 27 0 0 0 0</pose>
+        <name>Construction_Barrel_31</name>
+        <pose>-17.7743 6.76633 0 0 0 -1.5792</pose>
       </include>
     </model>
 
-    <!-- Light -->
     <light name='sun' type='directional'>
       <cast_shadows>1</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
@@ -261,7 +271,14 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <direction>-0.5 0.1 -0.9</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
     </light>
+
+
 
     <!-- Other Basics -->
     <gravity>0 0 -9.8</gravity>
