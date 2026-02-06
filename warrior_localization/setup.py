@@ -1,6 +1,7 @@
+from glob import glob
 from setuptools import find_packages, setup
 
-package_name = 'warrior_joy'
+package_name = 'warrior_localization'
 
 setup(
     name=package_name,
@@ -10,10 +11,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/joy_2stick.launch.py']),
-        ('share/' + package_name + '/launch', ['launch/joy_swerve.launch.py']),
-        ('share/' + package_name + '/launch', ['launch/joy_turtle.launch.py']),
-        ('share/' + package_name + '/config', ['config/joystick.yaml']),
+        ('share/' + package_name + '/launch', glob('launch/*.py')),
+        ('share/' + package_name + '/config', glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -21,11 +20,14 @@ setup(
     maintainer_email='alimyust@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     entry_points={
         'console_scripts': [
-            'joy_2stick = warrior_joy.joy_2stick:main',
-            'joy_swerve = warrior_joy.joy_swerve:main',
+            "map_robot_pose = warrior_localization.map_robot_pose:main",
         ],
     },
 )

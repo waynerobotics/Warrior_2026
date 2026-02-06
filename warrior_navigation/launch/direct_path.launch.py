@@ -1,0 +1,73 @@
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.actions import Node
+
+def generate_launch_description():
+
+
+    localization_pkg = FindPackageShare("warrior_localization")
+    navigation_pkg = FindPackageShare("warrior_navigation")
+    # --- Gazebo world (TurtleBot3) ---
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('turtlebot3_gazebo'),
+                'launch',
+                'turtlebot3_world.launch.py'
+            ])
+        )
+    )
+
+    # --- SLAM Toolbox ---
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                localization_pkg,
+                'launch',
+                'online_async_launch.py'
+            ])
+        )
+    )
+
+    costmap_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                navigation_pkg,
+                'launch',
+                'costmap.launch.py'
+            ])
+        )
+    )
+
+    robot_map_pose_node = Node(  # publishes map -> robot transform
+        package='warrior_localization',
+        executable='map_robot_pose',
+        name='map_robot_pose',
+        output='screen',
+    )
+
+    direct_path_generator_node = Node(   
+        package='warrior_navigation',
+        executable='direct_path_generator',
+        name='direct_path_generator',
+        output='screen',
+    )
+
+    direct_path_controller_node = Node(   
+        package='warrior_navigation',
+        executable='direct_path_controller',
+        name='direct_path_controller',
+        output='screen',
+    )
+
+    return LaunchDescription([
+        gazebo_launch,
+        slam_launch,
+        # robot_map_pose_node,
+        costmap_launch,
+        direct_path_generator_node,
+        direct_path_controller_node,
+    ])

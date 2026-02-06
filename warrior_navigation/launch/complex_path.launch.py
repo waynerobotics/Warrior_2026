@@ -1,0 +1,92 @@
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
+from launch_ros.actions import Node
+from launch.conditions import IfCondition
+
+def generate_launch_description():
+
+    use_sim = LaunchConfiguration('use_sim')
+
+    declare_use_sim = DeclareLaunchArgument(
+        'use_sim',
+        default_value='true',
+        description='Run in simulation or on real robot'
+    )
+
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('turtlebot3_gazebo'),
+                'launch',
+                'turtlebot3_world.launch.py'
+            ])
+        ),
+        condition=IfCondition(use_sim)
+    )
+
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('warrior_localization'),
+                'launch',
+                'online_async_launch.py'
+            ])
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
+    )
+
+    ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('warrior_localization'),
+                'launch',
+                'ekf.launch.py'
+            ])
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
+    )
+
+    costmap_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('warrior_navigation'),
+                'launch',
+                'costmap.launch.py'
+            ])
+        )
+    )
+
+    rviz_launch = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+    )
+
+    complex_path_generator_node = Node(
+        package='warrior_navigation',
+        executable='complex_path_generator',
+        name='complex_path_generator',
+        output='screen',
+    )
+
+    complex_path_controller_node = Node(
+        package='warrior_navigation',
+        executable='complex_path_controller',
+        name='complex_path_controller',
+        output='screen',
+    )
+
+    return LaunchDescription([
+        declare_use_sim,
+        gazebo_launch,
+        slam_launch,
+        ekf_launch,
+        costmap_launch,
+        complex_path_generator_node,
+        complex_path_controller_node,
+        rviz_launch
+    ])
