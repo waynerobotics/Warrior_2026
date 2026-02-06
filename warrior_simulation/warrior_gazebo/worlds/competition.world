@@ -1,0 +1,312 @@
+<sdf version='1.7'>
+  <world name='default'>
+    <!-- ***************************************************
+          Gazebo World Coordinates
+          This defines the bottom left corner of the gazebo frame.
+          BOTTOM LEFT CORNER
+          The coordinates are in meters.          
+    *************************************************** -->
+    <scene>
+      <ambient>1 1 1</ambient>
+      <grid>false</grid>
+    </scene>
+
+    <frame name='course_frame'>
+      <pose relative_to='world'>-15 28.7 0 0 0 0</pose>
+    </frame>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>42.66791</latitude_deg>
+      <longitude_deg>-83.21958</longitude_deg>
+      <elevation>286</elevation>
+      <heading_deg>90</heading_deg>
+    </spherical_coordinates>
+
+    <physics name="1ms" type="ODE">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+
+    <!-- Ground Plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+      <name>Ground Plane</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Stop Sign -->
+    <include>
+      <uri>model://stop_sign</uri>
+      <name>Stop Sign</name>
+      <pose relative_to='course_frame'>0 10 0 0 0 1.5708</pose>
+    </include>
+
+    <!-- Trash Can -->
+    <include>
+      <uri>model://first_2015_trash_can</uri>
+      <name>Trash Can</name>
+      <pose relative_to='course_frame'>10 0 0 0 0 0</pose>
+    </include>
+
+    <!-- IGVC Track-->
+    <include>
+      <uri>model://igvc_track</uri>
+      <name>IGVC Track</name>
+      <pose relative_to='course_frame'>12.5 -11.5 0 0 0 3.1415</pose>
+    </include>
+
+    <!-- Ramp -->
+    <include>
+      <uri>model://ramp</uri>
+      <name>Ramp</name>
+      <pose relative_to='course_frame'>6.5 -29 0 0 0 0</pose>
+      <!-- <pose>-3 7 0 0 0 -1.5708</pose> -->
+    </include>
+    
+    <!-- Construction Barrels Group -->
+    <model name="construction_barrels_group">
+      <static>1</static>
+      <pose relative_to='course_frame'>-2.8924 -7.3591 0 0 0 -1.5792</pose>
+      <link name="link">
+        <pose>-2.8924 -7.3591 0 0 0 -1.5792</pose>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>1.0</ixx>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyy>1.0</iyy>
+            <iyz>0.0</iyz>
+            <izz>1.0</izz>
+          </inertia>
+        </inertial>
+      </link>
+      
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel</name>
+        <pose>-13.6357 23.2323 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_0</name>
+        <pose>-16.0307 35.7528 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_1</name>
+        <pose>-18.4272 24.2726 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_2</name>
+        <pose>-11.5476 33.7151 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_3</name>
+        <pose>-12.5224 36.7234 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_4</name>
+        <pose>-13.5391 34.7318 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_5</name>
+        <pose>-18.602 27.2741 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_6</name>
+        <pose>-17.8079 2.76661 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_7</name>
+        <pose>-18.1566 20.7701 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_8</name>
+        <pose>-17.707 14.7661 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_9</name>
+        <pose>-5.54936 33.4647 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_10</name>
+        <pose>-13.6694 19.2324 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_11</name>
+        <pose>-13.7895 28.7337 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_12</name>
+        <pose>-16.2559 32.7546 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_13</name>
+        <pose>-7.8796 -5.81719 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_14</name>
+        <pose>-13.6148 25.7321 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_15</name>
+        <pose>-1.87559 -5.3676 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_16</name>
+        <pose>-5.85869 -3.3341 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_17</name>
+        <pose>-13.7072 14.7325 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_18</name>
+        <pose>-7.8754 -5.31719 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_19</name>
+        <pose>10.1223 -5.66841 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_20</name>
+        <pose>20.1194 -6.05242 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_21</name>
+        <pose>-17.7406 10.7663 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_22</name>
+        <pose>-1.87139 -4.8676 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_23</name>
+        <pose>11.1197 -5.97681 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_24</name>
+        <pose>-7.8712 -4.81719 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_25</name>
+        <pose>-17.6818 17.766 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_26</name>
+        <pose>11.1239 -5.47681 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_27</name>
+        <pose>-13.808 2.73291 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_28</name>
+        <pose>-13.7408 10.7327 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_29</name>
+        <pose>-3.86296 -3.8508 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_30</name>
+        <pose>-13.7744 6.73282 0 0 0 -1.5792</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>Construction_Barrel_31</name>
+        <pose>-17.7743 6.76633 0 0 0 -1.5792</pose>
+      </include>
+    </model>
+
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+
+
+
+    <!-- Other Basics -->
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <physics type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.8 0.8 0.8  1</background>
+      <shadows>1</shadows>
+    </scene>
+    <wind/>
+
+    <!-- Camera -->
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <!-- <pose>-49.3551 21.9479 3.51155 0 0.4108 -0.02</pose> -->
+        <!-- <pose>28.1588, -43.1236, 50.3440, 0, 0.624, 1.532</pose> -->
+        <pose>39.3076 -25.7805 68.7418 0 0.92 1.62</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+
+  </world>
+</sdf>

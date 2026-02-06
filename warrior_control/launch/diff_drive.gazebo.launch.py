@@ -93,7 +93,7 @@ def generate_launch_description():
         arguments=[
             "-topic", "robot_description",
             "-name", "warrior",
-            "-allow_renaming", "true"
+            "-allow_renaming", "true",
         ],
         output="screen",
         parameters=[{"use_sim_time": use_sim_time}],

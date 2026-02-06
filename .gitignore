@@ -53,9 +53,9 @@ tags
 .venv/
 
 # Ignore generated/temporary mesh or model files
-*.dae
+# *.dae
 # *.stl
-*.obj
+# *.obj
 
 # End of file
 

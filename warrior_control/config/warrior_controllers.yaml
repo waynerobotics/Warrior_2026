@@ -45,14 +45,9 @@ swerve_drive_controller:
       - "left_drive_joint"
       - "right_drive_joint"
 
-    command_interface_names:
-      - "position"
-      - "velocity"
-
     state_interface_names:
       - "position"
       - "velocity"
-      - "effort"
     
     wheel_radius: 0.1015
 

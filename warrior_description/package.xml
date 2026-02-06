@@ -3,7 +3,7 @@
 <package format="3">
   <name>warrior_description</name>
   <version>0.0.0</version>
-  <description>The description of the WSU warrior robot</description>
+  <description>The description of the 2026 WSU warrior robot</description>
   <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
   <license>Apache-2.0</license>
 

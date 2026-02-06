@@ -24,6 +24,8 @@ def launch_setup(context, *args, **kwargs):
     warrior_description_pkg = FindPackageShare("warrior_description")
     
     warrior_control_pkg = FindPackageShare("warrior_control")
+    
+    world_name = LaunchConfiguration("world_name").perform(context)
 
     xacro_file = PathJoinSubstitution([warrior_description_pkg, "urdf", "gzsim.urdf.xacro"])
     robot_description = Command(["xacro ", xacro_file])
@@ -41,6 +43,7 @@ def launch_setup(context, *args, **kwargs):
         launch_arguments={
             "use_sim_time": str(use_sim_time).lower(),
             "robot_description": robot_description,
+            "world_name": world_name,
         }.items()
     )
 
@@ -84,5 +87,7 @@ def generate_launch_description():
         DeclareLaunchArgument("namespace", default_value="warrior"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("controller_type", default_value="swerve_drive_controller"),
+        DeclareLaunchArgument("world_name", default_value="competition.world"),
+        
         OpaqueFunction(function=launch_setup),
     ])

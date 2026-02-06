@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
 from launch_ros.actions import Node
@@ -13,18 +14,30 @@ from launch.event_handlers import OnProcessExit
 def generate_launch_description():
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
+    gazebo_world = LaunchConfiguration('world_name', default='competition.world')
     
     # ----------------- path -----------------
     pkg_gz_ros = FindPackageShare("ros_gz_sim")
     pkg_warrior_description = FindPackageShare("warrior_description")
     pkg_warrior_control = FindPackageShare("warrior_control")
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
-    pkg_world_models = FindPackageShare("warrior_simulation")
+    pkg_gazebo = FindPackageShare("warrior_gazebo")
 
-    world_file = PathJoinSubstitution([pkg_world_models, "worlds", "empty.world"])
+    world_file = PathJoinSubstitution([pkg_gazebo, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
+
+
+    # Set GAZEBO model path
+    pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
+    model_resource_path = os.path.join(pkg_gazebo_path, "models")
+
+    os.environ["IGN_GAZEBO_RESOURCE_PATH"] = \
+        os.environ.get("IGN_GAZEBO_RESOURCE_PATH", "") + ":" + model_resource_path
+
+    os.environ["GZ_SIM_RESOURCE_PATH"] = \
+        os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
 
     rviz2_config_file = PathJoinSubstitution(
         [pkg_warrior_bringup, "rviz", "warrior.rviz"]
@@ -44,14 +57,14 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager-timeout", "10"],
+        arguments=["joint_state_broadcaster", "--controller-manager-timeout", "120"],
         output="screen",
     )
     
     swerve_drive_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["swerve_drive_controller", "--controller-manager-timeout", "10"],
+        arguments=["swerve_drive_controller", "--controller-manager-timeout", "120"],
         output="screen",
     )
 
@@ -94,7 +107,8 @@ def generate_launch_description():
         arguments=[
             "-topic", "robot_description",
             "-name", "warrior",
-            "-allow_renaming", "true"
+            "-allow_renaming", "true",
+            '-x', '0.', '-y', '0.', '-z', '0.3'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -122,11 +136,21 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_sim_time',
             default_value=use_sim_time,
-            description='If true, use simulated clock'),
+            description='If true, use simulated clock'
+        ),
+        DeclareLaunchArgument(
+            'world_name',
+            default_value=world_file,
+            description='Gazebo world file to load'
+        ),
+        
         gazebo,
         robot_state_publisher,
         # joint_state_publisher,
         # ros2_control_node,
+        gz_bridge,
+        gz_spawn_entity,
+        
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
@@ -140,9 +164,13 @@ def generate_launch_description():
             )
         ),
         
-        gz_bridge,
-        gz_spawn_entity,
-        rviz2,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=swerve_drive_controller_spawner,
+                on_exit=[rviz2],
+            )
+        ),
+
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=swerve_drive_controller_spawner,
