@@ -37,7 +37,7 @@ class ComplexPathController(Node):
     def get_robot_pose_map(self):
         try:
             tf = self.tf_buffer.lookup_transform(
-                target_frame='map',
+                target_frame='odom',
                 source_frame='base_link',
                 time=rclpy.time.Time()
             )
@@ -63,7 +63,7 @@ class ComplexPathController(Node):
     def get_robot_pose_map(self):
         try:
             tf = self.tf_buffer.lookup_transform(
-                target_frame='odometry/filtered',
+                target_frame='odom',
                 source_frame='base_link',
                 time=rclpy.time.Time()
             )

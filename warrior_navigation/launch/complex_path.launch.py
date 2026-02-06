@@ -1,13 +1,21 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
-from launch.substitutions import PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
 from launch_ros.actions import Node
+from launch.conditions import IfCondition
 
 def generate_launch_description():
 
-    # --- Gazebo world (TurtleBot3) ---
+    use_sim = LaunchConfiguration('use_sim')
+
+    declare_use_sim = DeclareLaunchArgument(
+        'use_sim',
+        default_value='true',
+        description='Run in simulation or on real robot'
+    )
+
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -15,10 +23,10 @@ def generate_launch_description():
                 'launch',
                 'turtlebot3_world.launch.py'
             ])
-        )
+        ),
+        condition=IfCondition(use_sim)
     )
 
-    # --- SLAM Toolbox ---
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -26,7 +34,19 @@ def generate_launch_description():
                 'launch',
                 'online_async_launch.py'
             ])
-        )
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
+    )
+
+    ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare('warrior_localization'),
+                'launch',
+                'ekf.launch.py'
+            ])
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
     )
 
     costmap_launch = IncludeLaunchDescription(
@@ -45,34 +65,15 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
     )
-    
-    robot_map_pose_node = Node(  # publishes map -> robot transform
-        package='warrior_localization',
-        executable='map_robot_pose',
-        name='map_robot_pose',
-        output='screen',
-    )
 
-    ekf_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare('warrior_localization'),
-                'launch',
-                'ekf.launch.py'
-            ])
-        )
-    )
-
-    complex_path_generator_node = Node(   
+    complex_path_generator_node = Node(
         package='warrior_navigation',
         executable='complex_path_generator',
         name='complex_path_generator',
         output='screen',
     )
-    
 
-
-    complex_path_controller_node = Node(   
+    complex_path_controller_node = Node(
         package='warrior_navigation',
         executable='complex_path_controller',
         name='complex_path_controller',
@@ -80,13 +81,12 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        declare_use_sim,
         gazebo_launch,
         slam_launch,
-        costmap_launch,
         ekf_launch,
+        costmap_launch,
         complex_path_generator_node,
         complex_path_controller_node,
         rviz_launch
-        # nav2_launch,
-        # rviz_launch
     ])

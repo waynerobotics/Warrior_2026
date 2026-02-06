@@ -9,39 +9,57 @@ class DirectPathGenerator(Node):
         super().__init__('direct_path_generator')
         self.get_logger().info('Direct Path Generator Node started')
 
-        self.robot_pose = None
         self.goal_pose = None
+
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
-        
-        self.path_publisher = self.create_publisher(Path, 'dir_path', 10)
-        self.goal_subscription = self.create_subscription(PoseStamped, 'goal_pose', self.goal_callback, 10)
-        self.robot_pose_subscription = self.create_subscription(PoseStamped, 'robot_map_pose', self.robot_pose_callback, 10)
 
-        self.timer = self.create_timer(0.1, self.publish_direct_path)
+        self.path_publisher = self.create_publisher(Path, 'dir_path', 10)
+        self.goal_subscription = self.create_subscription(
+            PoseStamped, 'goal_pose', self.goal_callback, 10
+        )
 
     def goal_callback(self, msg: PoseStamped):
         self.goal_pose = msg
+        self.publish_direct_path()
 
-    def robot_pose_callback(self, msg: PoseStamped):
-        self.robot_pose = msg
+    def get_robot_pose_map(self):
+        try:
+            tf = self.tf_buffer.lookup_transform(
+                target_frame='map',
+                source_frame='base_link',
+                time=rclpy.time.Time()
+            )
+
+            ps = PoseStamped()
+            ps.header.frame_id = 'map'
+            ps.header.stamp = self.get_clock().now().to_msg()
+            ps.pose.position.x = tf.transform.translation.x
+            ps.pose.position.y = tf.transform.translation.y
+            ps.pose.position.z = tf.transform.translation.z
+            ps.pose.orientation = tf.transform.rotation
+
+            return ps
+
+        except tf2_ros.TransformException as ex:
+            self.get_logger().warn(f'TF lookup failed: {ex}')
+            return None
 
     def publish_direct_path(self):
         if self.goal_pose is None:
             return
-        try:
-            path = Path()
-            path.header.frame_id = 'map'
-            path.header.stamp = self.get_clock().now().to_msg()
-            path.poses = [self.robot_pose, self.goal_pose]
 
-            self.get_logger().info('Publishing direct path from current position to goal' +
-                                   f'({self.robot_pose.pose.position.x}, {self.robot_pose.pose.position.y}) to ' +
-                                   f'({self.goal_pose.pose.position.x}, {self.goal_pose.pose.position.y})')
-            self.path_publisher.publish(path)
-        except Exception as e:
-            self.get_logger().warn(f'Transform lookup failed: {e}')
+        robot_pose = self.get_robot_pose_map()
+        if robot_pose is None:
+            return
 
+        path = Path()
+        path.header.frame_id = 'map'
+        path.header.stamp = self.get_clock().now().to_msg()
+        path.poses = [robot_pose, self.goal_pose]
+
+        self.path_publisher.publish(path)
+        self.get_logger().info('Published direct path using TF pose')
 
 def main():
     rclpy.init()
