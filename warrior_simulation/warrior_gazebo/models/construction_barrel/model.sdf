@@ -15,9 +15,11 @@
       </inertial>
       <collision name="collision">
         <geometry>
-          <mesh>
-            <uri>model://construction_barrel/meshes/construction_barrel.dae</uri>
-          </mesh>
+          <cylinder>
+            <radius>0.3</radius>
+            <length>2.5</length>
+            <!-- Around barrel, not including the base portion, but only the cylinder -->
+          </cylinder>
         </geometry>
       </collision>
       <visual name="visual">

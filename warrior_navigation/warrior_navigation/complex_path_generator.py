@@ -1,4 +1,3 @@
-from collections.abc import Buffer
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
@@ -36,7 +35,7 @@ class ComplexPathGenerator(Node):
         self.path_pub = self.create_publisher(Path, '/a_star_path', 10)
 
         self.cost_map_subscriber = self.create_subscription(OccupancyGrid,
-                                'global_costmap/costmap', self.cost_map_callback, 10)
+                                'local_costmap/costmap', self.cost_map_callback, 10)
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)

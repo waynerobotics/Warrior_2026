@@ -14,6 +14,8 @@ setup(
         ('share/' + package_name + '/launch', glob('launch/*.py')),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
         ('share/' + package_name + '/maps', glob('maps/*.yaml')),
+        ('share/' + package_name + '/rviz2', glob('rviz2/*.rviz')),
+
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,7 +30,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'waypoint_follower = warrior_navigation.waypoint_follower:main',
             'direct_path_generator = warrior_navigation.direct_path_generator:main',
             'map_robot_pose = warrior_navigation.map_robot_pose:main',
             'linear_path_controller = warrior_navigation.linear_path_controller:main',

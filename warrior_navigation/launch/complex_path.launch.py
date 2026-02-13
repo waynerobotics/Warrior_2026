@@ -16,6 +16,12 @@ def generate_launch_description():
         description='Run in simulation or on real robot'
     )
 
+    warrior_nav = FindPackageShare("warrior_navigation")
+
+    rviz2_config_file = PathJoinSubstitution(
+        [warrior_nav, "rviz2", "complex_path.rviz"]
+    )
+
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -59,11 +65,13 @@ def generate_launch_description():
         )
     )
 
-    rviz_launch = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
+
+    rviz2 = Node(
+        package="rviz2",
+        executable="rviz2",
+        output="screen",
+        arguments=["-d", rviz2_config_file],
+        parameters=[{"use_sim_time": False}],
     )
 
     complex_path_generator_node = Node(
@@ -88,5 +96,5 @@ def generate_launch_description():
         costmap_launch,
         complex_path_generator_node,
         complex_path_controller_node,
-        rviz_launch
+        rviz2
     ])
