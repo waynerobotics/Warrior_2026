@@ -25,9 +25,9 @@ def generate_launch_description():
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('turtlebot3_gazebo'),
+                FindPackageShare('warrior_navigation'),
                 'launch',
-                'turtlebot3_world.launch.py'
+                'turtlebot3_world_gps.launch.py'
             ])
         ),
         condition=IfCondition(use_sim)

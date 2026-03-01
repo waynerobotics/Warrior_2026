@@ -319,7 +319,7 @@
       <sensor name="navsat" type="navsat">
         <always_on>true</always_on>
         <update_rate>1</update_rate>
-        <topic>$(arg namespace)/gps/fix</topic>
+        <topic>gps/fix</topic>
         <gz_frame_id>gps_link</gz_frame_id>
         <navsat>
           <position_sensing>
@@ -388,9 +388,9 @@
     </joint>
 
     <joint name="gps_joint" type="fixed">
-      <parent link="base_link"/>
-      <child link="gps_link"/>
-      <origin xyz="-0.05 0 0.05" rpy="0 0 0"/>
+      <parent>base_link</parent>
+      <child>gps_link</child>
+      <pose>-0.05 0 0.05 0 0 0</pose>
     </joint>
 
     <plugin name="turtlebot3_diff_drive" filename="libgazebo_ros_diff_drive.so">
