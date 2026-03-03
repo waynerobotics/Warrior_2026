@@ -1,0 +1,6 @@
+[console_scripts]
+apriltag_gps_bridge = gps_localization.apriltag_gps_bridge:main
+gps_hardware_node = gps_localization.gps_hardware_node:main
+robot_frame_node = gps_localization.robot_frame_node:main
+waypoint_navigator_node = gps_localization.waypoint_navigator_node:main
+world_gps_node = gps_localization.world_gps_node:main
