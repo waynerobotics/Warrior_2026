@@ -1,0 +1,43 @@
+# GPS Localization Configuration
+gps_localization:
+  apriltag_gps_bridge:
+    ros__parameters:
+      robot_name: shanti
+      camera_params: [514.8914923, 515.01073552, 320.13602236, 240.43150943]
+      
+  world_gps_node:
+    ros__parameters:
+      use_hardware_gps: false  # Set to true for outdoor with GT-U7
+      fixed_latitude: 42.363945
+      fixed_longitude: -83.073175
+      fixed_altitude: 200.0
+      
+  waypoint_navigator:
+    ros__parameters:
+      robot_name: shanti
+      utm_zone: 17  # Detroit area
+      waypoint_tolerance: 0.3 #meters - robot must be within this distance
+      
+      # COMPETITION WAYPOINTS - Update these with actual coordinates
+      # Waypoint 1: Entrance to course (No Man's Land)
+      waypoint_1_lat: 42.363945
+      waypoint_1_lon: -83.073175
+      
+      # Waypoint 2: Navigation waypoint in No Man's Land
+      waypoint_2_lat: 42.364100
+      waypoint_2_lon: -83.073000
+      
+      # Waypoint 3: Navigation waypoint in No Man's Land
+      waypoint_3_lat: 42.364200
+      waypoint_3_lon: -83.072800
+      
+      # Waypoint 4: Exit from course (No Man's Land)
+      waypoint_4_lat: 42.363800
+      waypoint_4_lon: -83.073400
+      
+  robot_frame_node:
+    ros__parameters:
+      robot_name: shanti
+      initial_x: 0.0
+      initial_y: 0.0
+      initial_z: 0.0
