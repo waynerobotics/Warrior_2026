@@ -1,9 +1,0 @@
-<library path="warrior_control">
-  <class name="swerve_drive_controller/SwerveDriveController"
-         type="warrior::control::SwerveDriveController"
-         base_class_type="controller_interface::ControllerInterface">
-    <description>
-      The ros2_control pulgin of swerve drive controller for Warrior robot.
-    </description>
-  </class>
-</library>
