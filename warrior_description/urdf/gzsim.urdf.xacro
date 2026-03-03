@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="wsu_warrior_sim">
-    <xacro:include filename="$(find warrior_description)/xacro/material.gazebo.xacro"/>
-    <xacro:include filename="$(find warrior_description)/xacro/ros2_control/gzsim.ros2_control.xacro"/>
-    <xacro:include filename="$(find warrior_description)/xacro/robot.xacro"/>
-</robot>
