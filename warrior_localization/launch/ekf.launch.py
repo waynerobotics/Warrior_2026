@@ -10,7 +10,7 @@ def generate_launch_description():
     ekf_node = Node(
         package='robot_localization',
         executable='ekf_node',
-        name='ekf_filter_node',
+        name='ekf_node_odom',
         output='screen',
         parameters=[config_file],
         remappings=[
