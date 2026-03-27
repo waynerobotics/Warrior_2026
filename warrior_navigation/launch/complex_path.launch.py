@@ -62,7 +62,8 @@ def generate_launch_description():
                 'launch',
                 'costmap.launch.py'
             ])
-        )
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
     )
 
 
@@ -71,21 +72,23 @@ def generate_launch_description():
         executable="rviz2",
         output="screen",
         arguments=["-d", rviz2_config_file],
-        parameters=[{"use_sim_time": False}],
+        parameters=[{"use_sim_time": use_sim}],
     )
 
-    complex_path_generator_node = Node(
+    path_to_pose_server_node = Node(
         package='warrior_navigation',
-        executable='complex_path_generator',
-        name='complex_path_generator',
+        executable='path_to_pose_server',
+        name='path_to_pose_server',
         output='screen',
+        parameters=[{'use_sim_time': use_sim}],
     )
 
-    complex_path_controller_node = Node(
+    follow_path_node = Node(
         package='warrior_navigation',
-        executable='complex_path_controller',
-        name='complex_path_controller',
+        executable='follow_path',
+        name='follow_path',
         output='screen',
+        parameters=[{'use_sim_time': use_sim}],
     )
 
     return LaunchDescription([
@@ -94,7 +97,7 @@ def generate_launch_description():
         slam_launch,
         ekf_launch,
         costmap_launch,
-        complex_path_generator_node,
-        complex_path_controller_node,
+        path_to_pose_server_node,
+        follow_path_node,
         rviz2
     ])

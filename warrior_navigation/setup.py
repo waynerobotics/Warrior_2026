@@ -33,9 +33,9 @@ setup(
             'direct_path_generator = warrior_navigation.direct_path_generator:main',
             'map_robot_pose = warrior_navigation.map_robot_pose:main',
             'linear_path_controller = warrior_navigation.linear_path_controller:main',
-            'complex_path_generator = warrior_navigation.complex_path_generator:main',
+            'path_to_pose_server = warrior_navigation.compute_path_to_pose:main',
             'astar_planner = warrior_navigation.astar_planner:main',
-            'complex_path_controller = warrior_navigation.complex_path_controller:main',
+            'follow_path = warrior_navigation.follow_path:main',
             
         ],
     },

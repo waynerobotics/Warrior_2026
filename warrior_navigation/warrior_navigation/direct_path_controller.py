@@ -9,6 +9,8 @@ class DirectPathController(Node):
     def __init__(self):
         super().__init__('direct_path_controller')
         self.get_logger().info('Direct Path Controller Node started')
+        self.declare_parameter('robot_base_frame', 'base_footprint')
+        self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
 
         self.lookahead_point = None
 
@@ -32,7 +34,7 @@ class DirectPathController(Node):
         try:
             tf = self.tf_buffer.lookup_transform(
                 target_frame='map',
-                source_frame='base_link',
+                source_frame=self.robot_base_frame,
                 time=rclpy.time.Time()
             )
 
@@ -70,7 +72,7 @@ class DirectPathController(Node):
 
         cmd = TwistStamped()
         cmd.header.stamp = self.get_clock().now().to_msg()
-        cmd.header.frame_id = 'base_link'
+        cmd.header.frame_id = self.robot_base_frame
         cmd.twist.linear.x = k_linear * distance
         cmd.twist.angular.z = k_angular * angle_error
 
