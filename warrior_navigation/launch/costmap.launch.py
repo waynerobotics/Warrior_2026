@@ -8,7 +8,6 @@ import os
 
 
 def generate_launch_description():
-    # Absolute path to: <install>/share/warrior_navigation/config/costmaps_only.yaml
     default_params_file = os.path.join(
         get_package_share_directory('warrior_navigation'),
         'config',
@@ -30,17 +29,17 @@ def generate_launch_description():
         ),
 
         Node(
-            package='nav2_planner',
-            executable='planner_server',
-            name='planner_server',
+            package='nav2_costmap_2d',
+            executable='nav2_costmap_2d',
+            name='global_costmap',
             output='screen',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
         ),
 
         Node(
-            package='nav2_controller',
-            executable='controller_server',
-            name='controller_server',
+            package='nav2_costmap_2d',
+            executable='nav2_costmap_2d',
+            name='local_costmap',
             output='screen',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
         ),
@@ -48,15 +47,14 @@ def generate_launch_description():
         Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
-            name='lifecycle_manager',
+            name='lifecycle_manager_costmaps',
             output='screen',
-            # Hard-pass these too so lifecycle_manager can’t crash even if YAML has issues
             parameters=[
                 params_file,
                 {
                     'use_sim_time': use_sim_time,
                     'autostart': True,
-                    'node_names': ['planner_server', 'controller_server'],
+                    'node_names': ['global_costmap', 'local_costmap'],
                 }
             ],
         ),
