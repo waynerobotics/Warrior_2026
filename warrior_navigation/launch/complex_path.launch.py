@@ -80,7 +80,24 @@ def generate_launch_description():
         executable='path_to_pose_server',
         name='path_to_pose_server',
         output='screen',
-        parameters=[{'use_sim_time': use_sim}],
+        parameters=[{
+            'use_sim_time': use_sim,
+            'action_name': 'compute_path_to_pose_core',
+            'costmap_topic': '/global_costmap/costmap',
+        }],
+    )
+
+    recovery_manager_node = Node(
+        package='warrior_navigation',
+        executable='recovery_manager',
+        name='recovery_manager',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim,
+            'action_name': 'path_to_pose',
+            'planner_action_name': 'compute_path_to_pose_core',
+            'enable_rviz_goal_bridge': True,
+        }],
     )
 
     follow_path_node = Node(
@@ -98,6 +115,7 @@ def generate_launch_description():
         ekf_launch,
         costmap_launch,
         path_to_pose_server_node,
+        recovery_manager_node,
         follow_path_node,
         rviz2
     ])

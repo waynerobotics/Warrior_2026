@@ -101,7 +101,7 @@ lifecycle_manager:
   ros__parameters:
     autostart: true
     node_names: ["global_costmap", "local_costmap"]
-
+    bond_timeout: 10.0
 
 
 # planner_server:

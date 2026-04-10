@@ -34,6 +34,7 @@ setup(
             'map_robot_pose = warrior_navigation.map_robot_pose:main',
             'linear_path_controller = warrior_navigation.linear_path_controller:main',
             'path_to_pose_server = warrior_navigation.compute_path_to_pose:main',
+            'recovery_manager = warrior_navigation.recovery_manager:main',
             'astar_planner = warrior_navigation.astar_planner:main',
             'follow_path = warrior_navigation.follow_path:main',
             

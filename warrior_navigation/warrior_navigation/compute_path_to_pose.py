@@ -7,7 +7,7 @@ from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import PoseStamped
 from nav2_msgs.action import ComputePathToPose as ComputePathToPoseAction
 from nav_msgs.msg import OccupancyGrid, Path
-from rclpy.action import ActionClient, ActionServer, CancelResponse, GoalResponse
+from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.node import Node
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
@@ -27,30 +27,25 @@ class PathToPoseServer(Node):
 
         self.declare_parameter('global_frame', 'map')
         self.declare_parameter('robot_base_frame', 'base_footprint')
-        self.declare_parameter('action_name', 'path_to_pose')
-        self.declare_parameter('rviz_goal_topic', 'goal_pose')
-        self.declare_parameter('enable_rviz_goal_bridge', True)
+        self.declare_parameter('action_name', 'compute_path_to_pose_core')
+        self.declare_parameter('costmap_topic', '/global_costmap/costmap')
+
         self.global_frame = self.get_parameter('global_frame').get_parameter_value().string_value
         self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
-        self.rviz_goal_topic = self.get_parameter('rviz_goal_topic').get_parameter_value().string_value
-        self.enable_rviz_goal_bridge = (
-            self.get_parameter('enable_rviz_goal_bridge').get_parameter_value().bool_value
-        )
+        self.costmap_topic = self.get_parameter('costmap_topic').get_parameter_value().string_value
 
         self.path_pub = self.create_publisher(Path, '/a_star_path', 10)
         self.status_pub = self.create_publisher(String, '~/planning_status', 10)
         self.cost_map_subscriber = self.create_subscription(
             OccupancyGrid,
-            '/costmap',
+            self.costmap_topic,
             self.cost_map_callback,
             10,
         )
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        self._action_client = ActionClient(self, ComputePathToPoseAction, self.action_name)
-        self._rviz_goal_handle = None
 
         self.costmap = None
         self.map_info = None
@@ -67,18 +62,7 @@ class PathToPoseServer(Node):
             cancel_callback=self.cancel_callback,
         )
 
-        if self.enable_rviz_goal_bridge:
-            self.goal_pose_subscription = self.create_subscription(
-                PoseStamped,
-                self.rviz_goal_topic,
-                self.rviz_goal_callback,
-                10,
-            )
-        else:
-            self.goal_pose_subscription = None
-
     def destroy_node(self):
-        self._action_client.destroy()
         self._action_server.destroy()
         super().destroy_node()
 
@@ -96,62 +80,6 @@ class PathToPoseServer(Node):
     def cancel_callback(self, _goal_handle):
         self.publish_status(f'Cancel request received for {self.action_name}.')
         return CancelResponse.ACCEPT
-
-    def rviz_goal_callback(self, msg: PoseStamped):
-        if not self._action_client.wait_for_server(timeout_sec=0.5):
-            self.get_logger().warn(
-                f'RViz goal received, but action server {self.action_name} is not available yet.'
-            )
-            return
-
-        if self._rviz_goal_handle is not None:
-            self._rviz_goal_handle.cancel_goal_async()
-            self._rviz_goal_handle = None
-
-        goal_msg = ComputePathToPoseAction.Goal()
-        goal_msg.goal = msg
-        goal_msg.use_start = False
-        goal_msg.planner_id = 'a_star'
-
-        self.publish_status(
-            f'Received RViz goal on {self.rviz_goal_topic}, sending action request.'
-        )
-        send_goal_future = self._action_client.send_goal_async(goal_msg)
-        send_goal_future.add_done_callback(self._rviz_goal_response_callback)
-
-    def _rviz_goal_response_callback(self, future):
-        try:
-            goal_handle = future.result()
-        except Exception as exc:
-            self.get_logger().error(f'Failed to send RViz goal to action server: {exc}')
-            return
-
-        if not goal_handle.accepted:
-            self.get_logger().warn('RViz goal was rejected by the action server.')
-            return
-
-        self._rviz_goal_handle = goal_handle
-        self.get_logger().info('RViz goal accepted by the action server.')
-        result_future = goal_handle.get_result_async()
-        result_future.add_done_callback(self._rviz_goal_result_callback)
-
-    def _rviz_goal_result_callback(self, future):
-        try:
-            result = future.result().result
-        except Exception as exc:
-            self.get_logger().error(f'Failed to get action result for RViz goal: {exc}')
-            return
-        finally:
-            self._rviz_goal_handle = None
-
-        if result.error_code == ComputePathToPoseAction.Result.NONE:
-            self.get_logger().info('RViz-triggered planning request completed successfully.')
-            return
-
-        self.get_logger().warn(
-            f'RViz-triggered planning request failed with code {result.error_code}: '
-            f'{result.error_msg}'
-        )
 
     def execute_callback(self, goal_handle):
         result = ComputePathToPoseAction.Result()
