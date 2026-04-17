@@ -9,6 +9,8 @@ from nav2_msgs.action import ComputePathToPose as ComputePathToPoseAction
 from nav_msgs.msg import OccupancyGrid, Path
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.node import Node
+from rclpy.task import Future
+from rclpy.time import Time
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -28,12 +30,20 @@ class PathToPoseServer(Node):
         self.declare_parameter('global_frame', 'map')
         self.declare_parameter('robot_base_frame', 'base_footprint')
         self.declare_parameter('action_name', 'compute_path_to_pose_core')
-        self.declare_parameter('costmap_topic', '/global_costmap/costmap')
+        self.declare_parameter('costmap_topic', '/costmap')
+        self.declare_parameter('costmap_wait_timeout', 5.0)
+        self.declare_parameter('costmap_wait_poll_interval', 0.1)
 
         self.global_frame = self.get_parameter('global_frame').get_parameter_value().string_value
         self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
         self.costmap_topic = self.get_parameter('costmap_topic').get_parameter_value().string_value
+        self.costmap_wait_timeout = (
+            self.get_parameter('costmap_wait_timeout').get_parameter_value().double_value
+        )
+        self.costmap_wait_poll_interval = (
+            self.get_parameter('costmap_wait_poll_interval').get_parameter_value().double_value
+        )
 
         self.path_pub = self.create_publisher(Path, '/a_star_path', 10)
         self.status_pub = self.create_publisher(String, '~/planning_status', 10)
@@ -81,13 +91,13 @@ class PathToPoseServer(Node):
         self.publish_status(f'Cancel request received for {self.action_name}.')
         return CancelResponse.ACCEPT
 
-    def execute_callback(self, goal_handle):
+    async def execute_callback(self, goal_handle):
         result = ComputePathToPoseAction.Result()
         planning_started_at = time.perf_counter()
 
         try:
             self.publish_status('Planning request accepted.')
-            self.ensure_costmap_ready()
+            await self.wait_for_costmap_ready(goal_handle)
 
             if goal_handle.is_cancel_requested:
                 return self.cancel_goal(goal_handle, result, planning_started_at)
@@ -159,12 +169,46 @@ class PathToPoseServer(Node):
         self.publish_status(result.error_msg)
         return result
 
-    def ensure_costmap_ready(self):
-        if self.costmap is None or self.map_info is None:
-            raise PathPlanningError(
-                ComputePathToPoseAction.Result.UNKNOWN,
-                'No costmap has been received yet.',
-            )
+    async def wait_for_costmap_ready(self, goal_handle):
+        if self.costmap is not None and self.map_info is not None:
+            return
+
+        deadline = time.monotonic() + self.costmap_wait_timeout
+        self.publish_status(
+            f'Waiting for costmap on {self.costmap_topic} before planning.'
+        )
+
+        while self.costmap is None or self.map_info is None:
+            if goal_handle.is_cancel_requested:
+                raise PathPlanningError(
+                    ComputePathToPoseAction.Result.UNKNOWN,
+                    'Path planning request was canceled while waiting for the costmap.',
+                )
+
+            if time.monotonic() >= deadline:
+                raise PathPlanningError(
+                    ComputePathToPoseAction.Result.UNKNOWN,
+                    f'No costmap has been received on {self.costmap_topic} within '
+                    f'{self.costmap_wait_timeout:.1f} seconds.',
+                )
+
+            await self.sleep_for(self.costmap_wait_poll_interval)
+
+    async def sleep_for(self, seconds: float):
+        future = Future()
+        timer = None
+
+        def _finish_wait():
+            nonlocal timer
+            if timer is not None:
+                timer.cancel()
+                self.destroy_timer(timer)
+                timer = None
+            if not future.done():
+                future.set_result(True)
+
+        timer = self.create_timer(seconds, _finish_wait)
+        await future
 
     def normalize_pose(self, pose: PoseStamped, label: str) -> PoseStamped:
         if pose.header.frame_id not in ('', self.global_frame):
@@ -184,7 +228,7 @@ class PathToPoseServer(Node):
             tf = self.tf_buffer.lookup_transform(
                 target_frame=self.global_frame,
                 source_frame=self.robot_base_frame,
-                time=rclpy.time.Time(),
+                time=Time(),
             )
         except TransformException as exc:
             raise PathPlanningError(

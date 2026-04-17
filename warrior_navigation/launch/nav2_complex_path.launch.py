@@ -1,13 +1,13 @@
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.substitutions import FindPackageShare
-from launch.substitutions import PathJoinSubstitution, LaunchConfiguration
-from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+
 
 def generate_launch_description():
-
     use_sim = LaunchConfiguration('use_sim')
 
     declare_use_sim = DeclareLaunchArgument(
@@ -16,18 +16,22 @@ def generate_launch_description():
         description='Run in simulation or on real robot'
     )
 
-    warrior_nav = FindPackageShare("warrior_navigation")
+    warrior_nav = FindPackageShare('warrior_navigation')
 
     rviz2_config_file = PathJoinSubstitution(
-        [warrior_nav, "rviz2", "complex_path.rviz"]
+        [warrior_nav, 'rviz2', 'complex_path.rviz']
+    )
+
+    nav2_params_file = PathJoinSubstitution(
+        [warrior_nav, 'config', 'nav2_params.yaml']
     )
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('warrior_navigation'),
+                warrior_nav,
                 'launch',
-                'turtlebot3_world_gps.launch.py'
+                'turtlebot3_world_gps.launch.py',
             ])
         ),
         condition=IfCondition(use_sim)
@@ -38,9 +42,9 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_localization'),
                 'launch',
-                'online_async_launch.py'
+                'online_async_launch.py',
             ])
-        ),
+        ),  
         launch_arguments={'use_sim_time': use_sim}.items()
     )
 
@@ -49,55 +53,37 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_localization'),
                 'launch',
-                'ekf.launch.py'
+                'ekf.launch.py',
             ])
         ),
         launch_arguments={'use_sim_time': use_sim}.items()
     )
 
-    costmap_launch = IncludeLaunchDescription(
+    nav2_bringup_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('warrior_navigation'),
+                warrior_nav,
                 'launch',
-                'costmap.launch.py'
+                'bringup_launch.py',
             ])
         ),
-        launch_arguments={'use_sim_time': use_sim}.items()
+        launch_arguments={
+            'slam': 'False',
+            'use_localization': 'False',
+            'use_sim_time': use_sim,
+            'params_file': nav2_params_file,
+            'autostart': 'true',
+            'use_composition': 'True',
+            'use_respawn': 'False',
+        }.items()
     )
-
 
     rviz2 = Node(
-        package="rviz2",
-        executable="rviz2",
-        output="screen",
-        arguments=["-d", rviz2_config_file],
-        parameters=[{"use_sim_time": use_sim}],
-    )
-
-    path_to_pose_server_node = Node(
-        package='warrior_navigation',
-        executable='path_to_pose_server',
-        name='path_to_pose_server',
+        package='rviz2',
+        executable='rviz2',
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim,
-            'action_name': 'compute_path_to_pose_core',
-            'costmap_topic': '/costmap',
-        }],
-    )
-
-    recovery_manager_node = Node(
-        package='warrior_navigation',
-        executable='recovery_manager',
-        name='recovery_manager',
-        output='screen',
-        parameters=[{
-            'use_sim_time': use_sim,
-            'action_name': 'path_to_pose',
-            'planner_action_name': 'compute_path_to_pose_core',
-            'enable_rviz_goal_bridge': True,
-        }],
+        arguments=['-d', rviz2_config_file],
+        parameters=[{'use_sim_time': use_sim}],
     )
 
     follow_path_node = Node(
@@ -113,9 +99,7 @@ def generate_launch_description():
         gazebo_launch,
         slam_launch,
         ekf_launch,
-        costmap_launch,
-        path_to_pose_server_node,
-        recovery_manager_node,
+        nav2_bringup_launch,
         follow_path_node,
-        rviz2
+        rviz2,
     ])

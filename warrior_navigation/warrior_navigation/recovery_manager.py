@@ -1,5 +1,3 @@
-import asyncio
-
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
@@ -7,6 +5,7 @@ from nav2_msgs.action import ComputePathToPose as ComputePathToPoseAction
 from nav2_msgs.srv import ClearEntireCostmap
 from rclpy.action import ActionClient, ActionServer, CancelResponse, GoalResponse
 from rclpy.node import Node
+from rclpy.task import Future
 from std_msgs.msg import String
 
 
@@ -266,7 +265,7 @@ class RecoveryManager(Node):
             if outer_goal_handle.is_cancel_requested:
                 planner_goal_handle.cancel_goal_async()
                 return None
-            await asyncio.sleep(0.05)
+            await self._sleep_for(0.05)
         return result_future.result()
 
     async def _run_recovery_behaviors(self, behaviors, planner_result):
@@ -298,7 +297,7 @@ class RecoveryManager(Node):
         )
 
     async def _wait_before_retry(self, _planner_result):
-        await asyncio.sleep(self.retry_wait_seconds)
+        await self._sleep_for(self.retry_wait_seconds)
         return True
 
     async def _call_clear_service(self, client, label: str):
@@ -308,13 +307,29 @@ class RecoveryManager(Node):
 
         future = client.call_async(ClearEntireCostmap.Request())
         while rclpy.ok() and not future.done():
-            await asyncio.sleep(0.05)
+            await self._sleep_for(0.05)
 
         if future.result() is None:
             self.get_logger().warn(f'Clear service for {label} returned no response.')
             return False
 
         return True
+
+    async def _sleep_for(self, seconds: float):
+        future = Future()
+        timer = None
+
+        def _finish_wait():
+            nonlocal timer
+            if timer is not None:
+                timer.cancel()
+                self.destroy_timer(timer)
+                timer = None
+            if not future.done():
+                future.set_result(True)
+
+        timer = self.create_timer(seconds, _finish_wait)
+        await future
 
     def _cancel_result(self, goal_handle):
         result = ComputePathToPoseAction.Result()

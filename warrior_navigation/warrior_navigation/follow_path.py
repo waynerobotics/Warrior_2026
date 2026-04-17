@@ -1,5 +1,7 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Time
+from rclpy.duration import Duration
 from geometry_msgs.msg import TwistStamped
 from nav_msgs.msg import Path
 from tf2_ros import TransformListener, Buffer
@@ -33,6 +35,7 @@ class FollowPath(Node):
         self.max_linear_vel = 0.2
         self.max_angular_vel = 2.0
         self.goal_tolerance = 0.1
+        self.tf_timeout = Duration(seconds=0.1)
 
         self.timer = self.create_timer(0.05, self.control_loop)
 
@@ -48,10 +51,21 @@ class FollowPath(Node):
 
     def get_robot_pose_in_frame(self, frame_id):
         try:
+            if not self.tf_buffer.can_transform(
+                target_frame=frame_id,
+                source_frame=self.robot_base_frame,
+                time=Time(),
+                timeout=self.tf_timeout
+            ):
+                self.get_logger().debug(
+                    f'TF not ready yet between {frame_id} and {self.robot_base_frame}'
+                )
+                return None
+
             tf = self.tf_buffer.lookup_transform(
                 target_frame=frame_id,
                 source_frame=self.robot_base_frame,
-                time=rclpy.time.Time()
+                time=Time()
             )
 
             x = tf.transform.translation.x
@@ -65,10 +79,14 @@ class FollowPath(Node):
             return None
 
     def control_loop(self):
-        path_frame = self.path.header.frame_id if self.path is not None and self.path.header.frame_id else 'map'
-        robot_pose = self.get_robot_pose_in_frame(path_frame)
-        if self.path is None or robot_pose is None or len(self.path.poses) == 0:
+        if self.path is None or len(self.path.poses) == 0:
             return
+
+        path_frame = self.path.header.frame_id if self.path.header.frame_id else 'map'
+        robot_pose = self.get_robot_pose_in_frame(path_frame)
+        if robot_pose is None:
+            return
+
         # --- Current robot pose 
         rx, ry, yaw = robot_pose
         # --- Goal check ---

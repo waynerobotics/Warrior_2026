@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -16,6 +16,7 @@ def generate_launch_description():
 
     params_file = LaunchConfiguration('params_file')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    startup_delay = LaunchConfiguration('startup_delay')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -26,6 +27,11 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='true'
+        ),
+        DeclareLaunchArgument(
+            'startup_delay',
+            default_value='3.0',
+            description='Delay before activating the costmap lifecycle manager'
         ),
 
         Node(
@@ -44,18 +50,23 @@ def generate_launch_description():
             parameters=[params_file, {'use_sim_time': use_sim_time}],
         ),
 
-        Node(
-            package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager_costmaps',
-            output='screen',
-            parameters=[
-                params_file,
-                {
-                    'use_sim_time': use_sim_time,
-                    'autostart': True,
-                    'node_names': ['global_costmap', 'local_costmap'],
-                }
+        TimerAction(
+            period=startup_delay,
+            actions=[
+                Node(
+                    package='nav2_lifecycle_manager',
+                    executable='lifecycle_manager',
+                    name='lifecycle_manager',
+                    output='screen',
+                    parameters=[
+                        params_file,
+                        {
+                            'use_sim_time': use_sim_time,
+                            'autostart': True,
+                            'node_names': ['global_costmap', 'local_costmap'],
+                        }
+                    ],
+                ),
             ],
         ),
     ])
