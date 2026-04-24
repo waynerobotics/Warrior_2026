@@ -1,4 +1,5 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -12,7 +13,7 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_node_odom',
         output='screen',
-        parameters=[config_file],
+        parameters=[config_file, {'use_sim_time': True}],
         remappings=[
             ('odometry/filtered', 'odometry/local'),
         ]
@@ -23,7 +24,7 @@ def generate_launch_description():
         executable='ekf_node',
         name='ekf_node_map',
         output='screen',
-        parameters=[config_file],
+        parameters=[config_file, {'use_sim_time': True}],
         remappings=[
             ('odometry/filtered', 'odometry/global'),
         ]
@@ -34,7 +35,7 @@ def generate_launch_description():
         executable='navsat_transform_node',
         name='navsat_transform',
         output='screen',
-        parameters=[config_file],
+        parameters=[config_file, {'use_sim_time': True}],
         remappings=[
             ('imu/data', 'imu'),
             ('gps/fix', 'gps/fix'),

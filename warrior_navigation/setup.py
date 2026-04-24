@@ -15,7 +15,7 @@ setup(
         ('share/' + package_name + '/config', glob('config/*.yaml')),
         ('share/' + package_name + '/maps', glob('maps/*.yaml')),
         ('share/' + package_name + '/rviz2', glob('rviz2/*.rviz')),
-
+        
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -37,7 +37,7 @@ setup(
             'recovery_manager = warrior_navigation.recovery_manager:main',
             'astar_planner = warrior_navigation.astar_planner:main',
             'follow_path = warrior_navigation.follow_path:main',
-            
+            'waypoint_follower = warrior_navigation.logged_waypoint_follower:main'
         ],
     },
 )

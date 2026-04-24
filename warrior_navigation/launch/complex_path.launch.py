@@ -49,7 +49,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_localization'),
                 'launch',
-                'ekf.launch.py'
+                'dual_ekf_navsat.launch.py'
             ])
         ),
         launch_arguments={'use_sim_time': use_sim}.items()
