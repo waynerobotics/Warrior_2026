@@ -300,7 +300,7 @@ class RecoveryManager(Node):
         await self._sleep_for(self.retry_wait_seconds)
         return True
 
-    async def _call_clear_service(self, client, label: str):
+    async def _call_clear_show_service(self, client, label: str):
         if not client.wait_for_service(timeout_sec=1.0):
             self.get_logger().warn(f'Clear service for {label} is not available.')
             return False
