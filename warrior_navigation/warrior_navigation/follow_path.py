@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Time
+from rclpy.duration import Duration
 from geometry_msgs.msg import TwistStamped
-from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Path
 from tf2_ros import TransformListener, Buffer
 from tf2_ros import TransformException
@@ -12,10 +13,13 @@ import math
 
 # Implement a pure pursuit to take a path and output velocity to cmd_vel to follow it
 
-class ComplexPathController(Node):
+class FollowPath(Node):
     def __init__(self):
-        super().__init__('complex_path_controller')
-        self.get_logger().info('Complex Path Controller node started')
+        super().__init__('follow_path')
+        self.get_logger().info('Follow Path node started')
+
+        self.declare_parameter('robot_base_frame', 'base_footprint')
+        self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
 
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
         self.path_sub = self.create_subscription(Path, 'a_star_path', self.path_callback, 10)
@@ -31,24 +35,9 @@ class ComplexPathController(Node):
         self.max_linear_vel = 0.2
         self.max_angular_vel = 2.0
         self.goal_tolerance = 0.1
+        self.tf_timeout = Duration(seconds=0.1)
 
         self.timer = self.create_timer(0.05, self.control_loop)
-
-    def get_robot_pose_map(self):
-        try:
-            tf = self.tf_buffer.lookup_transform(
-                target_frame='odom',
-                source_frame='base_link',
-                time=rclpy.time.Time()
-            )
-
-            x = tf.transform.translation.x
-            y = tf.transform.translation.y
-            return x, y
-
-        except TransformException as ex:
-            self.get_logger().warn(f'TF lookup failed: {ex}')
-            return None
 
     
     def path_callback(self, msg):
@@ -60,12 +49,23 @@ class ComplexPathController(Node):
             1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     )
 
-    def get_robot_pose_map(self):
+    def get_robot_pose_in_frame(self, frame_id):
         try:
+            if not self.tf_buffer.can_transform(
+                target_frame=frame_id,
+                source_frame=self.robot_base_frame,
+                time=Time(),
+                timeout=self.tf_timeout
+            ):
+                self.get_logger().debug(
+                    f'TF not ready yet between {frame_id} and {self.robot_base_frame}'
+                )
+                return None
+
             tf = self.tf_buffer.lookup_transform(
-                target_frame='odom',
-                source_frame='base_link',
-                time=rclpy.time.Time()
+                target_frame=frame_id,
+                source_frame=self.robot_base_frame,
+                time=Time()
             )
 
             x = tf.transform.translation.x
@@ -79,9 +79,14 @@ class ComplexPathController(Node):
             return None
 
     def control_loop(self):
-        robot_pose = self.get_robot_pose_map()
-        if self.path is None or robot_pose is None or len(self.path.poses) == 0:
+        if self.path is None or len(self.path.poses) == 0:
             return
+
+        path_frame = self.path.header.frame_id if self.path.header.frame_id else 'map'
+        robot_pose = self.get_robot_pose_in_frame(path_frame)
+        if robot_pose is None:
+            return
+
         # --- Current robot pose 
         rx, ry, yaw = robot_pose
         # --- Goal check ---
@@ -127,7 +132,7 @@ class ComplexPathController(Node):
         # --- Publish cmd_vel ---
         twist = TwistStamped()
         twist.header.stamp = self.get_clock().now().to_msg()
-        twist.header.frame_id = "base_link"
+        twist.header.frame_id = self.robot_base_frame
         twist.twist.linear.x = linear_vel
         twist.twist.angular.z = angular_vel
         self.cmd_vel_pub.publish(twist)
@@ -183,7 +188,7 @@ class ComplexPathController(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ComplexPathController()
+    node = FollowPath()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

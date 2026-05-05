@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -8,7 +8,6 @@ import os
 
 
 def generate_launch_description():
-    # Absolute path to: <install>/share/warrior_navigation/config/costmaps_only.yaml
     default_params_file = os.path.join(
         get_package_share_directory('warrior_navigation'),
         'config',
@@ -17,6 +16,7 @@ def generate_launch_description():
 
     params_file = LaunchConfiguration('params_file')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    startup_delay = LaunchConfiguration('startup_delay')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -28,36 +28,45 @@ def generate_launch_description():
             'use_sim_time',
             default_value='true'
         ),
+        DeclareLaunchArgument(
+            'startup_delay',
+            default_value='3.0',
+            description='Delay before activating the costmap lifecycle manager'
+        ),
 
         Node(
-            package='nav2_planner',
-            executable='planner_server',
-            name='planner_server',
+            package='nav2_costmap_2d',
+            executable='nav2_costmap_2d',
+            name='global_costmap',
             output='screen',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
         ),
 
         Node(
-            package='nav2_controller',
-            executable='controller_server',
-            name='controller_server',
+            package='nav2_costmap_2d',
+            executable='nav2_costmap_2d',
+            name='local_costmap',
             output='screen',
             parameters=[params_file, {'use_sim_time': use_sim_time}],
         ),
 
-        Node(
-            package='nav2_lifecycle_manager',
-            executable='lifecycle_manager',
-            name='lifecycle_manager',
-            output='screen',
-            # Hard-pass these too so lifecycle_manager can’t crash even if YAML has issues
-            parameters=[
-                params_file,
-                {
-                    'use_sim_time': use_sim_time,
-                    'autostart': True,
-                    'node_names': ['planner_server', 'controller_server'],
-                }
+        TimerAction(
+            period=startup_delay,
+            actions=[
+                Node(
+                    package='nav2_lifecycle_manager',
+                    executable='lifecycle_manager',
+                    name='lifecycle_manager',
+                    output='screen',
+                    parameters=[
+                        params_file,
+                        {
+                            'use_sim_time': use_sim_time,
+                            'autostart': True,
+                            'node_names': ['global_costmap', 'local_costmap'],
+                        }
+                    ],
+                ),
             ],
         ),
     ])

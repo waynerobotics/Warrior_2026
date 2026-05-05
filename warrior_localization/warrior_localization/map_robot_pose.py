@@ -10,6 +10,8 @@ class MapRobotPoseNode(Node):
     def __init__(self):
         super().__init__('map_robot_pose_node')
         self.get_logger().info('Map Robot Pose Node started')
+        self.declare_parameter('robot_base_frame', 'base_footprint')
+        self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
         
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
@@ -19,7 +21,7 @@ class MapRobotPoseNode(Node):
 
     def publish_robot_map_pose(self):
         try:
-            t = self.tf_buffer.lookup_transform('map', 'base_link', Time())
+            t = self.tf_buffer.lookup_transform('map', self.robot_base_frame, Time())
         except Exception as e:
             self.get_logger().warn(f'TF lookup failed: {e}')
             return

@@ -18,92 +18,94 @@ controller_server:
 
 # GLOBAL COSTMAP (map frame)
 global_costmap:
-  global_costmap:
-    ros__parameters:
-      global_frame: map
-      robot_base_frame: base_link
-      resolution: 0.05
-      track_unknown_space: true
-      rolling_window: false
-      width: 50
-      height: 50
-      origin_x: -25.0
-      origin_y: -25.0
+  ros__parameters:
+    global_frame: map
+    robot_base_frame: base_footprint
+    transform_tolerance: 1.0
+    initial_transform_timeout: 10.0
+    resolution: 0.05
+    track_unknown_space: true
+    rolling_window: false
+    width: 50
+    height: 50
+    origin_x: -25.0
+    origin_y: -25.0
 
-      robot_radius: 0.105  # TB3 Burger-ish; adjust if needed
+    robot_radius: 0.105  # TB3 Burger-ish; adjust if needed
 
-      update_frequency: 2.0
-      publish_frequency: 2.0
-      always_send_full_costmap: True
+    update_frequency: 2.0
+    publish_frequency: 2.0
+    always_send_full_costmap: True
 
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
 
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: true
+    static_layer:
+      plugin: "nav2_costmap_2d::StaticLayer"
+      map_subscribe_transient_local: true
 
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 2.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 3.5
-          raytrace_min_range: 0.0
-          obstacle_max_range: 3.0
-          obstacle_min_range: 0.0
+    obstacle_layer:
+      plugin: "nav2_costmap_2d::ObstacleLayer"
+      observation_sources: scan
+      scan:
+        topic: /scan
+        max_obstacle_height: 2.0
+        clearing: true
+        marking: true
+        data_type: "LaserScan"
+        raytrace_max_range: 3.5
+        raytrace_min_range: 0.0
+        obstacle_max_range: 3.0
+        obstacle_min_range: 0.0
 
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.55
-        cost_scaling_factor: 3.0
+    inflation_layer:
+      plugin: "nav2_costmap_2d::InflationLayer"
+      inflation_radius: 0.55
+      cost_scaling_factor: 3.0
 
 # LOCAL COSTMAP (odom frame, rolling window)
 local_costmap:
-  local_costmap:
-    ros__parameters:
-      global_frame: odom
-      robot_base_frame: base_link
-      resolution: 0.05
-      rolling_window: true
-      width: 3
-      height: 3
+  ros__parameters:
+    global_frame: odom
+    robot_base_frame: base_footprint
+    transform_tolerance: 1.0
+    initial_transform_timeout: 10.0
+    resolution: 0.05
+    rolling_window: true
+    width: 3
+    height: 3
 
-      robot_radius: 0.105
+    robot_radius: 0.105
 
-      update_frequency: 10.0
-      publish_frequency: 10.0
-      always_send_full_costmap: True
+    update_frequency: 10.0
+    publish_frequency: 10.0
+    always_send_full_costmap: True
 
-      plugins: ["obstacle_layer", "inflation_layer"]
+    plugins: ["obstacle_layer", "inflation_layer"]
 
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 2.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 3.5
-          raytrace_min_range: 0.0
-          obstacle_max_range: 3.0
-          obstacle_min_range: 0.0
+    obstacle_layer:
+      plugin: "nav2_costmap_2d::ObstacleLayer"
+      observation_sources: scan
+      scan:
+        topic: /scan
+        max_obstacle_height: 2.0
+        clearing: true
+        marking: true
+        data_type: "LaserScan"
+        raytrace_max_range: 3.5
+        raytrace_min_range: 0.0
+        obstacle_max_range: 3.0
+        obstacle_min_range: 0.0
 
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.55
-        cost_scaling_factor: 3.0
+    inflation_layer:
+      plugin: "nav2_costmap_2d::InflationLayer"
+      inflation_radius: 0.55
+      cost_scaling_factor: 3.0
 
 lifecycle_manager:
   ros__parameters:
     autostart: true
-    node_names: ["planner_server", "controller_server"]
-
+    node_names: ["global_costmap", "local_costmap"]
+    bond_timeout: 4.0
 
 
 # planner_server:

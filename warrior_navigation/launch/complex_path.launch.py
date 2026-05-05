@@ -16,12 +16,18 @@ def generate_launch_description():
         description='Run in simulation or on real robot'
     )
 
+    warrior_nav = FindPackageShare("warrior_navigation")
+
+    rviz2_config_file = PathJoinSubstitution(
+        [warrior_nav, "rviz2", "complex_path.rviz"]
+    )
+
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare('turtlebot3_gazebo'),
+                FindPackageShare('warrior_navigation'),
                 'launch',
-                'turtlebot3_world.launch.py'
+                'turtlebot3_world_gps.launch.py'
             ])
         ),
         condition=IfCondition(use_sim)
@@ -43,7 +49,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_localization'),
                 'launch',
-                'ekf.launch.py'
+                'dual_ekf_navsat.launch.py'
             ])
         ),
         launch_arguments={'use_sim_time': use_sim}.items()
@@ -56,28 +62,50 @@ def generate_launch_description():
                 'launch',
                 'costmap.launch.py'
             ])
-        )
+        ),
+        launch_arguments={'use_sim_time': use_sim}.items()
     )
 
-    rviz_launch = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        output='screen',
+
+    rviz2 = Node(
+        package="rviz2",
+        executable="rviz2",
+        output="screen",
+        arguments=["-d", rviz2_config_file],
+        parameters=[{"use_sim_time": use_sim}],
     )
 
-    complex_path_generator_node = Node(
+    path_to_pose_server_node = Node(
         package='warrior_navigation',
-        executable='complex_path_generator',
-        name='complex_path_generator',
+        executable='path_to_pose_server',
+        name='path_to_pose_server',
         output='screen',
+        parameters=[{
+            'use_sim_time': use_sim,
+            'action_name': 'compute_path_to_pose_core',
+            'costmap_topic': '/costmap',
+        }],
     )
 
-    complex_path_controller_node = Node(
+    recovery_manager_node = Node(
         package='warrior_navigation',
-        executable='complex_path_controller',
-        name='complex_path_controller',
+        executable='recovery_manager',
+        name='recovery_manager',
         output='screen',
+        parameters=[{
+            'use_sim_time': use_sim,
+            'action_name': 'path_to_pose',
+            'planner_action_name': 'compute_path_to_pose_core',
+            'enable_rviz_goal_bridge': True,
+        }],
+    )
+
+    follow_path_node = Node(
+        package='warrior_navigation',
+        executable='follow_path',
+        name='follow_path',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim}],
     )
 
     return LaunchDescription([
@@ -86,7 +114,8 @@ def generate_launch_description():
         slam_launch,
         ekf_launch,
         costmap_launch,
-        complex_path_generator_node,
-        complex_path_controller_node,
-        rviz_launch
+        path_to_pose_server_node,
+        recovery_manager_node,
+        follow_path_node,
+        rviz2
     ])

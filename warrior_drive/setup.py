@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'diff_drive = warrior_drive.diff_drive:main',
             'arduino_drive = warrior_drive.arduino_drive:main',
+            'arduino_motors = warrior_drive.arduino_motors:main',
         ],
     },
 )
