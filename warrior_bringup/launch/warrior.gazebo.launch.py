@@ -1,4 +1,14 @@
 #!/usr/bin/env python3
+"""
+DEPRECATED: This launcher is maintained for backward compatibility only.
+For new projects, use the centralized launcher system:
+
+  Use: ros2 launch warrior_bringup main.launch.py robot_type:=swerve_sim [world_name:=...]
+  Or:  ros2 launch warrior_bringup swerve_sim.launch.py [world_name:=...]
+  Or:  ros2 launch warrior_bringup diff_sim.launch.py [world_name:=...]
+
+See LAUNCH_USAGE.md for complete documentation and migration guide.
+"""
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,

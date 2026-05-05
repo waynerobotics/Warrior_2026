@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+DEPRECATED: This launcher is now called from the centralized system.
+For direct use, this is still supported but consider using:
+
+  ros2 launch warrior_bringup main.launch.py robot_type:=diff_sim [world_name:=...]
+  ros2 launch warrior_bringup diff_sim.launch.py [world_name:=...]
+
+See warrior_bringup/LAUNCH_USAGE.md for complete documentation.
+"""
 import os
 from launch import LaunchDescription
 from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
@@ -13,6 +22,7 @@ from launch.event_handlers import OnProcessExit
 def generate_launch_description():
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
+    gazebo_world = LaunchConfiguration('world_name', default='empty.world')
     
     # ----------------- path -----------------
     pkg_gz_ros = FindPackageShare("ros_gz_sim")
@@ -20,7 +30,7 @@ def generate_launch_description():
     pkg_warrior_control = FindPackageShare("warrior_control")
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
 
-    world_file = PathJoinSubstitution([pkg_warrior_description, "worlds", "empty.world"])
+    world_file = PathJoinSubstitution([pkg_warrior_description, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
     controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
@@ -122,6 +132,10 @@ def generate_launch_description():
             'use_sim_time',
             default_value=use_sim_time,
             description='If true, use simulated clock'),
+        DeclareLaunchArgument(
+            'world_name',
+            default_value='empty.world',
+            description='Name of the world file to load'),
         gazebo,
         robot_state_publisher,
 

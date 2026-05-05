@@ -1,3 +1,12 @@
+"""
+DEPRECATED: This launcher is maintained for backward compatibility only.
+For new projects, use the centralized launcher system:
+
+  Use: ros2 launch warrior_bringup main.launch.py robot_type:=warrior_real
+  Or:  ros2 launch warrior_bringup warrior_real.launch.py
+
+See LAUNCH_USAGE.md for complete documentation and migration guide.
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory

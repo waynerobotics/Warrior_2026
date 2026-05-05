@@ -298,7 +298,7 @@ class RecoveryManager(Node):
 
     async def _wait_before_retry(self, _planner_result):
         await self._sleep_for(self.retry_wait_seconds)
-        return True
+        return Trueg
 
     async def _call_clear_show_service(self, client, label: str):
         if not client.wait_for_service(timeout_sec=1.0):
