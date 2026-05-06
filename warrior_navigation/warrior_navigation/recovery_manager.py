@@ -55,11 +55,11 @@ class RecoveryManager(Node):
         self._action_client = ActionClient(self, ComputePathToPoseAction, self.action_name)
         self._clear_global_client = self.create_client(
             ClearEntireCostmap,
-            '/global_costmap/clear_entirely_global_costmap',
+            '/clear_entirely_costmap',
         )
         self._clear_local_client = self.create_client(
             ClearEntireCostmap,
-            '/local_costmap/clear_entirely_local_costmap',
+            '/clear_entirely_costmap',
         )
         self._rviz_goal_handle = None
 
@@ -285,20 +285,20 @@ class RecoveryManager(Node):
         return True
 
     async def _clear_global_costmap(self, _planner_result):
-        return await self._call_clear_service(
+        return await self._call_clear_show_service(
             self._clear_global_client,
             'global costmap',
         )
 
     async def _clear_local_costmap(self, _planner_result):
-        return await self._call_clear_service(
+        return await self._call_clear_show_service(
             self._clear_local_client,
             'local costmap',
         )
 
     async def _wait_before_retry(self, _planner_result):
         await self._sleep_for(self.retry_wait_seconds)
-        return Trueg
+        return True
 
     async def _call_clear_show_service(self, client, label: str):
         if not client.wait_for_service(timeout_sec=1.0):
