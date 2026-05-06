@@ -364,7 +364,7 @@
       </axis>
     </joint>
 
-    <joint name='caster_back_joint' type='ball'>
+    <joint name='caster_back_joint' type='fixed'> 
       <parent>base_link</parent>
       <child>caster_back_link</child>
     </joint>
