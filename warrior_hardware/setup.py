@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'warrior_drive'
+package_name = 'warrior_hardware'
 
 setup(
     name=package_name,
@@ -24,9 +24,8 @@ setup(
     },  
     entry_points={
         'console_scripts': [
-            'diff_drive = warrior_drive.diff_drive:main',
-            'arduino_drive = warrior_drive.arduino_drive:main',
-            'arduino_motors = warrior_drive.arduino_motors:main',
+            'diff_drive = warrior_hardware.arduino_motors:main',
+            'arduino_motors = warrior_hardware.arduino_motors:main',
         ],
     },
 )

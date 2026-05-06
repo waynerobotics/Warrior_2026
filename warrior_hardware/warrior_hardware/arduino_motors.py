@@ -5,7 +5,7 @@ from rclpy.node import Node
 from serial import SerialException
 from std_msgs.msg import String
 
-from warrior_drive.arduino_interface import ArduinoInterface
+from warrior_hardware.arduino_interface import ArduinoInterface
 
 
 class ArduinoMotors(Node):
