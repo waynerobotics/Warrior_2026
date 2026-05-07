@@ -36,13 +36,12 @@ def generate_launch_description():
     )
 
     urdf_path = os.path.join(
-        get_package_share_directory('warrior_gazebo'),
-        'models',
-        model_folder,
-        'turtlebot3_burger.urdf'
+        get_package_share_directory('warrior_description'),
+        'urdf',
+        'turtlebot3_burger_gps.urdf'
     )
 
-    robot_description_config = xacro.process_file(sdf_path)
+    robot_description_config = xacro.process_file(urdf_path)
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     # Launch configuration variables specific to simulation

@@ -432,6 +432,7 @@
       <topic>joint_states</topic>
       <joint_name>wheel_left_joint</joint_name>
       <joint_name>wheel_right_joint</joint_name>
+      <joint_name>caster_back_joint</joint_name>
     </plugin>
 
   </model>
