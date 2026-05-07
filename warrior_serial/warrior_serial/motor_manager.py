@@ -35,6 +35,7 @@ import rclpy
 from rclpy.node import Node
 import serial
 import serial.tools.list_ports
+from sensor_msgs.msg import Joy
 
 from warrior_msgs.msg import MotorCommand
 from .serial_protocol import (
@@ -59,12 +60,24 @@ class MotorManagerNode(Node):
         self._read_timeout_s: float = self.declare_parameter(
             'read_timeout_s', 0.1).value
 
+        # Active-target cycling via RB (all) / LB (cycle one at a time)
+        # buttons[5] = RB,  buttons[4] = LB  on Xbox controller
+        # _active_idx = None  → broadcast to all targets
+        # _active_idx = int   → only that index in self._targets receives commands
+        self._rb_index: int = self.declare_parameter('rb_button_index', 5).value
+        self._lb_index: int = self.declare_parameter('lb_button_index', 4).value
+        self._active_idx = None  # start in "all" mode
+        self._rb_prev: int = 0
+        self._lb_prev: int = 0
+
         # device_name -> WarriorSerial (open, exclusive lock held)
         self._connections: dict = {}
         self._lock = threading.Lock()
 
         self._sub = self.create_subscription(
             MotorCommand, '/motor_cmd', self._motor_cmd_cb, 10)
+        self._joy_sub = self.create_subscription(
+            Joy, '/joy', self._joy_cb, 10)
 
         self._last_status_time: float = 0.0
 
@@ -79,7 +92,36 @@ class MotorManagerNode(Node):
         self._discovery_thread.start()
 
         self.get_logger().info(
-            f'motor_manager started; managing targets={self._targets}')
+            f'motor_manager started; managing targets={self._targets}  '
+            f'active=ALL  '
+            f'RB=buttons[{self._rb_index}] (all)  LB=buttons[{self._lb_index}] (cycle)')
+
+    # ------------------------------------------------------------------
+    # Joystick — active target cycling
+    # ------------------------------------------------------------------
+
+    def _active_label(self) -> str:
+        return 'ALL' if self._active_idx is None else self._targets[self._active_idx]
+
+    def _joy_cb(self, msg: Joy) -> None:
+        """RB → select ALL targets.  LB (rising edge) → cycle one at a time."""
+        if self._rb_index < len(msg.buttons):
+            rb_now = msg.buttons[self._rb_index]
+            if rb_now == 1 and self._rb_prev == 0:
+                self._active_idx = None
+                self.get_logger().info('[motor_manager] RB → active target: ALL')
+            self._rb_prev = rb_now
+
+        if self._lb_index < len(msg.buttons):
+            lb_now = msg.buttons[self._lb_index]
+            if lb_now == 1 and self._lb_prev == 0:
+                if self._active_idx is None:
+                    self._active_idx = 0
+                else:
+                    self._active_idx = (self._active_idx + 1) % len(self._targets)
+                self.get_logger().info(
+                    f'[motor_manager] LB → active target: "{self._targets[self._active_idx]}"')
+            self._lb_prev = lb_now
 
     # ------------------------------------------------------------------
     # Discovery — background thread
@@ -231,6 +273,15 @@ class MotorManagerNode(Node):
     # ------------------------------------------------------------------
 
     def _motor_cmd_cb(self, msg: MotorCommand) -> None:
+        # Determine which targets should receive this command
+        if self._active_idx is None:
+            active_targets = self._targets  # ALL mode
+        else:
+            active_targets = [self._targets[self._active_idx]]
+
+        if msg.target not in active_targets:
+            return
+
         with self._lock:
             ws = self._connections.get(msg.target)
         if ws is None:
