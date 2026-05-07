@@ -20,19 +20,34 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'mode',
-            default_value='indoor',
-            description='Mode: indoor'
+            default_value='outdoor',
+            description='Mode: outdoor | indoor | gazebo'
         ),
-
+        Node(
+            package='gps_localization',
+            executable='gps_hardware_node',
+            name='gps_hardware_node',
+            output='screen',
+            parameters=[config],
+            condition=IfCondition(PythonExpression(["'",mode,"' == 'outdoor'"]))
+        ),
         Node(
             package='gps_localization',
             executable='apriltag_gps_bridge',
             name='apriltag_gps_bridge',
             output='screen',
             parameters=[config],
-            condition=IfCondition(PythonExpression(["'",mode,"' == 'indoor'"]))
+            condition=IfCondition(PythonExpression(
+                ["'",mode,"' == 'outdoor' or '",mode,"' == 'indoor'"]))
         ),
-
+        Node(
+            package='gps_localization',
+            executable='simulated_gps_node',
+            name='simulated_gps_node',
+            output='screen',
+            parameters=[config],
+            condition=IfCondition(PythonExpression(["'",mode,"' == 'gazebo'"]))
+        ),
          Node(
             package='gps_localization',
             executable='robot_frame_node',
@@ -47,12 +62,12 @@ def generate_launch_description():
             output='screen',
             parameters=[config]
         ),
-        Node(
+         Node(
             package='gps_localization',
             executable='waypoint_navigator_node',
             name='waypoint_navigator_node',
             output='screen',
             parameters=[config]
-        )
+            ),
         ])
     
