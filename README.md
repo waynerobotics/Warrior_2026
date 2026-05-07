@@ -70,6 +70,7 @@ After=network.target
 [Service]
 Type=simple
 User=fire
+Environment=ROS_DOMAIN_ID=30
 ExecStart=/home/fire/ros2_ws/src/Warrior_2026/warrior_scripts/launch_swerve_teleop.sh
 Restart=on-failure
 RestartSec=5

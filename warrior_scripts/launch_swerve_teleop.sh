@@ -27,4 +27,7 @@ source "$ROS_SETUP"
 # shellcheck source=/home/fire/ros2_ws/install/setup.bash
 source "$WS_SETUP"
 
+# Must match ROS_DOMAIN_ID used in the interactive shell / rqt / ros2 CLI
+export ROS_DOMAIN_ID=30
+
 exec ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
