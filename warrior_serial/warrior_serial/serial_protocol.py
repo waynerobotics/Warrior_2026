@@ -69,11 +69,18 @@ class WarriorSerial:
     # ------------------------------------------------------------------
 
     def open(self) -> None:
-        """Open the serial port and wait for the Arduino reset."""
+        """Open the serial port exclusively and wait for the Arduino reset.
+
+        ``exclusive=True`` acquires a kernel-level lock (TIOCEXCL on Linux)
+        so that a second process attempting to open the same port gets
+        ``[Errno 11] Resource temporarily unavailable`` instead of silently
+        stealing bytes from the first opener.
+        """
         self._ser = serial.Serial(
             self._port,
             baudrate=self._baud_rate,
             timeout=self._read_timeout_s,
+            exclusive=True,
         )
         time.sleep(OPEN_RESET_DELAY_S)
 
@@ -113,6 +120,7 @@ class WarriorSerial:
         if self._ser is None:
             raise serial.SerialException('Port is not open')
         self._ser.write(encode_message(*fields))
+        self._ser.flush()  # ensure bytes leave the OS TX buffer immediately
 
 
 # ---------------------------------------------------------------------------
@@ -133,7 +141,7 @@ def query_device_name(port: str, baud_rate: int = BAUD_RATE_DEFAULT,
     """
     ws = WarriorSerial(port, baud_rate, read_timeout_s=0.2)
     try:
-        ws.open()
+        ws.open()  # raises SerialException immediately if port is locked by another driver
         ws.write_message('WHO')
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
