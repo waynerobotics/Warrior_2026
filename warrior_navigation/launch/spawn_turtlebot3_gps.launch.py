@@ -27,14 +27,22 @@ def generate_launch_description():
     # Get the urdf file
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
     model_folder = 'turtlebot3_' + TURTLEBOT3_MODEL + '_gps'
-    urdf_path = os.path.join(
+    
+    sdf_path = os.path.join(
         get_package_share_directory('warrior_gazebo'),
         'models',
         model_folder,
         'model.sdf'
     )
 
-    robot_description_config = xacro.process_file(urdf_path)
+    urdf_path = os.path.join(
+        get_package_share_directory('warrior_gazebo'),
+        'models',
+        model_folder,
+        'turtlebot3_burger.urdf'
+    )
+
+    robot_description_config = xacro.process_file(sdf_path)
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     # Launch configuration variables specific to simulation
@@ -55,7 +63,7 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', TURTLEBOT3_MODEL,
-            '-file', urdf_path,
+            '-file', sdf_path,
             '-x', x_pose,
             '-y', y_pose,
             '-z', '0.01'
@@ -101,9 +109,9 @@ def generate_launch_description():
     ld.add_action(declare_y_position_cmd)
 
     # Add any conditioned actions
+    ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(start_gazebo_ros_spawner_cmd)
     ld.add_action(start_gazebo_ros_bridge_cmd)
     ld.add_action(start_gazebo_ros_image_bridge_cmd) if TURTLEBOT3_MODEL != 'burger' else None
-    ld.add_action(start_robot_state_publisher_cmd)
 
     return ld
