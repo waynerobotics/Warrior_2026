@@ -8,6 +8,7 @@ Both directions use the same format.
 """
 
 import re
+import termios
 import time
 from typing import Optional
 
@@ -119,8 +120,11 @@ class WarriorSerial:
         """
         if self._ser is None:
             raise serial.SerialException('Port is not open')
-        self._ser.write(encode_message(*fields))
-        self._ser.flush()  # ensure bytes leave the OS TX buffer immediately
+        try:
+            self._ser.write(encode_message(*fields))
+            self._ser.flush()  # ensure bytes leave the OS TX buffer immediately
+        except termios.error as exc:
+            raise serial.SerialException(f'flush failed: {exc}') from exc
 
 
 # ---------------------------------------------------------------------------

@@ -247,7 +247,7 @@ class MotorManagerNode(Node):
                 fields = parse_message(line)
                 if fields:
                     self._handle_incoming(name, fields)
-            except serial.SerialException as exc:
+            except (serial.SerialException, OSError) as exc:
                 self.get_logger().warn(
                     f'[motor_manager] {name} read error: {exc} — will reconnect')
                 to_remove.append(name)
@@ -298,7 +298,7 @@ class MotorManagerNode(Node):
         self.get_logger().info(f'[tx] → {frame}')
         try:
             ws.write_message('MOT', msg.target, str(msg.spark), str(msg.flipsky))
-        except serial.SerialException as exc:
+        except (serial.SerialException, OSError) as exc:
             self.get_logger().warn(
                 f'[tx] {msg.target} write error: {exc} — will reconnect')
             with self._lock:

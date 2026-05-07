@@ -65,7 +65,7 @@ Paste:
 ```ini
 [Unit]
 Description=Warrior Swerve Teleop ROS 2 Launch
-After=network.target
+After=network.target bluetooth.service
 
 [Service]
 Type=simple
