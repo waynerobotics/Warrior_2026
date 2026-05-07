@@ -33,7 +33,7 @@
         <pose>-0.032 0 0 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://turtlebot3_common/meshes/bases/burger_base.stl</uri>
+            <uri>package://turtlebot3_description/meshes/bases/burger_base.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -122,7 +122,7 @@
         <pose>-0.032 0 0.171 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://turtlebot3_common/meshes/sensors/lds.stl</uri>
+            <uri>package://turtlebot3_description/meshes/sensors/lds.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -213,7 +213,7 @@
         <pose>0 0.08 0.023 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://turtlebot3_common/meshes/wheels/left_tire.stl</uri>
+            <uri>package://turtlebot3_description/meshes/wheels/left_tire.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -275,7 +275,7 @@
         <pose>0.0 -0.08 0.023 0 0 0</pose>
         <geometry>
           <mesh>
-            <uri>model://turtlebot3_common/meshes/wheels/right_tire.stl</uri>
+            <uri>package://turtlebot3_description/meshes/wheels/right_tire.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -432,6 +432,7 @@
       <topic>joint_states</topic>
       <joint_name>wheel_left_joint</joint_name>
       <joint_name>wheel_right_joint</joint_name>
+      <joint_name>caster_back_joint</joint_name>
     </plugin>
 
   </model>

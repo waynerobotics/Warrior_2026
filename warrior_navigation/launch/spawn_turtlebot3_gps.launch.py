@@ -20,17 +20,29 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+from launch_ros.parameter_descriptions import ParameterValue
+import xacro
 
 def generate_launch_description():
     # Get the urdf file
     TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
     model_folder = 'turtlebot3_' + TURTLEBOT3_MODEL + '_gps'
-    urdf_path = os.path.join(
+    
+    sdf_path = os.path.join(
         get_package_share_directory('warrior_gazebo'),
         'models',
         model_folder,
         'model.sdf'
     )
+
+    urdf_path = os.path.join(
+        get_package_share_directory('warrior_description'),
+        'urdf',
+        'turtlebot3_burger_gps.urdf'
+    )
+
+    robot_description_config = xacro.process_file(urdf_path)
+    robot_description = {'robot_description': robot_description_config.toxml()}
 
     # Launch configuration variables specific to simulation
     x_pose = LaunchConfiguration('x_pose', default='0.0')
@@ -50,7 +62,7 @@ def generate_launch_description():
         executable='create',
         arguments=[
             '-name', TURTLEBOT3_MODEL,
-            '-file', urdf_path,
+            '-file', sdf_path,
             '-x', x_pose,
             '-y', y_pose,
             '-z', '0.01'
@@ -81,6 +93,14 @@ def generate_launch_description():
         arguments=['/camera/image_raw'],
         output='screen',
     )
+
+    start_robot_state_publisher_cmd = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{'use_sim_time': True}, robot_description],
+        output='screen'
+    )
+
     ld = LaunchDescription()
 
     # Declare the launch options
@@ -88,6 +108,7 @@ def generate_launch_description():
     ld.add_action(declare_y_position_cmd)
 
     # Add any conditioned actions
+    ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(start_gazebo_ros_spawner_cmd)
     ld.add_action(start_gazebo_ros_bridge_cmd)
     ld.add_action(start_gazebo_ros_image_bridge_cmd) if TURTLEBOT3_MODEL != 'burger' else None
