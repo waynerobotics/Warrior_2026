@@ -5,6 +5,10 @@ from geometry_msgs.msg import PoseStamped
 from rclpy.publisher import Publisher
 from rclpy.time import Time
 import tf2_ros
+ 
+### DEPRECATED: This node is no longer needed as the robot pose in the map frame is now published 
+# by the localization node.
+
 
 class MapRobotPoseNode(Node):
     def __init__(self):
