@@ -4,6 +4,7 @@ from rclpy.time import Time
 from rclpy.duration import Duration
 from geometry_msgs.msg import TwistStamped
 from nav_msgs.msg import Path
+from std_msgs.msg import String
 from tf2_ros import TransformListener, Buffer
 from tf2_ros import TransformException
 
@@ -22,6 +23,7 @@ class FollowPath(Node):
         self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
 
         self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.status_pub = self.create_publisher(String, '~/tracking_status', 10)
         self.path_sub = self.create_subscription(Path, 'a_star_path', self.path_callback, 10)
 
         self.tf_buffer = Buffer()
@@ -36,12 +38,18 @@ class FollowPath(Node):
         self.max_angular_vel = 2.0
         self.goal_tolerance = 0.1
         self.tf_timeout = Duration(seconds=0.1)
+        self._last_status = None
 
         self.timer = self.create_timer(0.05, self.control_loop)
 
     
     def path_callback(self, msg):
         self.path = msg
+        if len(msg.poses) == 0:
+            self.publish_stop()
+            self.publish_status('idle')
+        else:
+            self.publish_status('following')
     
     def yaw_from_quaternion(self, q):
         return math.atan2(
@@ -96,12 +104,14 @@ class FollowPath(Node):
 
         if goal_dist < self.goal_tolerance:
             self.publish_stop()
+            self.publish_status('goal_reached')
             return
 
         # --- Lookahead point ---
         target = self.find_lookahead_point(rx, ry)
         if target is None:
             self.publish_stop()
+            self.publish_status('idle')
             return
 
         tx, ty = target
@@ -136,6 +146,7 @@ class FollowPath(Node):
         twist.twist.linear.x = linear_vel
         twist.twist.angular.z = angular_vel
         self.cmd_vel_pub.publish(twist)
+        self.publish_status('following')
 
 
     def find_lookahead_point(self, robot_x, robot_y):
@@ -185,6 +196,15 @@ class FollowPath(Node):
         twist.twist.angular.z = 0.0
         self.cmd_vel_pub.publish(twist)
         # self.get_logger().info('Published stop command to cmd_vel.')
+
+    def publish_status(self, status: str):
+        if status == self._last_status:
+            return
+
+        msg = String()
+        msg.data = status
+        self.status_pub.publish(msg)
+        self._last_status = status
 
 def main(args=None):
     rclpy.init(args=args)

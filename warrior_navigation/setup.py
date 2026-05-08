@@ -37,7 +37,8 @@ setup(
             'recovery_manager = warrior_navigation.recovery_manager:main',
             'astar_planner = warrior_navigation.astar_planner:main',
             'follow_path = warrior_navigation.follow_path:main',
-            'waypoint_follower = warrior_navigation.logged_waypoint_follower:main'
+            'waypoint_follower = warrior_navigation.logged_waypoint_follower:main',
+            'gps_waypoint_manager = warrior_navigation.gps_waypoint_manager:main'
         ],
     },
 )
