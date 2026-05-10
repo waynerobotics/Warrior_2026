@@ -6,6 +6,8 @@
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/sensors/lidar.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/sensors/camera.xacro"/>
+  <xacro:include filename="$(find warrior_description)/xacro/sensors/imu.xacro"/>
+  <!-- <xacro:include filename="$(find warrior_description)/xacro/sensors/gps.xacro"/> -->
 
 
   <!-- ========== Properties ========== -->
@@ -16,12 +18,14 @@
    <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
 
   <!-- Wheel properties -->
-  <xacro:property name="wheel_mass" value="0.5"/>
+  <!-- <xacro:property name="wheel_mass" value="2.5"/> -->
+  <xacro:property name="wheel_mass" value="5.0"/>
   <xacro:property name="wheel_offset_z" value="-0.15"/>
   <xacro:property name="wheel_radius" value="0.1"/>
 
   <!-- Base properties -->
-  <xacro:property name="base_mass" value="0.5"/>
+  <!-- <xacro:property name="base_mass" value="6.0"/> -->
+  <xacro:property name="base_mass" value="10.0"/> 
   <xacro:property name="base_footprint_height" value="${0.508 + wheel_radius}"/>
   
   <!-- Initial orientations (radians) -->
@@ -53,7 +57,7 @@
       <geometry>
         <mesh filename="file://$(find warrior_description)/meshes/warrior_body.stl"/>
       </geometry>
-      <material name="gray"/>
+      <material name="medium_gray"/>
     </visual>
     <collision>
       <geometry>
@@ -113,7 +117,7 @@
   
   <!-- ========== LiDAR Sensor ========== -->
   <xacro:lidar_macro parent="pole_link" lidar_name="L1_lidar" 
-                     xyz="${lidar_offset_x} 0 ${lidar_offset_z}" rpy="0 0 0" mass="0.5"/>
+                     xyz="${lidar_offset_x} 0 ${lidar_offset_z}" rpy="0 0 3.1415" mass="0.5"/>
 
 
   <!-- ========== Camera Sensor ========== -->

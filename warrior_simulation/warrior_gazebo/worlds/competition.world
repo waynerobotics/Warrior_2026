@@ -11,8 +11,8 @@
       <grid>false</grid>
     </scene>
 
-    <frame name='course_frame'>
-      <pose relative_to='world'>-15 28.7 0 0 0 0</pose>
+    <frame name='igvc_frame'>
+      <pose relative_to='world'>-2.5 17.2 0 0 0 3.1415</pose>
     </frame>
 
     <spherical_coordinates>
@@ -31,9 +31,9 @@
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
-    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+    <!-- <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre</render_engine>
-    </plugin>
+    </plugin> -->
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
 
@@ -41,42 +41,276 @@
     <include>
       <uri>model://ground_plane</uri>
       <name>Ground Plane</name>
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to='igvc_frame'>0 0 0 0 0 0</pose>
     </include>
 
     <!-- Stop Sign -->
     <include>
       <uri>model://stop_sign</uri>
       <name>Stop Sign</name>
-      <pose relative_to='course_frame'>0 10 0 0 0 1.5708</pose>
+      <pose relative_to='igvc_frame'>-12.5 20.5 0 0 0 1.5707</pose>
     </include>
 
     <!-- Trash Can -->
     <include>
       <uri>model://first_2015_trash_can</uri>
       <name>Trash Can</name>
-      <pose relative_to='course_frame'>10 0 0 0 0 0</pose>
+      <pose relative_to='igvc_frame'>2.5 -12.5 0 0 0 -3.1415</pose>
     </include>
 
     <!-- IGVC Track-->
     <include>
       <uri>model://igvc_track</uri>
       <name>IGVC Track</name>
-      <pose relative_to='course_frame'>12.5 -11.5 0 0 0 3.1415</pose>
+      <pose relative_to='igvc_frame'>0 0 0 0 0 0</pose>
     </include>
 
     <!-- Ramp -->
     <include>
       <uri>model://ramp</uri>
       <name>Ramp</name>
-      <pose relative_to='course_frame'>6.5 -29 0 0 0 0</pose>
-      <!-- <pose>-3 7 0 0 0 -1.5708</pose> -->
+      <pose relative_to='igvc_frame'>6.0 17.5 0 0 0 -3.1415</pose>
     </include>
+
+    <!-- Pine Tree Group 1-->
+    <model name="pine_tree_group1">
+      <static>1</static>
+      <pose relative_to='igvc_frame'>-23.3924 26.8591 0 0 0 0</pose>
+      
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_0</name>
+        <pose>-3 -9 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_1</name>
+        <pose>-3 -13 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_2</name>
+        <pose>-3 -17 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_3</name>
+        <pose>-3 -21 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_4</name>
+        <pose>-3 -25 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_5</name>
+        <pose>-3 -29 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_6</name>
+        <pose>-3 -33 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_7</name>
+        <pose>-3 -37 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_8</name>
+        <pose>-3 -41 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_9</name>
+        <pose>-3 -45 0 0 0 -1.5708</pose>
+      </include>
+
+    </model>
+
+
+    <!-- Pine Tree Group 2-->
+    <model name="pine_tree_group2">
+      <static>1</static>
+      <pose relative_to='igvc_frame'>28.3924 26.8591 0 0 0 0</pose>
+      
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_0</name>
+        <pose>-3 -9 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_1</name>
+        <pose>-3 -13 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_2</name>
+        <pose>-3 -17 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_3</name>
+        <pose>-3 -21 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_4</name>
+        <pose>-3 -25 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_5</name>
+        <pose>-3 -29 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_6</name>
+        <pose>-3 -33 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_7</name>
+        <pose>-3 -37 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_8</name>
+        <pose>-3 -41 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://pine_tree</uri>
+        <name>Pine_Tree_9</name>
+        <pose>-3 -45 0 0 0 -1.5708</pose>
+      </include>
+
+    </model>
+
+    <!-- Oak Tree Group 1-->
+    <model name="oak_tree_group1">
+      <static>1</static>
+      <pose relative_to='igvc_frame'>15.3924 27.8591 0 0 0 1.5625</pose>
+      
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_0</name>
+        <pose>-3 -9 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_1</name>
+        <pose>-3 -1 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_2</name>
+        <pose>-3 7 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_3</name>
+        <pose>-3 15 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_4</name>
+        <pose>-3 23 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_5</name>
+        <pose>-3 31 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_6</name>
+        <pose>-3 39 0 0 0 -1.5708</pose>
+      </include>
+
+    </model>
+
+
+    <!-- Oak Tree Group 2-->
+    <model name="oak_tree_group2">
+      <static>1</static>
+      <pose relative_to='igvc_frame'>15.3924 -22.5 0 0 0 1.5625</pose>
+      
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_0</name>
+        <pose>-3 -9 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_1</name>
+        <pose>-3 -1 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_2</name>
+        <pose>-3 7 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_3</name>
+        <pose>-3 15 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_4</name>
+        <pose>-3 23 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_5</name>
+        <pose>-3 31 0 0 0 -1.5708</pose>
+      </include>
+
+      <include>
+        <uri>model://oak_tree</uri>
+        <name>Oak_Tree_6</name>
+        <pose>-3 39 0 0 0 -1.5708</pose>
+      </include>
+
+    </model>
+
     
     <!-- Construction Barrels Group -->
     <model name="construction_barrels_group">
       <static>1</static>
-      <pose relative_to='course_frame'>-2.8924 -7.3591 0 0 0 -1.5792</pose>
+      <pose relative_to='igvc_frame'>15.3924 -3.1409 0 0 0 1.5625</pose>
       <link name="link">
         <pose>-2.8924 -7.3591 0 0 0 -1.5792</pose>
         <inertial>
@@ -260,7 +494,7 @@
     </model>
 
     <light name='sun' type='directional'>
-      <cast_shadows>1</cast_shadows>
+      <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 -0 0</pose>
       <diffuse>0.8 0.8 0.8 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>

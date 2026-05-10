@@ -5,9 +5,14 @@ material StopSign/Diffuse
   {
     pass
     {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      specular 0.5 0.5 0.5 1 12.5
+
       texture_unit
       {
         texture StopSign_Diffuse.png
+        filtering trilinear
       }
     }
   }
@@ -20,9 +25,14 @@ material StopSign/Specular
   {
     pass
     {
+      ambient 1 1 1 1
+      diffuse 1 1 1 1
+      specular 1 1 1 1 32
+
       texture_unit
       {
         texture StopSign_Spec.png
+        filtering trilinear
       }
     }
   }

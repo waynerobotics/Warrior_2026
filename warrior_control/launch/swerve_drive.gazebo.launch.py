@@ -92,9 +92,9 @@ def generate_launch_description():
         name='teleop_twist_keyboard',
         output='screen',
         prefix='gnome-terminal --', 
-        remappings=[
-            ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
-        ],
+        # remappings=[
+        #     ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
+        # ],
         parameters=[
             {'stamped': True},
             {'use_sim_time': use_sim_time}
@@ -127,7 +127,8 @@ def generate_launch_description():
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+        arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
             '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
             '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
@@ -177,11 +178,11 @@ def generate_launch_description():
             )
         ),
 
-        RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=swerve_drive_controller_spawner,
-                on_exit=[teleop_node],
-            )
-        ),
+        # RegisterEventHandler(
+        #     event_handler=OnProcessExit(
+        #         target_action=swerve_drive_controller_spawner,
+        #         on_exit=[teleop_node],
+        #     )
+        # ),
         
     ])

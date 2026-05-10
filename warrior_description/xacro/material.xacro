@@ -10,6 +10,10 @@
     <color rgba="0.2 0.2 0.2 1"/>
   </material>
 
+  <material name="medium_gray">
+    <color rgba="0.55 0.55 0.55 1"/>
+  </material>
+
   <material name="light_gray">
     <color rgba="0.8 0.8 0.8 1"/>
   </material>
