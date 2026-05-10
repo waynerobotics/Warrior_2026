@@ -10,8 +10,8 @@
       <geometry>
         <mesh filename="file://$(find warrior_description)/meshes/insta360_camera.stl"/>
       </geometry>
-      <material name="light_grey">
-        <color rgba="0.8 0.8 0.8 1"/>
+      <material name="light_black">
+        <color rgba="0.15 0.15 0.15 1"/>
       </material>
     </visual>
     <collision>

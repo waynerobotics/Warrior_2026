@@ -17,11 +17,14 @@
           </mesh>
         </geometry>
         <material>
-          <script>
-            <uri>model://stop_sign/materials/scripts</uri>
-            <uri>model://stop_sign/materials/textures</uri>
-            <name>StopSign/Diffuse</name>
-          </script>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://stop_sign/materials/textures/StopSign_Diffuse.png</albedo_map>
+            </metal>
+          </pbr>
         </material>
       </visual>
     </link>

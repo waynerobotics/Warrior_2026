@@ -119,9 +119,13 @@ def generate_launch_description():
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-                   '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
-                   '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo'],
+        arguments=[
+            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+            '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+        ],
         parameters=[{"use_sim_time": use_sim_time}],
         output='screen',
     )
