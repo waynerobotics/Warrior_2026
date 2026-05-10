@@ -32,6 +32,7 @@ setup(
             'world_gps_node = gps_localization.world_gps_node:main',
             'apriltag_gps_bridge = gps_localization.apriltag_gps_bridge:main',
             'waypoint_navigator_node = gps_localization.waypoint_navigator_node:main',
+            'gps_hardware_node = gps_localization.gps_hardware_node:main',
         ],
     },
 )

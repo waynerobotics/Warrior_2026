@@ -1,20 +1,20 @@
 # # If you're in sim, set this true in ALL nodes (or pass via launch)
 # # use_sim_time: true
 
-planner_server:
-  ros__parameters:
-    expected_planner_frequency: 1.0
-    planner_plugins: ["GridBased"]
-    GridBased:
-      plugin: "nav2_navfn_planner::NavfnPlanner"
+# planner_server:
+#   ros__parameters:
+#     expected_planner_frequency: 1.0
+#     planner_plugins: ["GridBased"]
+#     GridBased:
+#       plugin: "nav2_navfn_planner::NavfnPlanner"
 
-controller_server:
-  ros__parameters:
-    use_sim_time: true
-    controller_frequency: 10.0
-    controller_plugins: ["FollowPath"]
-    FollowPath:
-      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+# controller_server:
+#   ros__parameters:
+#     use_sim_time: true
+#     controller_frequency: 10.0
+#     controller_plugins: ["FollowPath"]
+#     FollowPath:
+#       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
 
 # GLOBAL COSTMAP (map frame)
 global_costmap:
@@ -37,11 +37,7 @@ global_costmap:
     publish_frequency: 2.0
     always_send_full_costmap: True
 
-    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-
-    static_layer:
-      plugin: "nav2_costmap_2d::StaticLayer"
-      map_subscribe_transient_local: true
+    plugins: ["obstacle_layer", "inflation_layer"]
 
     obstacle_layer:
       plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -56,6 +52,7 @@ global_costmap:
         raytrace_min_range: 0.0
         obstacle_max_range: 3.0
         obstacle_min_range: 0.0
+        inf_is_valid: True
 
     inflation_layer:
       plugin: "nav2_costmap_2d::InflationLayer"
@@ -95,6 +92,7 @@ local_costmap:
         raytrace_min_range: 0.0
         obstacle_max_range: 3.0
         obstacle_min_range: 0.0
+        inf_is_valid: True
 
     inflation_layer:
       plugin: "nav2_costmap_2d::InflationLayer"
