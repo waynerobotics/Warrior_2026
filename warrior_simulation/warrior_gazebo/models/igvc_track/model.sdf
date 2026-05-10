@@ -23,7 +23,7 @@
           <specular>0.2 0.2 0.2 1.0</specular>
           <pbr>
             <metal>
-              <albedo_map>model://igvc_track/textures/course_color.png</albedo_map>
+              <albedo_map>model://igvc_track/textures/ground_surface/tarmac5.png</albedo_map>
               <roughness>0.8</roughness>
               <metalness>0.0</metalness>
             </metal>
@@ -53,7 +53,7 @@
           <specular>0.2 0.2 0.2 1.0</specular>
           <pbr>
             <metal>
-              <albedo_map>model://igvc_track/textures/track_floor3.png</albedo_map>
+              <albedo_map>model://igvc_track/textures/course/track_floor3.png</albedo_map>
               <roughness>0.8</roughness>
               <metalness>0.0</metalness>
             </metal>

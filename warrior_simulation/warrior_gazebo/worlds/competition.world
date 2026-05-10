@@ -139,11 +139,10 @@
 
     </model>
 
-
     <!-- Pine Tree Group 2-->
     <model name="pine_tree_group2">
       <static>1</static>
-      <pose relative_to='igvc_frame'>28.3924 26.8591 0 0 0 0</pose>
+      <pose relative_to='igvc_frame'>29.3924 26.8591 0 0 0 0</pose>
       
       <include>
         <uri>model://pine_tree</uri>
