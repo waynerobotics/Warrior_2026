@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>warrior_sparkmax</name>
+  <version>0.0.0</version>
+  <description>ROS 2 C++ driver for REV SPARK MAX motor controllers via USB CDC</description>
+  <maintainer email="lord.daniel.w@hotmail.com">fire</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>warrior_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

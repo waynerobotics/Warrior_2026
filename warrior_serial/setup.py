@@ -30,6 +30,7 @@ setup(
         'console_scripts': [
             'warrior_base_driver = warrior_serial.base_driver:main',
             'twist_to_motor = warrior_serial.twist_to_motor:main',
+            'twist_to_spark = warrior_serial.twist_to_spark:main',
             'motor_manager = warrior_serial.motor_manager:main',
         ],
     },
