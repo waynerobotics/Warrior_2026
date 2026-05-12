@@ -21,9 +21,16 @@ curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo "$UBUNTU_CODENAME") main" \
     > /etc/apt/sources.list.d/ros2.list
 
-# ROS 2 Humble desktop + Gazebo Fortress (ros-humble-ros-gz pulls in ignition-fortress)
+# ROS 2 Humble desktop + Gazebo Fortress + ros2_control (needed by warrior_control)
 apt update
-apt install -y ros-humble-desktop ros-dev-tools ros-humble-ros-gz
+apt install -y \
+    ros-humble-desktop \
+    ros-dev-tools \
+    ros-humble-ros-gz \
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
+    ros-humble-gz-ros2-control \
+    libeigen3-dev
 
 # ~/.bashrc lines
 add_line() {
