@@ -69,7 +69,7 @@ v_{by} \\
 i \in \\{1,2,3\\}
 $$
 
-The desired driving velocity and steering angle for each swerve module are given by:
+By inverse kinematics, The desired driving velocity and steering angle for each swerve module are given by:
 
 $$
 \|v_i\|_2 =
