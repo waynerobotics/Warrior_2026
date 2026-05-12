@@ -88,8 +88,7 @@ $$
 The corresponding wheel angular velocity can then be computed as
 
 $$
-\omega_i^{wheel}
-=
+\omega_i^{wheel} =
 \frac{\|\mathbf{v}_i\|_2}{r_w},
 \qquad
 i \in \\{1,2,3\\}
