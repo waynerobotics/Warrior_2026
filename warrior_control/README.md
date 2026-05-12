@@ -17,11 +17,16 @@ This module provides inverse and forward kinematics solutions for a three-wheel 
 The swerve drive kinematics is derived from rigid body dynamics principles.
 
 ### Rigid Body Dynamics
+| Illustration of Rigid Body Kinematics | Warrior Kinematics                                     |
+|----------------------------------------------|----------------------------------------------|
+| <img src="./docs/rigid_body_dynamics.png" height="330"/> | <img src="./docs/inverse_kinematics.png" height="330"/> |
 
-<p align="center">
+
+
+<!-- <p align="center">
  <img src="./docs/rigid_body_dynamics.png" width="840" alt="Rigid body dynamics diagram"/> 
  <br><b>Fig 1. Rigid Body Dynamics</b>
-</p>
+</p> -->
 
 For a rigid body moving in 2D space, the velocity at any point can be expressed as:
 
@@ -85,7 +90,7 @@ $$
 i \in \\{1,2,3\\}
 $$
 
-The corresponding wheel angular velocity for driving motor can then be computed as:
+The corresponding wheel angular velocity for each separate driving motor can then be computed as:
 
 $$
 \omega_i^{wheel} =
