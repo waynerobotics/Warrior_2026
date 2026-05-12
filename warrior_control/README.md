@@ -85,7 +85,7 @@ $$
 i \in \\{1,2,3\\}
 $$
 
-The corresponding wheel angular velocity can then be computed as
+The corresponding wheel angular velocity for driving motor can then be computed as:
 
 $$
 \omega_i^{wheel} =
