@@ -85,7 +85,7 @@ $$
 i \in \\{1,2,3\\}
 $$
 
-where $\|\mathbf{v}_i\|_2$ denotes the desired rotational speed of the driving motor, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
+where $\|\mathbf{v}_i\|_2$ is the desired rotational speed of the driving wheel, and $\theta_i$ is the desired steering angle of the corresponding steering motor.
 
 ## Usage
 
