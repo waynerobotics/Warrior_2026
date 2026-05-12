@@ -67,20 +67,25 @@ private:
     double measurement_noise_linear_ = 5e-2;
     double measurement_noise_angular_ = 5e-2;
 
+    // desired wheel angular speeds (read from state)
+    double desired_front_wheel_w_ = 0.0;
+    double desired_left_wheel_w_ = 0.0;
+    double desired_right_wheel_w_ = 0.0;
+
     // wheel angular speeds (read from state)
     double front_wheel_w_ = 0.0;
     double left_wheel_w_ = 0.0;
     double right_wheel_w_ = 0.0;
 
-    // steering angles (computed from kinematics) rad
+    // desired steering angles (computed from kinematics) rad
+    double desired_front_steer_angle_ = 0.0;
+    double desired_left_steer_angle_ = 0.0;
+    double desired_right_steer_angle_ = 0.0;
+
+    // steering angles read from state interfaces
     double front_steer_angle_ = 0.0;
     double left_steer_angle_ = 0.0;
     double right_steer_angle_ = 0.0;
-
-    // steering angles read from state interfaces
-    double front_steer_measured_ = 0.0;
-    double left_steer_measured_ = 0.0;
-    double right_steer_measured_ = 0.0;
 
     // ROS odometry publisher and TF broadcaster
     std::string odom_frame_;

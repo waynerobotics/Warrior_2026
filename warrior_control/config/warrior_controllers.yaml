@@ -36,9 +36,9 @@ swerve_drive_controller:
     base_frame_id: "base_footprint"
 
     cmd_vel_limit:
-      vx_limit: [0.0, 0.48]  # m/s
-      vy_limit: [-0.1, 0.1]  # m/s
-      wz_limit: [-0.86, 0.545]  # rad/s
+      vx_limit: [-1.0, 1.0]  # m/s
+      vy_limit: [-0.8, 0.8]  # m/s
+      wz_limit: [-1.5, 1.5]  # rad/s
 
       # torch.tensor([0.205, -0.1, -0.86], device=self.device),
       # torch.tensor([0.48, 0.1, 0.545], device=self.device)

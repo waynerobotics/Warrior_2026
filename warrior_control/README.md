@@ -40,10 +40,62 @@ where:
  <br><b>Fig 2. Inverse Kinematics for Warrior</b>
 </p>
 
-Given desired body velocities $(v_x, v_y, \omega_z)$, the module calculates:
-- Wheel steering angles $\theta_f, \theta_l, \theta_r$
-- Wheel driving velocities $v_f, v_l, v_r$
+Given the desired base twist $[\mathbf{v}_b,\ \boldsymbol{\omega}]$, the relationship between the robot base motion and each swerve module can be obtained through inverse kinematics as
 
+$$
+\mathbf{v}_i
+=
+\mathbf{v}_b
++
+\boldsymbol{\omega}
+\times
+\mathbf{r}_{bi},
+\qquad
+i \in \{1,2,3\}
+$$
+
+where $\mathbf{v}_b = [v_{bx}, v_{by}, 0]^T$ denotes the linear velocity of the robot base, $\boldsymbol{\omega} = [0,0,\omega_z]^T$ represents the angular velocity of the base, and $\mathbf{v}_i = [v_{ix}, v_{iy}, 0]^T$ is the velocity of the $i$-th swerve module. The vector $\mathbf{r}_{bi} = [r_{ix}, r_{iy}, 0]^T$ denotes the position vector from the robot base center to the corresponding swerve module.
+
+Accordingly, the kinematic relationship can be expressed in matrix form as
+
+$$
+\begin{bmatrix}
+v_{ix} \\
+v_{iy}
+\end{bmatrix}
+=
+\begin{bmatrix}
+1 & 0 & -r_{iy} \\
+0 & 1 & r_{ix}
+\end{bmatrix}
+\begin{bmatrix}
+v_{bx} \\
+v_{by} \\
+\omega_z
+\end{bmatrix},
+\qquad
+i \in \{1,2,3\}
+$$
+
+Based on the inverse kinematics solution, the desired driving velocity and steering angle for each swerve module can be computed as
+
+$$
+\|\mathbf{v}_i\|_2
+=
+\sqrt{v_{ix}^2 + v_{iy}^2},
+\qquad
+i \in \{1,2,3\}
+$$
+
+$$
+\theta_i
+=
+\operatorname{atan2}(v_{iy}, v_{ix}),
+\qquad
+i \in \{1,2,3\}
+$$
+
+where $\|\mathbf{v}_i\|_2$ denotes the desired rotational speed of the driving motor, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
 
 ## Usage
 
