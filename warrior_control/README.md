@@ -14,32 +14,43 @@ This module provides inverse and forward kinematics solutions for a three-wheel 
 
 ## Principle
 
-The swerve drive kinematics is derived from rigid body dynamics principles.
+### Rigid Body Kinematics
 
-### Rigid Body Dynamics
-| Illustration of Rigid Body Kinematics | Warrior Kinematics                                     |
-|----------------------------------------------|----------------------------------------------|
-| <img src="./docs/rigid_body_kinematics.png" height="330"/> | <img src="./docs/inverse_kinematics.png" height="330"/> |
+The kinematics of the swerve drive system are derived based on rigid body motion principles.
 
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><b>Fig 1. Schematic of Rigid Body Kinematics</b></td>
+    <td align="center"><b>Fig 2. Warrior Robot Kinematics</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/rigid_body_kinematics.png" height="430"/></td>
+    <td align="center"><img src="./docs/inverse_kinematics.png" height="430"/></td>
+  </tr>
+</table>
+</div>
 
-For a rigid body moving in 2D space, the velocity at any point can be expressed as:
+As illustrated in `Fig. 1`, for two points `A` and `B` on the same rigid body, both points share the same translational motion while point `B` simultaneously rotates about point `A`. Therefore, the velocity relationship between the two points can be expressed as:
 
 $$
-\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i
+\mathbf{v}_B =
+\mathbf{v}_A +
+\boldsymbol{\omega}
+\times
+\mathbf{r}_{AB}
 $$
 
 where:
-- $\mathbf{v}_i$: velocity of wheel $i$
-- $\mathbf{v}_{center}$: linear velocity of robot center
-- $\boldsymbol{\omega}$: angular velocity of the robot
-- $\mathbf{r}_i$: position vector from center to wheel $i$
 
-### Inverse Kinematics
+- $\mathbf{v}_A$: translational velocity of point `A`
+- $\mathbf{v}_B$: velocity of point `B`
+- $\boldsymbol{\omega}$: angular velocity of point `B` relative to point `A`
+- $\mathbf{r}_{AB}$: position vector from point `A` to point `B`
 
- <br><b>Fig 2. Inverse Kinematics for Warrior</b>
-</p>
+### Warrior Robot Kinematics
 
-Given the desired base twist $[\mathbf{v}_b,\ \boldsymbol{\omega}]$, the relationship between the robot base motion and each swerve module can be obtained through inverse kinematics as:
+Based on the rigid body kinematics described above, the kinematic model of the Warrior robot can be derived. As in `Fig 2`, given the desired base twist $[\mathbf{v}_b,\ \boldsymbol{\omega}]$, the velocity relationship between the robot base and each swerve module is expressed as:
 
 $$
 \mathbf{v}_i = \mathbf{v}_b + \boldsymbol{\omega} \times \mathbf{r}_{bi}, \qquad i \in \\{1,2,3\\}
@@ -86,12 +97,12 @@ The corresponding wheel angular velocity for each separate driving motor can the
 
 $$
 \omega_i^{wheel} =
-\frac{\|\mathbf{v}_i\|_2}{r_w},
+\frac{\|\mathbf{v}_i\|_2}{R_{i}},
 \qquad
 i \in \\{1,2,3\\}
 $$
 
-where $\|\mathbf{v}_i\|_2$ denotes the desired linear velocity of the $i$-th wheel, $\omega_i^{wheel}$ is the desired angular velocity of the driving wheel, $r_w$ is the wheel radius, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
+where $\|\mathbf{v}_i\|_2$ denotes the desired linear velocity of the $i$-th wheel, $\omega_i^{wheel}$ is the desired angular velocity of the driving wheel, $R_i$ is the wheel radius, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
 
 ## Usage
 
