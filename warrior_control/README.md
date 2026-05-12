@@ -69,10 +69,10 @@ v_{by} \\
 i \in \\{1,2,3\\}
 $$
 
-By inverse kinematics, The desired driving velocity and steering angle for each swerve module are given by:
+By inverse kinematics, the desired driving velocity and steering angle for each swerve module are given by:
 
 $$
-\|v_i\|_2 =
+\|\mathbf{v}_i\|_2 =
 \sqrt{v_{ix}^2 + v_{iy}^2},
 \qquad
 i \in \\{1,2,3\\}
@@ -85,7 +85,17 @@ $$
 i \in \\{1,2,3\\}
 $$
 
-where $\|\mathbf{v}_i\|_2$ is the desired rotational speed of the driving wheel, and $\theta_i$ is the desired steering angle of the corresponding steering motor.
+The corresponding wheel angular velocity can then be computed as
+
+$$
+\omega_i^{wheel}
+=
+\frac{\|\mathbf{v}_i\|_2}{r_w},
+\qquad
+i \in \\{1,2,3\\}
+$$
+
+where $\|\mathbf{v}_i\|_2$ denotes the desired linear velocity of the $i$-th wheel, $\omega_i^{wheel}$ is the desired angular velocity of the driving wheel, $r_w$ is the wheel radius, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
 
 ## Usage
 
