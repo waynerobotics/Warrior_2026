@@ -66,10 +66,9 @@ controller_interface::CallbackReturn SwerveDriveController::on_init() {
     wheel_to_center_["left"]  = auto_declare<double>("wheel_to_center.left", 0.0);
     wheel_to_center_["right"] = auto_declare<double>("wheel_to_center.right", 0.0);
 
-    // Angles to wheels
-    alpha_front_ = auto_declare<double>("alpha.front", 0.0);
-    alpha_left_  = auto_declare<double>("alpha.left", 0.0);
-    alpha_right_ = auto_declare<double>("alpha.right", 0.0);
+    alpha_["front"] = auto_declare<double>("alpha.front", 0.0);
+    alpha_["left"]  = auto_declare<double>("alpha.left", 0.0);
+    alpha_["right"] = auto_declare<double>("alpha.right", 0.0);
 
     const auto vx_limit = auto_declare<std::vector<double>>("cmd_vel_limit.vx_limit", {-0.3, 0.3});
     const auto vy_limit = auto_declare<std::vector<double>>("cmd_vel_limit.vy_limit", {-0.3, 0.3});
@@ -229,9 +228,6 @@ controller_interface::return_type SwerveDriveController::update(
     kalmanPredict(dt);
     kalmanCorrect(body_twist);
 
-    publishEdgeState();
-    publishTrackingError();
-
     // RCLCPP_INFO(get_node()->get_logger(), "Updating SwerveDriveController with vx: %.2f, vy: %.2f, wz: %.2f",
     //                 vx_cmd_, vy_cmd_, wz_cmd_);
 
@@ -246,56 +242,6 @@ void SwerveDriveController::applyCmdVelLimits() {
     vx_cmd_ = std::clamp(vx_cmd_, vx_limit_min_, vx_limit_max_);
     vy_cmd_ = std::clamp(vy_cmd_, vy_limit_min_, vy_limit_max_);
     wz_cmd_ = std::clamp(wz_cmd_, wz_limit_min_, wz_limit_max_);
-}
-
-void SwerveDriveController::publishEdgeState() {
-    // if (!edge_state_pub_) {
-    //     return;
-    // }
-
-    // x_ = kf_state_(0);
-    // y_ = kf_state_(1);
-    // yaw_ = kf_state_(2);
-
-    // edge_msgs::msg::EdgeState edge_state;
-    // edge_state.header.stamp = get_node()->now();
-    // edge_state.header.frame_id = edge_state_frame_id_;
-    // edge_state.state_type = edge_msgs::msg::EdgeState::ROBOT_STATE;
-    // edge_state.state_value.resize(12);
-
-    // edge_state.state_value[0] = x_;
-    // edge_state.state_value[1] = y_;
-    // edge_state.state_value[2] = 0.0;
-    // edge_state.state_value[3] = 0.0;
-    // edge_state.state_value[4] = 0.0;
-    // edge_state.state_value[5] = yaw_;
-    // edge_state.state_value[6] = kf_state_(3);
-    // edge_state.state_value[7] = kf_state_(4);
-    // edge_state.state_value[8] = 0.0;
-    // edge_state.state_value[9] = 0.0;
-    // edge_state.state_value[10] = 0.0;
-    // edge_state.state_value[11] = kf_state_(5);
-
-    // edge_state_pub_->publish(edge_state);
-}
-
-void SwerveDriveController::publishTrackingError() {
-    // if (!tracking_error_pub_) {
-    //     return;
-    // }
-
-    // edge_msgs::msg::EdgeState tracking_error;
-    // tracking_error.header.stamp = get_node()->now();
-    // tracking_error.header.frame_id = edge_state_frame_id_;
-    // tracking_error.state_type = edge_msgs::msg::EdgeState::TRACKING_ERROR;
-    // tracking_error.state_value.resize(12, 0.0);
-
-    // tracking_error.state_value[2] = base_link_height_;
-    // tracking_error.state_value[6] = vx_cmd_ - kf_state_(3);
-    // tracking_error.state_value[7] = vy_cmd_ - kf_state_(4);
-    // tracking_error.state_value[11] = wz_cmd_ - kf_state_(5);
-
-    // tracking_error_pub_->publish(tracking_error);
 }
 
 
@@ -343,6 +289,9 @@ bool SwerveDriveController::estimateBodyTwist(Eigen::Vector3d & body_twist) cons
     const double df = wheel_to_center_.at("front");
     const double dl = wheel_to_center_.at("left");
     const double dr = wheel_to_center_.at("right");
+    const double alpha_front_ = alpha_.at("front");
+    const double alpha_left_  = alpha_.at("left");
+    const double alpha_right_ = alpha_.at("right");
 
     const double front_x = df * std::sin(alpha_front_);
     const double front_y = df * std::cos(alpha_front_);
@@ -401,7 +350,7 @@ void SwerveDriveController::kalmanPredict(double dt) {
     Q(5, 5) = process_noise_velocity_ * dt;
 
     kf_state_ = F * kf_state_;
-    kf_state_(2) = normalizeAngle(kf_state_(2));
+    kf_state_(2) = wrap2Pi(kf_state_(2));
     kf_cov_ = F * kf_cov_ * F.transpose() + Q;
 }
 
@@ -422,13 +371,13 @@ void SwerveDriveController::kalmanCorrect(const Eigen::Vector3d & body_twist) {
     const Eigen::Matrix<double, 6, 3> K = kf_cov_ * H.transpose() * S.inverse();
 
     kf_state_ += K * innovation;
-    kf_state_(2) = normalizeAngle(kf_state_(2));
+    kf_state_(2) = wrap2Pi(kf_state_(2));
 
     const Eigen::Matrix<double, 6, 6> I = Eigen::Matrix<double, 6, 6>::Identity();
     kf_cov_ = (I - K * H) * kf_cov_;
 }
 
-double SwerveDriveController::normalizeAngle(double angle) {
+double SwerveDriveController::wrap2Pi(double angle) {
     return std::atan2(std::sin(angle), std::cos(angle));
 }
 
@@ -489,18 +438,43 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
     tf_broadcaster_->sendTransform(tf_msg);
 }
 
+// Compute optimal steering angle and adjust linear speed if reversing is needed
+double SwerveDriveController::computeSteerAngle(double desired_angle, double current_angle, double& desired_linear_speed) {
+    double delta = wrap2Pi(desired_angle - current_angle);
+    
+    if (std::fabs(delta) > M_PI_2) {
+        desired_angle += M_PI;
+        desired_linear_speed *= -1.0;
+    }
+    
+    return wrap2Pi(desired_angle);
+}
+
+// Scale drive speed based on steering angle error to prevent wheel slippage
+double SwerveDriveController::computeDriveSpeed(double desired_angle, double current_angle, double desired_linear_speed) {
+    double angle_error = wrap2Pi(desired_angle - current_angle);
+    
+    if (std::fabs(angle_error) > M_PI_2) {
+        return 0.0;
+    }
+    
+    double scale = 1.0 - (std::fabs(angle_error) / M_PI_2);
+    return desired_linear_speed * scale;
+}
 
 void SwerveDriveController::computeJointCommand(double vx, double vy, double wz) {
 
-    std::cout << "Desired velocities - vx: " << vx << ", vy: " << vy << ", wz: " << wz << std::endl;
     auto rb1_ = wheel_to_center_["front"];
     auto rb2_ = wheel_to_center_["left"];
     auto rb3_ = wheel_to_center_["right"];
 
-    double alpha1 = 0;
-    double alpha2 = 2 * M_PI / 3;
-    double alpha3 = 4 * M_PI / 3;
+    // Assuming the vehicle body coordinate system is placed at the center of the robot, 
+    // and the wheels are located at 120 degree intervals around the center.
+    double alpha1 = alpha_["front"];
+    double alpha2 = alpha_["left"];
+    double alpha3 = alpha_["right"];
 
+    // Get the position vector of each wheel relative to the robot center
     double rb1_x_ = rb1_ * std::cos(alpha1);
     double rb1_y_ = rb1_ * std::sin(alpha1);
     double rb2_x_ = rb2_ * std::cos(alpha2);
@@ -508,7 +482,7 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
     double rb3_x_ = rb3_ * std::cos(alpha3);
     double rb3_y_ = rb3_ * std::sin(alpha3);
 
-    // Implement swerve kinematics calculations
+    // Implement inverse swerve kinematics calculations
     double x1 = vx - rb1_y_ * wz;
     double y1 = vy + rb1_x_ * wz;
     double x2 = vx - rb2_y_ * wz;
@@ -516,52 +490,39 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
     double x3 = vx - rb3_y_ * wz;
     double y3 = vy + rb3_x_ * wz;
 
-    // Calculate wheel angles for steering
-    double f_th = atan2(y1, x1);
-    double l_th = atan2(y2, x2);
-    double r_th = atan2(y3, x3);
+    // Calculate desired wheel angles for steering
+    auto d_front_steer_angle = atan2(y1, x1);
+    auto d_left_steer_angle = atan2(y2, x2);
+    auto d_right_steer_angle = atan2(y3, x3);
 
-    double front_wheel_v = sqrt(pow(x1, 2) + pow(y1, 2));
-    double left_wheel_v  = sqrt(pow(x2, 2) + pow(y2, 2));
-    double right_wheel_v = sqrt(pow(x3, 2) + pow(y3, 2));
+    // Calculate desired wheel linear speeds for driving
+    auto d_front_wheel_speed = sqrt(pow(x1, 2) + pow(y1, 2));
+    auto d_left_wheel_speed  = sqrt(pow(x2, 2) + pow(y2, 2));
+    auto d_right_wheel_speed = sqrt(pow(x3, 2) + pow(y3, 2));
 
+    // Compute optimal steering angles and adjust speeds to minimize rotation and prevent slippage
+    desired_front_steer_angle_ = computeSteerAngle(d_front_steer_angle, front_steer_angle_, d_front_wheel_speed);
+    desired_left_steer_angle_  = computeSteerAngle(d_left_steer_angle,  left_steer_angle_,  d_left_wheel_speed);
+    desired_right_steer_angle_ = computeSteerAngle(d_right_steer_angle, right_steer_angle_, d_right_wheel_speed);
 
-    double delta_f = normalizeAngle(f_th - front_steer_angle_);
-    double delta_l = normalizeAngle(l_th - left_steer_angle_);
-    double delta_r = normalizeAngle(r_th - right_steer_angle_);
-
-    if (fabs(delta_f) > M_PI_2)
-    {
-        f_th += M_PI;
-        front_wheel_v *= -1.0;
-    }
-    if (fabs(delta_l) > M_PI_2)
-    {
-        l_th += M_PI;
-        left_wheel_v *= -1.0;
-    }
-    if (fabs(delta_r) > M_PI_2)
-    {
-        r_th += M_PI;
-        right_wheel_v *= -1.0;
-    }
-
-    RCLCPP_INFO(get_node()->get_logger(), "Computed wheel steering angles (radians): Front: %.2f, Left: %.2f, Right: %.2f",
-                f_th, l_th, r_th);
-    RCLCPP_INFO(get_node()->get_logger(), "Computed wheel velocities: Front: %.2f, Left: %.2f, Right: %.2f",
-                front_wheel_v, left_wheel_v, right_wheel_v);
+    // Compute final wheel linear speeds after adjusting for steering angles
+    desired_front_wheel_speed_ = computeDriveSpeed(desired_front_steer_angle_, front_steer_angle_, d_front_wheel_speed);
+    desired_left_wheel_speed_  = computeDriveSpeed(desired_left_steer_angle_,  left_steer_angle_,  d_left_wheel_speed);
+    desired_right_wheel_speed_ = computeDriveSpeed(desired_right_steer_angle_, right_steer_angle_, d_right_wheel_speed);
     
     // Update wheel angular speed commands
-    const double front_wheel_w_cmd = front_wheel_v / wheel_radius_;
-    const double left_wheel_w_cmd  = left_wheel_v / wheel_radius_;
-    const double right_wheel_w_cmd = right_wheel_v / wheel_radius_;
+    const double front_wheel_w_cmd = desired_front_wheel_speed_ / wheel_radius_;
+    const double left_wheel_w_cmd  = desired_left_wheel_speed_ / wheel_radius_;
+    const double right_wheel_w_cmd = desired_right_wheel_speed_ / wheel_radius_;
 
-    std::cout << "Steering angles (degrees): Front: " << f_th * 180.0 / M_PI
-              << ", Left: " << l_th * 180.0 / M_PI
-              << ", Right: " << r_th * 180.0 / M_PI << std::endl;
-
-    
-
+    RCLCPP_INFO(get_node()->get_logger(), "Computed wheel steering angles (radians): Front: %.2f, Left: %.2f, Right: %.2f",
+                desired_front_steer_angle_, desired_left_steer_angle_, desired_right_steer_angle_);
+    RCLCPP_INFO(get_node()->get_logger(), "Steering angles (degrees): Front: %.2f, Left: %.2f, Right: %.2f",
+                desired_front_steer_angle_ * 180.0 / M_PI, desired_left_steer_angle_ * 180.0 / M_PI, desired_right_steer_angle_ * 180.0 / M_PI);
+    RCLCPP_INFO(get_node()->get_logger(), "Computed wheel linear velocities (m/s): Front: %.2f, Left: %.2f, Right: %.2f",
+                desired_front_wheel_speed_, desired_left_wheel_speed_, desired_right_wheel_speed_);
+    RCLCPP_INFO(get_node()->get_logger(), "Computed wheel angular velocities (rad/s): Front: %.2f, Left: %.2f, Right: %.2f",
+                front_wheel_w_cmd, left_wheel_w_cmd, right_wheel_w_cmd);
 
     // Set commands to interfaces
     for (size_t i = 0; i < drive_cmd_.size(); ++i) {
@@ -576,11 +537,11 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
 
     for (size_t i = 0; i < steer_cmd_.size(); ++i) {
         if (steer_cmd_[i].get().get_prefix_name().find("front") != std::string::npos) {
-            steer_cmd_[i].get().set_value(f_th);
+            steer_cmd_[i].get().set_value(desired_front_steer_angle_);
         } else if (steer_cmd_[i].get().get_prefix_name().find("left") != std::string::npos) {
-            steer_cmd_[i].get().set_value(l_th);
+            steer_cmd_[i].get().set_value(desired_left_steer_angle_);
         } else if (steer_cmd_[i].get().get_prefix_name().find("right") != std::string::npos) {
-            steer_cmd_[i].get().set_value(r_th);
+            steer_cmd_[i].get().set_value(desired_right_steer_angle_);
         }
     }
     

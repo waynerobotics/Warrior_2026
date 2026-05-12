@@ -40,9 +40,6 @@ swerve_drive_controller:
       vy_limit: [-0.8, 0.8]  # m/s
       wz_limit: [-1.5, 1.5]  # rad/s
 
-      # torch.tensor([0.205, -0.1, -0.86], device=self.device),
-      # torch.tensor([0.48, 0.1, 0.545], device=self.device)
-
     steer_joint_names:
       - "front_steer_joint"
       - "left_steer_joint"
@@ -65,7 +62,10 @@ swerve_drive_controller:
       left: 0.545    # m
       right: 0.545   # m
 
+
+    # Assuming the vehicle body coordinate system is placed at the center of the robot, 
+    # and the wheels are located at 120 degree intervals around the center.
     alpha:
       front: 0.0
-      left: 0.5236    # 30 degrees in radians
-      right: 0.5236   # 30 degrees in radians
+      left: 2.0944    # 120 degrees in radians
+      right: 4.1888   # 240 degrees in radians

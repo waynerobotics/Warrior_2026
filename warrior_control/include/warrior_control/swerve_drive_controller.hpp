@@ -67,12 +67,12 @@ private:
     double measurement_noise_linear_ = 5e-2;
     double measurement_noise_angular_ = 5e-2;
 
-    // desired wheel angular speeds (read from state)
-    double desired_front_wheel_w_ = 0.0;
-    double desired_left_wheel_w_ = 0.0;
-    double desired_right_wheel_w_ = 0.0;
+    // desired wheel linear speeds (computed from kinematics) m/s
+    double desired_front_wheel_speed_ = 0.0;
+    double desired_left_wheel_speed_ = 0.0;
+    double desired_right_wheel_speed_ = 0.0;
 
-    // wheel angular speeds (read from state)
+    // wheel angular speeds (read from state interfaces)
     double front_wheel_w_ = 0.0;
     double left_wheel_w_ = 0.0;
     double right_wheel_w_ = 0.0;
@@ -82,7 +82,7 @@ private:
     double desired_left_steer_angle_ = 0.0;
     double desired_right_steer_angle_ = 0.0;
 
-    // steering angles read from state interfaces
+    // steering angles (read from state interfaces)
     double front_steer_angle_ = 0.0;
     double left_steer_angle_ = 0.0;
     double right_steer_angle_ = 0.0;
@@ -113,14 +113,12 @@ private:
     // Swerve kinematics parameters
     double wheel_radius_;
     std::unordered_map<std::string, double> wheel_to_center_;
-
-    double alpha_front_;
-    double alpha_left_;
-    double alpha_right_;
+    std::unordered_map<std::string, double> alpha_;
 
     void applyCmdVelLimits();
-    void publishEdgeState();
-    void publishTrackingError();
+
+    double computeSteerAngle(double desired_angle, double current_angle, double& desired_linear_speed);
+    double computeDriveSpeed(double desired_angle, double current_angle, double desired_linear_speed);
 
     void computeJointCommand(double vx, double vy, double wz);
     void readWheelAngularVel();
@@ -130,7 +128,7 @@ private:
     void updateOdometry(double dt, const Eigen::Vector3d & body_twist);
     void kalmanPredict(double dt);
     void kalmanCorrect(const Eigen::Vector3d & body_twist);
-    static double normalizeAngle(double angle);
+    static double wrap2Pi(double angle);
 };
 
     
