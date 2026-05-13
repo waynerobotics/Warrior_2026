@@ -33,10 +33,9 @@ def main(args=None):
     rclpy.init(args=args)
     joy_swerve = JoySwerve()
     rclpy.spin(joy_swerve)
-    JoySwerve.destroy_node()
+    joy_swerve.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
-
 
