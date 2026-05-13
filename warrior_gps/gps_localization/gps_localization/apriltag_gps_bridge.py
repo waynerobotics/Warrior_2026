@@ -25,10 +25,16 @@ class AprilTagGPSBridge(Node):
         self.camera_params = (514.8914923, 515.01073552, 320.13602236, 240.43150943)
         
         # Setup camera
-        self.cap = cv2.VideoCapture(2)
-        if not self.cap.isOpened():
-            self.get_logger().error('Camera not found! Check connection.')
-            return
+        self.camera_available = False
+        for index in [0, 1, 2, 3, 4]:
+            self.cap = cv2.VideoCapture(index)
+            if self.cap.isOpened():
+                self.get_logger().info(f'Camera found at index {index}')
+                self.camera_available = True
+                break
+
+        if not self.camera_available:
+            self.get_logger().warn('No camera found — running without camera feed')
         
         # Setup AprilTag detector
         self.detector = Detector(families="tag36h11")
@@ -62,9 +68,12 @@ class AprilTagGPSBridge(Node):
     
     def process_frame(self):
         """Process one camera frame"""
+        if not self.camera_available:
+            return   # Skip entirely if no camera
+
         ret, frame = self.cap.read()
         if not ret:
-            return
+         return
         
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         
