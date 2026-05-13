@@ -50,7 +50,7 @@ where:
 
 ### Warrior Robot Kinematics
 
-Based on the rigid body kinematics described above, the kinematic model of the Warrior robot can be derived. As in `Fig 2`, given the desired base twist $[\mathbf{v}_b,\ \boldsymbol{\omega}]$, the velocity relationship between the robot base and each swerve module is expressed as:
+Based on the rigid body kinematics described above, the kinematics of the Warrior robot can be derived. As in `Fig 2`, given the desired base twist $\xi_b = [v_{bx},\ v_{by},\ \omega_z]^T$, the velocity relationship between the robot base and each swerve module is expressed as:
 
 $$
 \mathbf{v}_i = \mathbf{v}_b + \boldsymbol{\omega} \times \mathbf{r}_{bi}, \qquad i \in \\{1,2,3\\}
@@ -103,6 +103,23 @@ i \in \\{1,2,3\\}
 $$
 
 where $\|\mathbf{v}_i\|_2$ denotes the desired linear velocity of the $i$-th wheel, $\omega_i^{wheel}$ is the desired angular velocity of the driving wheel, $R_i$ is the wheel radius, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
+
+
+## Control Flow
+The overall and control pipeline are summarized below:
+
+The robot first receives the desired base twist $\mathbf{\xi}_b$. Through inverse kinematics (IK), the base motion is then transformed into swerve module commands, including the desired steering angle $\mathbf{\theta}_i$ and wheel speed $\omega_i$ for each module. The steering motors track the desired angles using PD control, while the driving motors regulate the wheel speeds through PWM-based velocity control.
+
+```mermaid
+graph LR
+    A["Base Twist​"] -->|IK| B["Swerve Command"]
+
+    B -->|θ_i| C["Steering Angle"]
+    B -->|ω_i| D["Wheel Speed"]
+
+    C -->|PD| E["Steering Motor"]
+    D -->|PWM| F["Driving Motor"]
+```
 
 ## Usage
 

@@ -130,22 +130,8 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
         });
 
     odom_pub_ = get_node()->create_publisher<nav_msgs::msg::Odometry>("/odom_est", 10);
-    // edge_state_pub_ = get_node()->create_publisher<edge_msgs::msg::EdgeState>(edge_state_topic_, 10);
-    // tracking_error_pub_ = get_node()->create_publisher<edge_msgs::msg::EdgeState>(tracking_error_topic_, 10);
 
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
-
-    // edge_action_sub_ = get_node()->create_subscription<edge_msgs::msg::EdgeAction>(
-    //     "/edge/command_action", 10,
-    //     [this](const edge_msgs::msg::EdgeAction::SharedPtr msg)
-    //     {
-    //         if (msg->action_type == edge_msgs::msg::EdgeAction::CMD_VEL) {
-    //             vx_cmd_ = msg->action_value[0];
-    //             vy_cmd_ = msg->action_value[1];
-    //             wz_cmd_ = -msg->action_value[2];  // Invert angular command to match the errors
-    //             applyCmdVelLimits();
-    //         }
-    //     });
 
     // Subscribe to simulation ground-truth odometry for TF broadcasting and base_link height.
     odom_gt_sub_ = get_node()->create_subscription<nav_msgs::msg::Odometry>(
@@ -464,12 +450,12 @@ double SwerveDriveController::computeDriveSpeed(double desired_angle, double cur
 
 void SwerveDriveController::computeJointCommand(double vx, double vy, double wz) {
 
+    // Get the distance from each wheel to the robot center
     auto rb1_ = wheel_to_center_["front"];
     auto rb2_ = wheel_to_center_["left"];
     auto rb3_ = wheel_to_center_["right"];
 
-    // Assuming the vehicle body coordinate system is placed at the center of the robot, 
-    // and the wheels are located at 120 degree intervals around the center.
+    // Get the alpha angles for each wheel
     double alpha1 = alpha_["front"];
     double alpha2 = alpha_["left"];
     double alpha3 = alpha_["right"];
