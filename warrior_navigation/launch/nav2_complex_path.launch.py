@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -17,6 +17,7 @@ def generate_launch_description():
     )
 
     warrior_nav = FindPackageShare('warrior_navigation')
+    nav2_bringup = FindPackageShare('nav2_bringup')
 
     rviz2_config_file = PathJoinSubstitution(
         [warrior_nav, 'rviz2', 'complex_path.rviz']
@@ -44,7 +45,7 @@ def generate_launch_description():
                 'launch',
                 'online_async_launch.py',
             ])
-        ),  
+        ),
         launch_arguments={'use_sim_time': use_sim}.items()
     )
 
@@ -53,7 +54,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_localization'),
                 'launch',
-                'ekf.launch.py',
+                'dual_ekf_navsat.launch.py',
             ])
         ),
         launch_arguments={'use_sim_time': use_sim}.items()
@@ -62,7 +63,7 @@ def generate_launch_description():
     nav2_bringup_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                warrior_nav,
+                nav2_bringup,
                 'launch',
                 'bringup_launch.py',
             ])
@@ -86,20 +87,14 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim}],
     )
 
-    follow_path_node = Node(
-        package='warrior_navigation',
-        executable='follow_path',
-        name='follow_path',
-        output='screen',
-        parameters=[{'use_sim_time': use_sim}],
-    )
-
     return LaunchDescription([
         declare_use_sim,
         gazebo_launch,
         slam_launch,
         ekf_launch,
-        nav2_bringup_launch,
-        follow_path_node,
+        TimerAction(
+            period=10.0,
+            actions=[nav2_bringup_launch]
+        ),
         rviz2,
     ])

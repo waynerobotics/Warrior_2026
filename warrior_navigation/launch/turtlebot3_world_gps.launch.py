@@ -38,8 +38,8 @@ def generate_launch_description():
         get_package_share_directory('warrior_gazebo'),
         'worlds',
         # 'turtlebot3_world_gps.world'
-        #'empty_test.world'
-        'fullTrack.world'
+        'empty_test.world'
+        # 'fullTrack.world'
     )
 
     gzserver_cmd = IncludeLaunchDescription(
