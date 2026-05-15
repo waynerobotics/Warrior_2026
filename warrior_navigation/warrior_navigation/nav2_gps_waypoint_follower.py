@@ -134,33 +134,68 @@ class Nav2GpsWaypointFollower(Node):
         self.get_logger().info(f'Nav2 action server {self.action_name} is available. Beginning waypoint mission.')
         self._execute_mission()
 
+
     def _execute_mission(self):
-        for idx, waypoint in enumerate(self.waypoints_map):
-            self.get_logger().info(f'Sending waypoint {idx + 1}/{len(self.waypoints_map)} to Nav2.')
-            goal_msg = NavigateToPose.Goal()
-            goal_msg.pose = self._create_pose_stamped(waypoint)
+        self._current_waypoint_index = 0
+        self._send_next_waypoint()
 
-            send_goal_future = self._action_client.send_goal_async(goal_msg)
-            rclpy.spin_until_future_complete(self, send_goal_future)
-            goal_handle = send_goal_future.result()
+    def _send_next_waypoint(self):
+        if self._current_waypoint_index >= len(self.waypoints_map):
+            self.get_logger().info('GPS waypoint mission complete.')
+            return
 
-            if not goal_handle.accepted:
-                self.get_logger().warn(f'Waypoint {idx + 1} was rejected by {self.action_name}.')
-                continue
+        idx = self._current_waypoint_index
+        waypoint = self.waypoints_map[idx]
 
-            result_future = goal_handle.get_result_async()
-            rclpy.spin_until_future_complete(self, result_future)
-            result = result_future.result()
+        self.get_logger().info(
+            f'Sending waypoint {idx + 1}/{len(self.waypoints_map)} to Nav2.'
+        )
 
-            if result.status == GoalStatus.STATUS_SUCCEEDED:
-                self.get_logger().info(f'Waypoint {idx + 1} reached successfully.')
-            else:
-                self.get_logger().warn(
-                    f'Waypoint {idx + 1} failed with status {result.status}. Continuing to next waypoint.'
-                )
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose = self._create_pose_stamped(waypoint)
 
-        self.get_logger().info('GPS waypoint mission complete.')
+        send_goal_future = self._action_client.send_goal_async(goal_msg)
 
+        send_goal_future.add_done_callback(self._goal_response_callback)
+
+    def _goal_response_callback(self, future):
+        goal_handle = future.result()
+
+        idx = self._current_waypoint_index
+
+        if not goal_handle.accepted:
+            self.get_logger().warn(
+                f'Waypoint {idx + 1} was rejected by {self.action_name}.'
+            )
+
+            self._current_waypoint_index += 1
+            self._send_next_waypoint()
+            return
+        self.get_logger().info(
+            f'Waypoint {idx + 1} accepted.'
+        )
+        result_future = goal_handle.get_result_async()
+        result_future.add_done_callback(self._result_callback)
+
+    
+
+    def _result_callback(self, future):
+        result = future.result()
+
+        idx = self._current_waypoint_index
+
+        if result.status == GoalStatus.STATUS_SUCCEEDED:
+            self.get_logger().info(
+                f'Waypoint {idx + 1} reached successfully.'
+            )
+        else:
+            self.get_logger().warn(
+                f'Waypoint {idx + 1} failed with status {result.status}.'
+            )
+
+        self._current_waypoint_index += 1
+
+        self._send_next_waypoint()
 
 def main():
     rclpy.init()

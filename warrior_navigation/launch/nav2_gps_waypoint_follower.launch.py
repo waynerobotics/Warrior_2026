@@ -130,7 +130,7 @@ def generate_launch_description():
             'map_origin_longitude': map_origin_longitude,
             'map_origin_yaw': map_origin_yaw,
             'utm_zone': utm_zone,
-            'utm_hemisphere': utm_hemisphere,
+            # 'utm_hemisphere': utm_hemisphere,
             'action_name': 'navigate_to_pose',
         }],
     )
