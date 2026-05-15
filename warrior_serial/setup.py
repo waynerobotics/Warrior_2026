@@ -32,6 +32,7 @@ setup(
             'twist_to_motor = warrior_serial.twist_to_motor:main',
             'twist_to_spark = warrior_serial.twist_to_spark:main',
             'motor_manager = warrior_serial.motor_manager:main',
+            'test_swerve_module = warrior_serial.test_swerve_module:main',
         ],
     },
 )
