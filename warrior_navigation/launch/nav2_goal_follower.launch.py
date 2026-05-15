@@ -20,7 +20,7 @@ def generate_launch_description():
     nav2_bringup = FindPackageShare('nav2_bringup')
 
     rviz2_config_file = PathJoinSubstitution(
-        [warrior_nav, 'rviz2', 'complex_path.rviz']
+        [warrior_nav, 'rviz2', 'goal_follower.rviz']
     )
 
     nav2_params_file = PathJoinSubstitution(
@@ -32,6 +32,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 warrior_nav,
                 'launch',
+                'nav_utils',
                 'turtlebot3_world_gps.launch.py',
             ])
         ),

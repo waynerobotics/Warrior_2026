@@ -63,6 +63,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_navigation'),
                 'launch',
+                'nav_utils',
                 'turtlebot3_world_gps.launch.py'
             ])
         ),
@@ -99,6 +100,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 FindPackageShare('warrior_navigation'),
                 'launch',
+                'nav_utils',
                 'costmap.launch.py'
             ])
         ),

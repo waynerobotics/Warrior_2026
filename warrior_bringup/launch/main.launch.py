@@ -93,7 +93,7 @@ def launch_robot(context, *args, **kwargs):
         pkg_warrior_navigation = FindPackageShare('warrior_navigation')
         turtlebot_launcher = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                PathJoinSubstitution([pkg_warrior_navigation, "launch", "turtlebot3_world_gps.launch.py"])
+                PathJoinSubstitution([pkg_warrior_navigation, "launch", "nav_utils", "turtlebot3_world_gps.launch.py"])
             ),
             launch_arguments={
                 'use_sim_time': use_sim_time,

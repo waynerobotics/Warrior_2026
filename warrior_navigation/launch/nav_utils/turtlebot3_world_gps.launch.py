@@ -65,7 +65,7 @@ def generate_launch_description():
 
     spawn_turtlebot_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('warrior_navigation'), 'launch', 'spawn_turtlebot3_gps.launch.py')
+            os.path.join(get_package_share_directory('warrior_navigation'), 'launch', 'nav_utils', 'spawn_turtlebot3_gps.launch.py')
         ),
         launch_arguments={
             'x_pose': x_pose,

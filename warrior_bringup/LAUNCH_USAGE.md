@@ -149,7 +149,7 @@ ros2 launch warrior_bringup main.launch.py robot_type:=swerve_sim world_name:=cu
 **Add-ons (run separately):**
 - Joystick control: `ros2 launch warrior_joy joy_swerve.launch.py`
 - Localization: `ros2 launch warrior_localization ekf.launch.py`
-- Navigation: `ros2 launch warrior_navigation costmap.launch.py`
+- Navigation: `ros2 launch warrior_navigation nav_utils/costmap.launch.py`
 
 ### Simulated Differential Drive
 ```bash
@@ -175,7 +175,7 @@ ros2 launch warrior_bringup turtlebot_sim.launch.py
 **Add-ons (run separately):**
 - Joystick control: `ros2 launch warrior_joy joy_turtle.launch.py`
 - SLAM: `ros2 launch warrior_localization online_async_launch.py`
-- Navigation with path following: `ros2 launch warrior_navigation complex_path.launch.py use_sim:=true`
+- Navigation with path following: `ros2 launch warrior_navigation goal_follower.launch.py use_sim:=true`
 
 ### Real Warrior Hardware
 ```bash
@@ -198,7 +198,7 @@ ros2 launch warrior_bringup turtlebot_real.launch.py
 **Add-ons (run separately):**
 - Joystick control: `ros2 launch warrior_joy joy_turtle.launch.py`
 - SLAM: `ros2 launch warrior_localization online_async_launch.py use_sim_time:=false`
-- Navigation: `ros2 launch warrior_navigation complex_path.launch.py use_sim:=false`
+- Navigation: `ros2 launch warrior_navigation goal_follower.launch.py use_sim:=false`
 
 ---
 
@@ -266,17 +266,17 @@ ros2 launch warrior_gps gps_localization.launch.py mode:=indoor
 
 ### Cost Maps (for planning)
 ```bash
-ros2 launch warrior_navigation costmap.launch.py use_sim_time:=true
+ros2 launch warrior_navigation nav_utils/costmap.launch.py use_sim_time:=true
 ```
 
 ### Complex Path Following (with SLAM, EKF, and custom path follower)
 ```bash
-ros2 launch warrior_navigation complex_path.launch.py use_sim:=true
+ros2 launch warrior_navigation goal_follower.launch.py use_sim:=true
 ```
 
 ### Nav2-Based Navigation
 ```bash
-ros2 launch warrior_navigation nav2_complex_path.launch.py use_sim:=true
+ros2 launch warrior_navigation nav2_goal_follower.launch.py use_sim:=true
 ```
 
 ---
@@ -349,7 +349,7 @@ main.launch.py (master entry point)
 ├─ robot_type == "warrior_real"
 │  └─> warrior_bringup/warrior.launch.py
 ├─ robot_type == "turtlebot_sim"
-│  └─> warrior_navigation/turtlebot3_world_gps.launch.py
+│  └─> warrior_navigation/nav_utils/turtlebot3_world_gps.launch.py
 └─ robot_type == "turtlebot_real"
    └─> turtlebot3_bringup/robot.launch.py (with TURTLEBOT3_MODEL=burger)
 
@@ -373,7 +373,7 @@ Convenience wrappers (pre-configured shortcuts):
 | Launch swerve with custom world | N/A (had to edit file) | `ros2 launch warrior_bringup swerve_sim.launch.py world_name:=empty.world` |
 | Launch diff drive | `ros2 launch warrior_control diff_drive.gazebo.launch.py` | `ros2 launch warrior_bringup diff_sim.launch.py` |
 | Launch real robot | `ros2 launch warrior_bringup warrior.launch.py` | `ros2 launch warrior_bringup warrior_real.launch.py` |
-| Launch TurtleBot3 | `ros2 launch warrior_navigation turtlebot3_world_gps.launch.py` | `ros2 launch warrior_bringup turtlebot_sim.launch.py` |
+| Launch TurtleBot3 | `ros2 launch warrior_navigation nav_utils/turtlebot3_world_gps.launch.py` | `ros2 launch warrior_bringup turtlebot_sim.launch.py` |
 
 **Old launchers are still available** for backward compatibility but are now marked as deprecated. The new system provides better organization and easier configuration.
 

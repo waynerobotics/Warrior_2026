@@ -72,6 +72,7 @@ def generate_launch_description():
             PathJoinSubstitution([
                 warrior_nav,
                 'launch',
+                'nav_utils',
                 'turtlebot3_world_gps.launch.py'
             ])
         ),
