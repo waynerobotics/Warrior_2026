@@ -8,6 +8,7 @@ def generate_launch_description():
         executable='joy_node',
         name='joy_node',
         output='screen',
+        arguments=['--ros-args', '--log-level', 'WARN'],
     )
 
     test_node = Node(

@@ -5,10 +5,20 @@ warrior_serial.test_swerve_module
 Self-contained Phase 0 test: drives a single SPARK MAX from the right stick
 Y axis of a gamepad. No motor manager, no Arduino, no helper imports.
 
-Joy axes[3] (right stick Y) → rate input in [-1, +1]
-    integrated at 50 Hz →  position in [0, 2π] rad  (hard clamped, no wrap)
-    converted              →  motor rotations = (pos_rad / 2π) * 42
-    sent every 20 ms over SLCAN as a Position-mode setpoint frame.
+Behavior
+--------
+* We do not transmit anything until the SPARK MAX has reported a position
+  back to us in a Status 2 frame. That first reading becomes our initial
+  commanded position (no startup jump).
+* Joystick axes[3] (right stick Y) in [-1, +1] is treated as a rate of
+  change of the commanded position, in motor rotations per second
+  (`rate_scale_rot_per_sec` parameter, default 10).
+* The commanded position is hard-capped to a window of 43 motor rotations
+  starting at the captured encoder reading — i.e. one full swerve wheel
+  revolution from boot.
+* The Spark's encoder is incremental; "0" is wherever it was when the
+  controller booted. Anchoring on the first reported position is what keeps
+  the initial setpoint = current shaft position = no jump.
 
 The SLCAN protocol details (frame ids, control-mode + enable broadcast
 frames, status frame layout) were reverse-engineered with sniff_usb.py and
@@ -18,7 +28,6 @@ Run with:
     ros2 launch warrior_serial test_swerve_module.launch.py
 """
 
-import math
 import struct
 import threading
 import time
@@ -39,6 +48,9 @@ _SETPOINT_ID_BASE = 0x02050100
 _SET_MODE_FRAME = "T02052C80802" + "00" * 7 + "\r"
 _ENABLE_FRAME = "T000502C0101\r"
 
+# One full wheel revolution = 43 motor rotations (gear ratio).
+_ROT_PER_WHEEL_REV = 43.0
+
 
 def _find_sparkmax_port() -> str:
     """Pick the first ACM/REV port. Same heuristic as talk_can.py."""
@@ -54,43 +66,40 @@ class TestSwerveModuleNode(Node):
         super().__init__('test_swerve_module')
 
         self._device_id: int = self.declare_parameter('device_id', 1).value
-        self._rate_scale: float = self.declare_parameter(
-            'rate_scale_rad_per_sec', 2.0).value
-        self._encoder_rot_per_2pi: float = self.declare_parameter(
-            'encoder_rot_per_2pi', 42.0).value
+        self._rate_scale_rot_per_sec: float = self.declare_parameter(
+            'rate_scale_rot_per_sec', 10.0).value
         self._joy_axis: int = self.declare_parameter('joy_axis', 3).value
         self._baud: int = self.declare_parameter('baud_rate', 115200).value
-        # For the test, cap position at [0, 2π] (no wrap).
-        self._max_pos: float = self.declare_parameter(
-            'max_position_rad', 2.0 * math.pi).value
-        self._min_pos: float = self.declare_parameter(
-            'min_position_rad', 0.0).value
+        self._window_rot: float = self.declare_parameter(
+            'window_rot', _ROT_PER_WHEEL_REV).value
 
         self._setpoint_id = _SETPOINT_ID_BASE | (self._device_id & 0x3F)
 
         # State
         self._rate_input: float = 0.0          # [-1, +1] from joystick
-        self._position_rad: float = 0.0        # [0, 2π]
-        self._enabled: bool = False            # gates the heartbeat output
         self._state_lock = threading.Lock()
+        self._joy_seen: bool = False
+        self._tx_error_logged: bool = False
 
-        # Live telemetry from reader_loop (Status 0/2 frames)
-        self._reported_pos_rot: float = 0.0
-        self._reported_out_pct: float = 0.0
-        self._reported_faults: int = 0
+        # Position state, all in absolute motor rotations.
+        # `_target_motor_rot` is None until the first Status 2 frame arrives,
+        # at which point we initialize it to the reported encoder reading.
+        # Heartbeat sends nothing while it is None.
+        self._target_motor_rot = None       # type: float | None
+        self._target_min: float = 0.0
+        self._target_max: float = 0.0
+        self._latest_encoder_rot: float = 0.0
+        self._encoder_seen: bool = False
 
-        # Serial — open eagerly so we fail fast if no SPARK MAX is plugged in.
+        # Open the SPARK MAX port. Fail fast if nothing is plugged in.
         port = _find_sparkmax_port()
         if not port:
             self.get_logger().error(
-                'No SPARK MAX USB device found (looking for ACM*/REV*). '
-                'Plug one in and relaunch.')
+                'No SPARK MAX USB device found. Plug one in and relaunch.')
             raise RuntimeError('no SPARK MAX device')
         self._port = port
         self._ser = serial.Serial(port, self._baud, timeout=0.1)
-        self.get_logger().info(
-            f'Opened {port} for device_id={self._device_id} '
-            f'(setpoint CAN ID = 0x{self._setpoint_id:08X})')
+        self.get_logger().info(f'SPARK MAX port: {port} (device_id={self._device_id})')
 
         # ROS plumbing
         self.create_subscription(Joy, '/joy', self._joy_cb, 10)
@@ -111,38 +120,46 @@ class TestSwerveModuleNode(Node):
     # ------------------------------------------------------------------
 
     def _joy_cb(self, msg: Joy) -> None:
+        if not self._joy_seen:
+            self._joy_seen = True
+            self.get_logger().info(
+                f'Joystick connected ({len(msg.axes)} axes, {len(msg.buttons)} buttons)')
         if self._joy_axis < len(msg.axes):
             val = float(msg.axes[self._joy_axis])
-            # Clamp to [-1, +1] in case the joystick driver returns slightly
-            # over-saturated values at extremes.
             val = max(-1.0, min(1.0, val))
             with self._state_lock:
                 self._rate_input = val
-                # Any joystick input enables the motor; the heartbeat will
-                # keep ENABLE going as long as the node is alive.
-                self._enabled = True
 
     def _integrate_tick(self) -> None:
-        """50 Hz — integrate rate into position, hard clamp at the bounds."""
+        """50 Hz — adjust the commanded target by the joystick rate, hard
+        clamped to the window captured at startup."""
         dt = 0.02
         with self._state_lock:
-            self._position_rad += self._rate_input * self._rate_scale * dt
-            if self._position_rad > self._max_pos:
-                self._position_rad = self._max_pos
-            elif self._position_rad < self._min_pos:
-                self._position_rad = self._min_pos
+            if self._target_motor_rot is None:
+                return
+            new_target = (
+                self._target_motor_rot
+                + self._rate_input * self._rate_scale_rot_per_sec * dt)
+            if new_target > self._target_max:
+                new_target = self._target_max
+            elif new_target < self._target_min:
+                new_target = self._target_min
+            self._target_motor_rot = new_target
 
     def _log_status(self) -> None:
+        if not self._joy_seen:
+            return
         with self._state_lock:
+            target = self._target_motor_rot
             rate_in = self._rate_input
-            pos_rad = self._position_rad
-        target_rot = (pos_rad / (2.0 * math.pi)) * self._encoder_rot_per_2pi
+            encoder = self._latest_encoder_rot
+        if target is None:
+            self.get_logger().info(
+                f'rate={rate_in:+.2f}  waiting for first encoder reading from Spark…')
+            return
         self.get_logger().info(
-            f'rate={rate_in:+.2f}  pos={pos_rad:5.2f} rad  '
-            f'target={target_rot:6.2f} rot  '
-            f'reported={self._reported_pos_rot:6.2f} rot  '
-            f'out={self._reported_out_pct:+5.1f}%  '
-            f'faults=0x{self._reported_faults:04X}')
+            f'rate={rate_in:+.2f}  cmd={target:7.2f} rot  '
+            f'(encoder={encoder:7.2f} rot)')
 
     # ------------------------------------------------------------------
     # SLCAN heartbeat (background thread, 50 Hz)
@@ -151,18 +168,28 @@ class TestSwerveModuleNode(Node):
     def _heartbeat_loop(self) -> None:
         while self._running:
             with self._state_lock:
-                enabled = self._enabled
-                pos_rad = self._position_rad
-            if enabled:
-                motor_rot = (pos_rad / (2.0 * math.pi)) * self._encoder_rot_per_2pi
-                try:
-                    payload = struct.pack('<ff', float(motor_rot), 0.0)
-                    setpoint_frame = (
-                        f'T{self._setpoint_id:08X}8{payload.hex()}\r')
-                    self._ser.write(
-                        (setpoint_frame + _SET_MODE_FRAME + _ENABLE_FRAME).encode())
-                except (serial.SerialException, OSError) as exc:
-                    self.get_logger().warn(f'tx error: {exc}')
+                target = self._target_motor_rot
+            if target is None:
+                # No encoder reading yet — do nothing. The Spark streams Status
+                # frames on its own, so we just wait for one to arrive.
+                time.sleep(0.02)
+                continue
+            try:
+                payload = struct.pack('<ff', float(target), 0.0)
+                setpoint_frame = (
+                    f'T{self._setpoint_id:08X}8{payload.hex()}\r')
+                self._ser.write(
+                    (setpoint_frame + _SET_MODE_FRAME + _ENABLE_FRAME).encode())
+                if self._tx_error_logged:
+                    self.get_logger().info('tx recovered')
+                    self._tx_error_logged = False
+            except (serial.SerialException, OSError) as exc:
+                if not self._tx_error_logged:
+                    self.get_logger().warn(
+                        f'tx error: {exc} (suppressing further until recovery)')
+                    self._tx_error_logged = True
+                time.sleep(0.5)
+                continue
             time.sleep(0.02)
 
     # ------------------------------------------------------------------
@@ -186,7 +213,8 @@ class TestSwerveModuleNode(Node):
                     buf.append(b)
 
     def _consume_slcan(self, line: str) -> None:
-        """Parse Status 0 (applied %, faults) and Status 2 (position)."""
+        """Parse Status 2 (position) frames. Status 0 (applied %, faults) is
+        ignored on the happy path; we don't surface it."""
         if not line or line[0] not in ('t', 'T'):
             return
         id_len = 8 if line[0] == 'T' else 3
@@ -198,14 +226,24 @@ class TestSwerveModuleNode(Node):
             return
         api_cls = (can_id >> 10) & 0x3F
         api_idx = (can_id >> 6) & 0x0F
-        if api_cls != 0x2E:
+        if api_cls != 0x2E or api_idx != 2 or len(data) < 8:
             return
-        if api_idx == 0 and len(data) >= 4:
-            applied_raw, faults = struct.unpack_from('<hH', data)
-            self._reported_out_pct = applied_raw / 32768.0 * 100.0
-            self._reported_faults = faults
-        elif api_idx == 2 and len(data) >= 8:
-            self._reported_pos_rot, = struct.unpack_from('<f', data, 4)
+        encoder_rot, = struct.unpack_from('<f', data, 4)
+        with self._state_lock:
+            self._latest_encoder_rot = encoder_rot
+            if not self._encoder_seen:
+                self._encoder_seen = True
+                self._target_motor_rot = encoder_rot
+                self._target_min = encoder_rot
+                self._target_max = encoder_rot + self._window_rot
+                first = True
+            else:
+                first = False
+        if first:
+            self.get_logger().info(
+                f'Encoder reports {encoder_rot:.2f} rot — using as starting '
+                f'commanded position. Window: '
+                f'[{self._target_min:.2f}, {self._target_max:.2f}]')
 
     # ------------------------------------------------------------------
     # Shutdown
