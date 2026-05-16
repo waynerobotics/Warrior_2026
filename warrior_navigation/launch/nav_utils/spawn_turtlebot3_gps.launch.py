@@ -73,7 +73,7 @@ def generate_launch_description():
     bridge_params = os.path.join(
         get_package_share_directory('warrior_navigation'),
         'config',
-        model_folder+'_bridge.yaml'
+        'gz_bridge_stamped.yaml'
     )
 
     start_gazebo_ros_bridge_cmd = Node(

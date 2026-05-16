@@ -9,11 +9,53 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
+    use_gps_waypoints = LaunchConfiguration('use_gps_waypoints')
+    waypoint_file = LaunchConfiguration('waypoint_file')
+    map_origin_latitude = LaunchConfiguration('map_origin_latitude')
+    map_origin_longitude = LaunchConfiguration('map_origin_longitude')
+    map_origin_yaw = LaunchConfiguration('map_origin_yaw')
+    utm_zone = LaunchConfiguration('utm_zone')
 
     declare_use_sim = DeclareLaunchArgument(
         'use_sim',
         default_value='true',
         description='Run in simulation or on real robot'
+    )
+
+    declare_use_gps_waypoints = DeclareLaunchArgument(
+        'use_gps_waypoints',
+        default_value='false',
+        description='Use GPS waypoints instead of RViz goal for navigation'
+    )
+
+    declare_waypoint_file = DeclareLaunchArgument(
+        'waypoint_file',
+        default_value='',
+        description='Path to GPS waypoint YAML file. Leave empty to use the package default.'
+    )
+
+    declare_map_origin_latitude = DeclareLaunchArgument(
+        'map_origin_latitude',
+        default_value='42.35911527890909',
+        description='Latitude of map origin (where robot starts)'
+    )
+
+    declare_map_origin_longitude = DeclareLaunchArgument(
+        'map_origin_longitude',
+        default_value='-83.06651728263228',
+        description='Longitude of map origin (where robot starts)'
+    )
+
+    declare_map_origin_yaw = DeclareLaunchArgument(
+        'map_origin_yaw',
+        default_value='0.0',
+        description='Yaw angle of map frame at origin (radians)'
+    )
+
+    declare_utm_zone = DeclareLaunchArgument(
+        'utm_zone',
+        default_value='10',
+        description='UTM zone used for GPS to map conversion'
     )
 
     warrior_nav = FindPackageShare('warrior_navigation')
@@ -88,14 +130,39 @@ def generate_launch_description():
         parameters=[{'use_sim_time': use_sim}],
     )
 
+    nav2_gps_waypoint_node = Node(
+        package='warrior_navigation',
+        executable='nav2_gps_waypoint_follower',
+        name='nav2_gps_waypoint_follower',
+        output='screen',
+        parameters=[{
+            'waypoint_file': waypoint_file,
+            'map_origin_latitude': map_origin_latitude,
+            'map_origin_longitude': map_origin_longitude,
+            'map_origin_yaw': map_origin_yaw,
+            'utm_zone': utm_zone,
+            'action_name': 'navigate_to_pose',
+            'use_sim_time': use_sim,
+
+        }],
+        condition=IfCondition(LaunchConfiguration('use_gps_waypoints'))
+    )
+
     return LaunchDescription([
         declare_use_sim,
+        declare_use_gps_waypoints,
+        declare_waypoint_file,
+
+        declare_map_origin_latitude,
+        declare_map_origin_longitude,
+        declare_map_origin_yaw,
+        declare_utm_zone,
+
         gazebo_launch,
         slam_launch,
         ekf_launch,
-        TimerAction(
-            period=10.0,
-            actions=[nav2_bringup_launch]
-        ),
+
+        nav2_bringup_launch,
+        TimerAction(period=10.0, actions=[nav2_gps_waypoint_node]),  # Delay GPS waypoint node to ensure Nav2 is ready
         rviz2,
     ])

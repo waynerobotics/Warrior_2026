@@ -131,9 +131,11 @@ def generate_launch_description():
             'map_origin_longitude': map_origin_longitude,
             'map_origin_yaw': map_origin_yaw,
             'utm_zone': utm_zone,
-            # 'utm_hemisphere': utm_hemisphere,
             'action_name': 'navigate_to_pose',
+            'use_sim_time': use_sim,
+
         }],
+        condition=IfCondition(LaunchConfiguration('use_gps_waypoints'))
     )
 
     return LaunchDescription([
@@ -144,6 +146,7 @@ def generate_launch_description():
         declare_map_origin_yaw,
         declare_utm_zone,
         declare_utm_hemisphere,
+
         gazebo_launch,
         ekf_launch,
         slam_launch,
