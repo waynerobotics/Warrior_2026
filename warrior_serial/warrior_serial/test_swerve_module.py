@@ -43,21 +43,86 @@ import serial.tools.list_ports
 # 0x02050100 = dev_type=0x02 | mfr=0x05 | api_class=0x00 | api_index=0x04
 _SETPOINT_ID_BASE = 0x02050100
 
-# Constant broadcast frames — "all SPARK MAXes use Position mode" + "robot enabled".
-# Without ENABLE the controller leaves outputs at 0% no matter the setpoint.
-_SET_MODE_FRAME = "T02052C80802" + "00" * 7 + "\r"
+# Enable broadcast — without this the controller leaves outputs at 0% no
+# matter the setpoint.
 _ENABLE_FRAME = "T000502C0101\r"
+
+
+def _make_mode_frame(device_id: int) -> str:
+    """Build the SLCAN "follow setpoints" broadcast for `device_id`.
+
+    Byte 0 is a bitmask of which device_ids should follow setpoints
+    (bit N = device_id N), discovered 2026-05-17 by sniffing REV
+    Hardware Client. The hard-coded `0x02` we used to ship only worked
+    by accident when all controllers were at CAN ID 1.
+    """
+    return f"T02052C808{(1 << device_id):02X}" + "00" * 7 + "\r"
 
 # One full wheel revolution = 43 motor rotations (gear ratio).
 _ROT_PER_WHEEL_REV = 43.0
 
+# REV SPARK MAX USB CDC identification — confirmed via sniff_usb.py.
+_SPARK_VID = 0x0483
+_SPARK_PID = 0xA30E
 
-def _find_sparkmax_port() -> str:
-    """Pick the first ACM/REV port. Same heuristic as talk_can.py."""
+
+def _list_spark_ports():
+    """All USB ports that look like a SPARK MAX. Filter by VID:PID first;
+    fall back to the description string for older udev setups."""
+    out = []
     for p in serial.tools.list_ports.comports():
-        if "ACM" in p.device or "REV" in (p.description or ""):
-            return p.device
-    return ""
+        if p.vid == _SPARK_VID and p.pid == _SPARK_PID:
+            out.append(p.device)
+        elif 'SPARK MAX' in (p.description or ''):
+            out.append(p.device)
+    return out
+
+
+def _scan_device_id(port: str, scan_seconds: float = 1.0):
+    """Open *port*, listen passively, return the first CAN device_id we see
+    streaming out of it. Returns None on timeout / open error.
+
+    `exclusive=True` so a second node racing the same port during the
+    staggered multi-wheel launch fails to open here cleanly (we return
+    None) instead of corrupting the first node's stream."""
+    try:
+        ser = serial.Serial(port, 115200, timeout=0.05, exclusive=True)
+    except Exception:
+        return None
+    line_buf = bytearray()
+    end = time.monotonic() + scan_seconds
+    try:
+        while time.monotonic() < end:
+            chunk = ser.read(256)
+            for b in chunk:
+                if b in (0x0D, 0x0A):
+                    if line_buf:
+                        line = line_buf.decode(errors='ignore')
+                        line_buf.clear()
+                        if line and line[0] in ('t', 'T'):
+                            id_len = 8 if line[0] == 'T' else 3
+                            try:
+                                can_id = int(line[1:1 + id_len], 16)
+                            except ValueError:
+                                continue
+                            return can_id & 0x3F
+                else:
+                    line_buf.append(b)
+    finally:
+        ser.close()
+    return None
+
+
+def _find_spark_by_device_id(target_id: int):
+    """Scan all SPARK MAX USB ports for the one streaming *target_id*.
+    Returns (port, scanned_map) where scanned_map is {port: device_id}."""
+    scanned = {}
+    for port in _list_spark_ports():
+        device_id = _scan_device_id(port)
+        scanned[port] = device_id
+        if device_id == target_id:
+            return port, scanned
+    return None, scanned
 
 
 class TestSwerveModuleNode(Node):
@@ -74,6 +139,7 @@ class TestSwerveModuleNode(Node):
             'window_rot', _ROT_PER_WHEEL_REV).value
 
         self._setpoint_id = _SETPOINT_ID_BASE | (self._device_id & 0x3F)
+        self._set_mode_frame = _make_mode_frame(self._device_id)
 
         # State
         self._rate_input: float = 0.0          # [-1, +1] from joystick
@@ -91,15 +157,24 @@ class TestSwerveModuleNode(Node):
         self._latest_encoder_rot: float = 0.0
         self._encoder_seen: bool = False
 
-        # Open the SPARK MAX port. Fail fast if nothing is plugged in.
-        port = _find_sparkmax_port()
-        if not port:
+        # Discover the SPARK MAX port whose CAN traffic matches the requested
+        # device_id. We filter candidates by USB VID:PID first (so we never
+        # accidentally open a swerve Arduino on /dev/ttyACM*) and then listen
+        # passively on each Spark port for one second to read its device_id
+        # out of the lower 6 bits of any incoming CAN frame.
+        self.get_logger().info(
+            f'[test_swerve_module v2] scanning SPARK MAX USB ports for device_id={self._device_id}…')
+        port, scanned = _find_spark_by_device_id(self._device_id)
+        if port is None:
             self.get_logger().error(
-                'No SPARK MAX USB device found. Plug one in and relaunch.')
-            raise RuntimeError('no SPARK MAX device')
+                f'No SPARK MAX with device_id={self._device_id} found. '
+                f'Scan results: {scanned}')
+            raise RuntimeError('spark not found')
         self._port = port
-        self._ser = serial.Serial(port, self._baud, timeout=0.1)
-        self.get_logger().info(f'SPARK MAX port: {port} (device_id={self._device_id})')
+        self._ser = serial.Serial(port, self._baud, timeout=0.1, exclusive=True)
+        self.get_logger().info(
+            f'SPARK MAX device_id={self._device_id} on {port}  '
+            f'(all scanned: {scanned})')
 
         # ROS plumbing
         self.create_subscription(Joy, '/joy', self._joy_cb, 10)
@@ -179,7 +254,7 @@ class TestSwerveModuleNode(Node):
                 setpoint_frame = (
                     f'T{self._setpoint_id:08X}8{payload.hex()}\r')
                 self._ser.write(
-                    (setpoint_frame + _SET_MODE_FRAME + _ENABLE_FRAME).encode())
+                    (setpoint_frame + self._set_mode_frame + _ENABLE_FRAME).encode())
                 if self._tx_error_logged:
                     self.get_logger().info('tx recovered')
                     self._tx_error_logged = False

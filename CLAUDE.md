@@ -24,6 +24,23 @@ for the topic-level diagram.
   (`can_id & 0x3F` == device_id). Set the device_id once in REV Hardware
   Client and treat it as the only source of truth (logical name → device_id
   table lives in `spark_driver` parameters).
+- **SPARK MAX mode-broadcast byte 0 is a per-device-id bitmask.** Frame
+  `T02052C80…`'s first data byte = `(1 << device_id)` enables that
+  controller to follow setpoints; OR multiple bits together to drive
+  multiple controllers in one frame. *Not* an enumerated control-mode
+  value. The control mode itself (Position / Velocity / Duty / …) is
+  persistent per-device config in REV Hardware Client. Hard-coding the
+  byte (e.g. `0x02`) silently fails as soon as device_ids change. Helper:
+  `_make_mode_frame()` in
+  [warrior_serial/warrior_serial/nudge_sparks.py](warrior_serial/warrior_serial/nudge_sparks.py).
+- **If position-discovery times out on a SPARK MAX, suspect Status 2 is
+  off.** Status 2 (encoder position) is a per-device periodic frame
+  configured in REV Hardware Client (Periodic Frame Periods → Status 2
+  Period). If it's set to 0 or huge, the controller still streams Status 0
+  (faults / applied output) but you'll never see position. Diagnostic
+  counters (`status_0_count`, `status_2_count`) in `nudge_sparks.py` let
+  you tell that apart from a dead controller. Fix: in REV, set Status 2 ≤
+  ~50 ms, **Burn Flash**, **power-cycle** that controller.
 - **Open serial ports exclusively.** pyserial `exclusive=True` + Linux
   `TIOCEXCL`. Without this, two nodes will fight over the same port and
   both will see corrupted bytes. See
@@ -48,6 +65,34 @@ for the topic-level diagram.
   (branch `position-driven-swerve-tele-op`). SPARK MAX support added via
   USB SLCAN; identification scheme switched from `<NAME>` handshake (used
   for Arduinos) to passive CAN device_id parsing (used for Sparks).
+- 2026-05-15 — **Never identify a SPARK MAX by `"ACM" in device.name` —
+  the swerve Arduinos (Nano ESP32 with TinyUSB CDC) also enumerate as
+  `/dev/ttyACM*` and you will pick one up.** On this rig the 7 ACM ports
+  break down as: 3 × SPARK MAX (VID `0x0483`, PID `0xa30e`,
+  description `'SPARK MAX Motor Controller'`), 3 × Nano ESP32 (VID
+  `0x2341`, PID `0x0070`), 1 × Arduino UNO (`00_base`, VID `0x2341`, PID
+  `0x0043`). Use VID:PID `0x0483:0xa30e` as the SPARK MAX filter, then
+  passively scan each Spark port for ~1 s to read the `device_id` from
+  the lower 6 bits of any incoming CAN ID. Helper:
+  `_find_spark_by_device_id()` in
+  [warrior_serial/test_swerve_module.py](warrior_serial/warrior_serial/test_swerve_module.py).
+- 2026-05-17 — **Mode-broadcast byte 0 is a device-id bitmask, not a
+  control-mode enum.** All three SPARK MAXes were originally at CAN ID 1,
+  so the old hard-coded `"T02052C80802" + "00"*7` (byte 0 = `0x02` = bit
+  1) worked by coincidence. After renumbering to 2/3/4 it stopped working
+  on all controllers; switching to `0x08` (bit 3) only fixed device 3.
+  Caught by `sniff_usb.py` showing REV sending `0x04` / `0x08` / `0x10`
+  for devices 2 / 3 / 4 respectively. Fix is to build the frame
+  dynamically: `bitmask = (1 << device_id)` (or OR together for several).
+  See `_make_mode_frame()` in `nudge_sparks.py`.
+- 2026-05-17 — **Position-discovery silently times out when Status 2 is
+  disabled.** During the same session, after re-IDing controllers in REV,
+  devices 3 and 4 sent Status 0 at the usual rate but exactly zero
+  Status 2 frames over 5 s — REV's Status 2 Period was either unset or
+  not yet persisted. Resolved by Burn Flash + power-cycle. Added
+  `status_0_count` / `status_2_count` / `other_frame_count` counters to
+  `nudge_sparks.py` so a quiet controller can be distinguished from one
+  that's just missing position broadcast.
 
 ## Repository layout
 

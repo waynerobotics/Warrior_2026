@@ -56,8 +56,11 @@ class SparkMaxController:
         print("Heartbeat thread active.")
 
         # Broadcast frames (constant, don't depend on target):
-        # "All SPARK MAX, run in Position control mode" — first data byte = control type 2.
-        SET_MODE = "T02052C80802" + "00" * 7 + "\r"
+        # "Follow your setpoint" broadcast — byte 0 is a bitmask of device_ids
+        # whose bit is set (bit N = device_id N). Discovered 2026-05-17 by
+        # sniffing REV Hardware Client; the old hard-coded `0x02` was bit 1 and
+        # only worked when controllers were at CAN ID 1.
+        SET_MODE = f"T02052C808{(1 << self.device_id):02X}" + "00" * 7 + "\r"
         # "Robot is enabled" broadcast — dev_type=0, single 0x01 data byte. Without
         # this the SPARK MAX leaves outputs at 0% no matter what setpoints arrive.
         ENABLE = "T000502C0101\r"
@@ -160,5 +163,5 @@ class SparkMaxController:
             print("Exited cleanly.")
 
 if __name__ == "__main__":
-    app = SparkMaxController(device_id=1)
+    app = SparkMaxController(device_id=2)
     app.run()
