@@ -12,6 +12,7 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <controller_interface/controller_interface.hpp>
+#include "warrior_control/swerve_ik.hpp"
 
 namespace warrior::control {
 
@@ -93,6 +94,7 @@ private:
     std::string edge_state_topic_;
     std::string tracking_error_topic_;
     std::string edge_state_frame_id_;
+    std::string odom_topic_;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_gt_sub_;
@@ -114,12 +116,9 @@ private:
     double wheel_radius_;
     std::unordered_map<std::string, double> wheel_to_center_;
     std::unordered_map<std::string, double> alpha_;
+    std::unique_ptr<SwerveIK> swerve_ik_;
 
     void applyCmdVelLimits();
-
-    double computeSteerAngle(double desired_angle, double current_angle, double& desired_linear_speed);
-    double computeDriveSpeed(double desired_angle, double current_angle, double desired_linear_speed);
-
     void computeJointCommand(double vx, double vy, double wz);
     void readWheelAngularVel();
     void readSteeringAngles();

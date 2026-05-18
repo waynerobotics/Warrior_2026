@@ -32,6 +32,8 @@ swerve_drive_controller:
   ros__parameters:
     update_rate: 100
 
+    odom_topic: "/odom"
+
     odom_frame_id: "odom"
     base_frame_id: "base_footprint"
 

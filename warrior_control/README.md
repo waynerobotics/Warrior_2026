@@ -114,7 +114,7 @@ The robot first receives the desired base twist $\mathbf{\xi}_b$. Through invers
 graph LR
     A["Base Twist​"] -->|IK| B["Swerve Command"]
 
-    B -->|θ_i| C["Steering Angle"]
+    B -->|θ_i| C["Steer Angle"]
     B -->|ω_i| D["Wheel Speed"]
 
     C -->|PD| E["Steering Motor"]

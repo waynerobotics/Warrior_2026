@@ -117,7 +117,7 @@ def generate_launch_description():
             "-topic", "robot_description",
             "-name", "warrior",
             "-allow_renaming", "true",
-            '-x', '0.', '-y', '0.', '-z', '0.3'
+            '-x', '0.', '-y', '0.', '-z', '0.1'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -133,8 +133,14 @@ def generate_launch_description():
             '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
             '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            "/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat",
+            "/odom_gt@nav_msgs/msg/Odometry[ignition.msgs.Odometry",
         ],
         parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ('/L1_lidar/scan', '/scan'),
+            ('/L1_lidar/scan/points', '/scan/points'),
+        ],
         output='screen',
     )
 
