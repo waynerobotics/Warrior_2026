@@ -4,7 +4,9 @@
 #
 #   ./scripts/run_test_swerve.sh
 #   ./scripts/run_test_swerve.sh wheels:=2,3       # subset of wheels
-set -euo pipefail
+# Note: `set -u` is incompatible with ROS setup scripts — they reference
+# AMENT_TRACE_SETUP_FILES and other variables without defaulting them.
+set -eo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 WORKSPACE_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)

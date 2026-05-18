@@ -93,6 +93,18 @@ for the topic-level diagram.
   `status_0_count` / `status_2_count` / `other_frame_count` counters to
   `nudge_sparks.py` so a quiet controller can be distinguished from one
   that's just missing position broadcast.
+- 2026-05-17 — **Collapsed `test_swerve_module` from three nodes to one
+  coordinator.** Originally one node per SPARK MAX (spawned 3× by the
+  launch file, with per-wheel `~/limit_status` Int8 pub/sub coordinating
+  stuck-stops). Replaced with a single `swerve_coordinator` node that
+  owns all 3 SPARK MAX `SparkSession`s in-process. Drives one shared
+  `cmd` plus per-wheel `offset`, so A-button "all wheels" is just
+  `cmd += rate * dt` while X/Y/B calibration modes adjust just the
+  selected wheel's offset (offsets persist across mode switches). Lag is
+  capped at ±10 motor rotations on `cmd` in ALL mode only. Removed: the
+  3-way `limit_status` topics, the per-port `TimerAction` stagger in the
+  launch file, the `peer_device_ids` parameter, and the old per-wheel
+  1.5-rot stuck threshold.
 
 ## Repository layout
 

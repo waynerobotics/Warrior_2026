@@ -2,25 +2,39 @@
 warrior_serial.test_swerve_module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Self-contained Phase 0 test: drives a single SPARK MAX from the right stick
-Y axis of a gamepad. No motor manager, no Arduino, no helper imports.
+Swerve test-rig coordinator. A single ROS 2 node owns all of the SPARK MAX
+steering controllers on the bus and drives them from one shared commanded
+position.
 
-Behavior
---------
-* We do not transmit anything until the SPARK MAX has reported a position
-  back to us in a Status 2 frame. That first reading becomes our initial
-  commanded position (no startup jump).
-* Joystick axes[3] (right stick Y) in [-1, +1] is treated as a rate of
-  change of the commanded position, in motor rotations per second
-  (`rate_scale_rot_per_sec` parameter, default 10).
-* The commanded position is hard-capped to a window of 43 motor rotations
-  starting at the captured encoder reading — i.e. one full swerve wheel
-  revolution from boot.
-* The Spark's encoder is incremental; "0" is wherever it was when the
-  controller booted. Anchoring on the first reported position is what keeps
-  the initial setpoint = current shaft position = no jump.
+Model
+-----
+* One global ``cmd`` (motor rotations) starts at 0.
+* Each wheel carries its own ``offset[i]``. The setpoint actually sent to
+  wheel *i* is ``cmd + offset[i]``.
+* Offsets are armed lazily: the first time wheel *i* reports a Status 2
+  encoder reading, ``offset[i] = encoder_i - cmd`` so the very first
+  setpoint equals the live encoder reading (no startup jump).
 
-The SLCAN protocol details (frame ids, control-mode + enable broadcast
+Modes (Xbox face buttons, exclusive; no toggle-off)
+---------------------------------------------------
+* **A** → ``ALL``: pushing the right-stick Y axis integrates ``cmd``, so
+  every wheel moves in lockstep.
+* **X** → ``ONLY:2``: pushing the stick integrates ``offset[2]`` only.
+  The shared ``cmd`` is unchanged, so wheel 2's setpoint changes relative
+  to the others. This is the calibration path. Pressing A reactivates the
+  shared command with the new offset persisting.
+* **B** → ``ONLY:3``, **Y** → ``ONLY:4`` (same idea per wheel).
+* Initial mode is ``ALL``.
+
+Coordinated stop (ALL mode only)
+--------------------------------
+In ALL mode, advancing ``cmd`` is gated by the per-wheel lag
+``(cmd + offset[i]) - encoder[i]``. If pushing forward would drive
+``max(lag) > +LAG_CAP_ROT`` the rate is zeroed; same for the reverse
+direction at ``-LAG_CAP_ROT``. ONLY modes have no software cap — the
+SPARK MAX's own soft/hard limits are the backstop during calibration.
+
+The SLCAN protocol details (frame ids, mode-bitmask + enable broadcast
 frames, status frame layout) were reverse-engineered with sniff_usb.py and
 match what REV Hardware Client writes.
 
@@ -47,6 +61,29 @@ _SETPOINT_ID_BASE = 0x02050100
 # matter the setpoint.
 _ENABLE_FRAME = "T000502C0101\r"
 
+# Xbox button index -> selection mode. Standard ROS `joy` Xbox mapping
+# (A=0, B=1, X=2, Y=3). A is the "all wheels" mode; the others are
+# exclusive single-wheel selectors. Pressing the same button twice is a
+# no-op (there is no toggle-off).
+_BUTTON_MODE_MAP = {
+    0: 'ALL',        # A
+    2: 'ONLY:2',     # X
+    1: 'ONLY:3',     # B
+    3: 'ONLY:4',     # Y
+}
+
+# In ALL mode, cap |cmd + offset[i] - encoder[i]| at this magnitude.
+_LAG_CAP_ROT = 10.0
+
+# How fresh a Status 2 frame must be (seconds) for that wheel to count
+# toward the lag cap. Past this age we treat the encoder reading as stale
+# and skip it.
+_STATUS2_STALE_S = 0.5
+
+# REV SPARK MAX USB CDC identification — confirmed via sniff_usb.py.
+_SPARK_VID = 0x0483
+_SPARK_PID = 0xA30E
+
 
 def _make_mode_frame(device_id: int) -> str:
     """Build the SLCAN "follow setpoints" broadcast for `device_id`.
@@ -57,13 +94,6 @@ def _make_mode_frame(device_id: int) -> str:
     by accident when all controllers were at CAN ID 1.
     """
     return f"T02052C808{(1 << device_id):02X}" + "00" * 7 + "\r"
-
-# One full wheel revolution = 43 motor rotations (gear ratio).
-_ROT_PER_WHEEL_REV = 43.0
-
-# REV SPARK MAX USB CDC identification — confirmed via sniff_usb.py.
-_SPARK_VID = 0x0483
-_SPARK_PID = 0xA30E
 
 
 def _list_spark_ports():
@@ -82,9 +112,8 @@ def _scan_device_id(port: str, scan_seconds: float = 1.0):
     """Open *port*, listen passively, return the first CAN device_id we see
     streaming out of it. Returns None on timeout / open error.
 
-    `exclusive=True` so a second node racing the same port during the
-    staggered multi-wheel launch fails to open here cleanly (we return
-    None) instead of corrupting the first node's stream."""
+    `exclusive=True` so a second opener fails cleanly (returns None)
+    instead of racing the first reader."""
     try:
         ser = serial.Serial(port, 115200, timeout=0.05, exclusive=True)
     except Exception:
@@ -113,165 +142,80 @@ def _scan_device_id(port: str, scan_seconds: float = 1.0):
     return None
 
 
-def _find_spark_by_device_id(target_id: int):
-    """Scan all SPARK MAX USB ports for the one streaming *target_id*.
-    Returns (port, scanned_map) where scanned_map is {port: device_id}."""
-    scanned = {}
-    for port in _list_spark_ports():
-        device_id = _scan_device_id(port)
-        scanned[port] = device_id
-        if device_id == target_id:
-            return port, scanned
-    return None, scanned
+class SparkSession:
+    """One SPARK MAX serial port + the tx/rx threads driving it.
 
+    Pure transport — does no integration and knows nothing about ROS. The
+    coordinator writes `setpoint_rot` each integrate tick; the tx thread
+    reads it and emits the 50 Hz heartbeat. The rx thread parses Status 2
+    frames into `encoder_rot` + `last_s2_monotonic`.
+    """
 
-class TestSwerveModuleNode(Node):
+    def __init__(self, port: str, device_id: int, baud: int = 115200):
+        self.port = port
+        self.device_id = device_id
+        self._ser = serial.Serial(port, baud, timeout=0.1, exclusive=True)
+        self._mode_frame = _make_mode_frame(device_id)
+        self._setpoint_id = _SETPOINT_ID_BASE | (device_id & 0x3F)
 
-    def __init__(self):
-        super().__init__('test_swerve_module')
+        self._lock = threading.Lock()
+        self._encoder_rot = None       # type: float | None
+        self._setpoint_rot = None      # type: float | None  (None = idle, tx skips)
+        self._last_s2_monotonic = 0.0
+        self.tx_count = 0
+        self.tx_error_logged = False
 
-        self._device_id: int = self.declare_parameter('device_id', 1).value
-        self._rate_scale_rot_per_sec: float = self.declare_parameter(
-            'rate_scale_rot_per_sec', 10.0).value
-        self._joy_axis: int = self.declare_parameter('joy_axis', 3).value
-        self._baud: int = self.declare_parameter('baud_rate', 115200).value
-        self._window_rot: float = self.declare_parameter(
-            'window_rot', _ROT_PER_WHEEL_REV).value
-
-        self._setpoint_id = _SETPOINT_ID_BASE | (self._device_id & 0x3F)
-        self._set_mode_frame = _make_mode_frame(self._device_id)
-
-        # State
-        self._rate_input: float = 0.0          # [-1, +1] from joystick
-        self._state_lock = threading.Lock()
-        self._joy_seen: bool = False
-        self._tx_error_logged: bool = False
-
-        # Position state, all in absolute motor rotations.
-        # `_target_motor_rot` is None until the first Status 2 frame arrives,
-        # at which point we initialize it to the reported encoder reading.
-        # Heartbeat sends nothing while it is None.
-        self._target_motor_rot = None       # type: float | None
-        self._target_min: float = 0.0
-        self._target_max: float = 0.0
-        self._latest_encoder_rot: float = 0.0
-        self._encoder_seen: bool = False
-
-        # Discover the SPARK MAX port whose CAN traffic matches the requested
-        # device_id. We filter candidates by USB VID:PID first (so we never
-        # accidentally open a swerve Arduino on /dev/ttyACM*) and then listen
-        # passively on each Spark port for one second to read its device_id
-        # out of the lower 6 bits of any incoming CAN frame.
-        self.get_logger().info(
-            f'[test_swerve_module v2] scanning SPARK MAX USB ports for device_id={self._device_id}…')
-        port, scanned = _find_spark_by_device_id(self._device_id)
-        if port is None:
-            self.get_logger().error(
-                f'No SPARK MAX with device_id={self._device_id} found. '
-                f'Scan results: {scanned}')
-            raise RuntimeError('spark not found')
-        self._port = port
-        self._ser = serial.Serial(port, self._baud, timeout=0.1, exclusive=True)
-        self.get_logger().info(
-            f'SPARK MAX device_id={self._device_id} on {port}  '
-            f'(all scanned: {scanned})')
-
-        # ROS plumbing
-        self.create_subscription(Joy, '/joy', self._joy_cb, 10)
-        self._integrate_timer = self.create_timer(0.02, self._integrate_tick)
-        self._log_timer = self.create_timer(1.0, self._log_status)
-
-        # Background heartbeat + reader
         self._running = True
         self._tx_thread = threading.Thread(
-            target=self._heartbeat_loop, daemon=True, name='spark_tx')
+            target=self._tx_loop, daemon=True, name=f'spark{device_id}_tx')
         self._rx_thread = threading.Thread(
-            target=self._reader_loop, daemon=True, name='spark_rx')
+            target=self._rx_loop, daemon=True, name=f'spark{device_id}_rx')
         self._tx_thread.start()
         self._rx_thread.start()
 
-    # ------------------------------------------------------------------
-    # ROS callbacks
-    # ------------------------------------------------------------------
+    # ---- Accessors (used by coordinator) -----------------------------
 
-    def _joy_cb(self, msg: Joy) -> None:
-        if not self._joy_seen:
-            self._joy_seen = True
-            self.get_logger().info(
-                f'Joystick connected ({len(msg.axes)} axes, {len(msg.buttons)} buttons)')
-        if self._joy_axis < len(msg.axes):
-            val = float(msg.axes[self._joy_axis])
-            val = max(-1.0, min(1.0, val))
-            with self._state_lock:
-                self._rate_input = val
+    @property
+    def encoder_rot(self):
+        with self._lock:
+            return self._encoder_rot
 
-    def _integrate_tick(self) -> None:
-        """50 Hz — adjust the commanded target by the joystick rate, hard
-        clamped to the window captured at startup."""
-        dt = 0.02
-        with self._state_lock:
-            if self._target_motor_rot is None:
-                return
-            new_target = (
-                self._target_motor_rot
-                + self._rate_input * self._rate_scale_rot_per_sec * dt)
-            if new_target > self._target_max:
-                new_target = self._target_max
-            elif new_target < self._target_min:
-                new_target = self._target_min
-            self._target_motor_rot = new_target
+    @property
+    def last_s2_monotonic(self) -> float:
+        with self._lock:
+            return self._last_s2_monotonic
 
-    def _log_status(self) -> None:
-        if not self._joy_seen:
-            return
-        with self._state_lock:
-            target = self._target_motor_rot
-            rate_in = self._rate_input
-            encoder = self._latest_encoder_rot
-        if target is None:
-            self.get_logger().info(
-                f'rate={rate_in:+.2f}  waiting for first encoder reading from Spark…')
-            return
-        self.get_logger().info(
-            f'rate={rate_in:+.2f}  cmd={target:7.2f} rot  '
-            f'(encoder={encoder:7.2f} rot)')
+    def set_setpoint(self, rot: float) -> None:
+        with self._lock:
+            self._setpoint_rot = float(rot)
 
-    # ------------------------------------------------------------------
-    # SLCAN heartbeat (background thread, 50 Hz)
-    # ------------------------------------------------------------------
+    # ---- Background threads ------------------------------------------
 
-    def _heartbeat_loop(self) -> None:
+    def _tx_loop(self):
         while self._running:
-            with self._state_lock:
-                target = self._target_motor_rot
-            if target is None:
-                # No encoder reading yet — do nothing. The Spark streams Status
-                # frames on its own, so we just wait for one to arrive.
+            with self._lock:
+                sp = self._setpoint_rot
+            if sp is None:
                 time.sleep(0.02)
                 continue
             try:
-                payload = struct.pack('<ff', float(target), 0.0)
-                setpoint_frame = (
-                    f'T{self._setpoint_id:08X}8{payload.hex()}\r')
+                payload = struct.pack('<ff', sp, 0.0)
+                setpoint_frame = f'T{self._setpoint_id:08X}8{payload.hex()}\r'
                 self._ser.write(
-                    (setpoint_frame + self._set_mode_frame + _ENABLE_FRAME).encode())
-                if self._tx_error_logged:
-                    self.get_logger().info('tx recovered')
-                    self._tx_error_logged = False
+                    (setpoint_frame + self._mode_frame + _ENABLE_FRAME).encode())
+                self.tx_count += 1
+                self.tx_error_logged = False
             except (serial.SerialException, OSError) as exc:
-                if not self._tx_error_logged:
-                    self.get_logger().warn(
-                        f'tx error: {exc} (suppressing further until recovery)')
-                    self._tx_error_logged = True
+                if not self.tx_error_logged:
+                    self.tx_error_logged = True
+                    # Print once per error burst; the coordinator's 1 Hz log
+                    # will surface ongoing issues via tx_count freezing.
+                    print(f'[spark{self.device_id}] tx error: {exc}')
                 time.sleep(0.5)
                 continue
             time.sleep(0.02)
 
-    # ------------------------------------------------------------------
-    # SLCAN reader (background thread)
-    # ------------------------------------------------------------------
-
-    def _reader_loop(self) -> None:
+    def _rx_loop(self):
         buf = bytearray()
         while self._running:
             try:
@@ -282,14 +226,12 @@ class TestSwerveModuleNode(Node):
             for b in chunk:
                 if b in (0x0D, 0x0A):
                     if buf:
-                        self._consume_slcan(buf.decode(errors='ignore'))
+                        self._consume(buf.decode(errors='ignore'))
                         buf.clear()
                 else:
                     buf.append(b)
 
-    def _consume_slcan(self, line: str) -> None:
-        """Parse Status 2 (position) frames. Status 0 (applied %, faults) is
-        ignored on the happy path; we don't surface it."""
+    def _consume(self, line: str) -> None:
         if not line or line[0] not in ('t', 'T'):
             return
         id_len = 8 if line[0] == 'T' else 3
@@ -303,36 +245,205 @@ class TestSwerveModuleNode(Node):
         api_idx = (can_id >> 6) & 0x0F
         if api_cls != 0x2E or api_idx != 2 or len(data) < 8:
             return
-        encoder_rot, = struct.unpack_from('<f', data, 4)
-        with self._state_lock:
-            self._latest_encoder_rot = encoder_rot
-            if not self._encoder_seen:
-                self._encoder_seen = True
-                self._target_motor_rot = encoder_rot
-                self._target_min = encoder_rot
-                self._target_max = encoder_rot + self._window_rot
-                first = True
-            else:
-                first = False
-        if first:
+        enc, = struct.unpack_from('<f', data, 4)
+        with self._lock:
+            self._encoder_rot = enc
+            self._last_s2_monotonic = time.monotonic()
+
+    def close(self):
+        self._running = False
+        self._tx_thread.join(timeout=1.0)
+        self._rx_thread.join(timeout=1.0)
+        try:
+            self._ser.close()
+        except Exception:
+            pass
+
+
+class SwerveCoordinatorNode(Node):
+
+    def __init__(self):
+        super().__init__('swerve_coordinator')
+
+        self._target_ids = list(self.declare_parameter('wheels', [2, 3, 4]).value)
+        self._rate_scale = float(self.declare_parameter(
+            'rate_scale_rot_per_sec', 10.0).value)
+        self._joy_axis = int(self.declare_parameter('joy_axis', 3).value)
+
+        # Coordinator state
+        self._state_lock = threading.Lock()
+        self._cmd: float = 0.0
+        self._offset: dict = {}              # device_id -> float
+        self._mode: str = 'ALL'
+        self._rate_input: float = 0.0
+        self._prev_btn_state: dict = {}
+        self._joy_seen: bool = False
+        self._wheels_armed: set = set()
+        self._unarmed_warned: bool = False
+        self._init_monotonic = time.monotonic()
+
+        # Discover ports and open one session per target wheel.
+        self._sessions = self._discover_sessions()
+
+        # ROS plumbing
+        self.create_subscription(Joy, '/joy', self._joy_cb, 10)
+        self.create_timer(0.02, self._integrate_tick)
+        self.create_timer(1.0, self._log_status)
+
+    # ------------------------------------------------------------------
+    # Discovery
+    # ------------------------------------------------------------------
+
+    def _discover_sessions(self) -> dict:
+        ports = _list_spark_ports()
+        self.get_logger().info(
+            f'Discovering SPARK MAX(es) for device_ids {self._target_ids} '
+            f'on USB ports {ports}…')
+        scanned = {}
+        sessions: dict = {}
+        for port in ports:
+            dev = _scan_device_id(port)
+            scanned[port] = dev
+            if dev in self._target_ids and dev not in sessions:
+                sessions[dev] = SparkSession(port, device_id=dev)
+                self.get_logger().info(f'  opened device_id={dev} on {port}')
+        missing = sorted(set(self._target_ids) - set(sessions))
+        if missing:
+            for s in sessions.values():
+                s.close()
+            self.get_logger().error(
+                f'Missing SPARK MAX device_ids {missing}. Scanned: {scanned}')
+            raise RuntimeError(f'missing sparks: {missing}')
+        return sessions
+
+    # ------------------------------------------------------------------
+    # ROS callbacks
+    # ------------------------------------------------------------------
+
+    def _joy_cb(self, msg: Joy) -> None:
+        if not self._joy_seen:
+            self._joy_seen = True
             self.get_logger().info(
-                f'Encoder reports {encoder_rot:.2f} rot — using as starting '
-                f'commanded position. Window: '
-                f'[{self._target_min:.2f}, {self._target_max:.2f}]')
+                f'Joystick connected ({len(msg.axes)} axes, '
+                f'{len(msg.buttons)} buttons). A=ALL, X=ONLY:2, B=ONLY:3, '
+                f'Y=ONLY:4. Initial mode: {self._mode}.')
+
+        # Rising-edge mode selection. Pressing the same button while
+        # already in that mode is a no-op (no toggle-off).
+        for btn_idx, mode_str in _BUTTON_MODE_MAP.items():
+            pressed = 0 <= btn_idx < len(msg.buttons) and bool(msg.buttons[btn_idx])
+            was_pressed = self._prev_btn_state.get(btn_idx, False)
+            if pressed and not was_pressed and self._mode != mode_str:
+                with self._state_lock:
+                    self._mode = mode_str
+                self.get_logger().info(f'btn{btn_idx} -> mode {mode_str}')
+            self._prev_btn_state[btn_idx] = pressed
+
+        if 0 <= self._joy_axis < len(msg.axes):
+            val = float(msg.axes[self._joy_axis])
+            val = max(-1.0, min(1.0, val))
+        else:
+            val = 0.0
+        with self._state_lock:
+            self._rate_input = val
+
+    def _integrate_tick(self) -> None:
+        dt = 0.02
+        with self._state_lock:
+            rate = self._rate_input * self._rate_scale
+            mode = self._mode
+            cmd = self._cmd
+
+        # Arm wheels whose first Status 2 frame just arrived. cmd is
+        # whatever value it is right now, so initial setpoint = encoder
+        # regardless of when this happens (still "no jump").
+        for dev, sess in self._sessions.items():
+            enc = sess.encoder_rot
+            if enc is None or dev in self._wheels_armed:
+                continue
+            self._offset[dev] = enc - cmd
+            self._wheels_armed.add(dev)
+            self.get_logger().info(
+                f'Wheel {dev} armed at encoder {enc:+.2f} rot, '
+                f'offset set to {self._offset[dev]:+.2f}.')
+
+        # One-shot warning about wheels that never came up.
+        if (not self._unarmed_warned
+                and time.monotonic() - self._init_monotonic > 5.0):
+            still_missing = sorted(set(self._target_ids) - self._wheels_armed)
+            if still_missing:
+                self.get_logger().warn(
+                    f'After 5 s, wheels {still_missing} have not reported '
+                    f'Status 2. Check Status 2 Period in REV Hardware Client.')
+            self._unarmed_warned = True
+
+        if not self._wheels_armed:
+            return
+
+        if mode == 'ALL':
+            # Compute lags over wheels with fresh encoder data.
+            now = time.monotonic()
+            lags = []
+            for dev in self._wheels_armed:
+                sess = self._sessions[dev]
+                if now - sess.last_s2_monotonic > _STATUS2_STALE_S:
+                    continue
+                enc = sess.encoder_rot
+                if enc is None:
+                    continue
+                lags.append((cmd + self._offset[dev]) - enc)
+            if lags:
+                if rate > 0.0 and max(lags) >= _LAG_CAP_ROT:
+                    rate = 0.0
+                elif rate < 0.0 and min(lags) <= -_LAG_CAP_ROT:
+                    rate = 0.0
+            cmd = cmd + rate * dt
+        elif mode.startswith('ONLY:'):
+            try:
+                dev = int(mode.split(':', 1)[1])
+            except ValueError:
+                dev = -1
+            if dev in self._wheels_armed:
+                self._offset[dev] = self._offset[dev] + rate * dt
+
+        with self._state_lock:
+            self._cmd = cmd
+
+        # Push current commanded position to every armed wheel every tick.
+        for dev in self._wheels_armed:
+            self._sessions[dev].set_setpoint(cmd + self._offset[dev])
+
+    def _log_status(self) -> None:
+        if not self._joy_seen and not self._wheels_armed:
+            return
+        with self._state_lock:
+            mode = self._mode
+            cmd = self._cmd
+            rate_in = self._rate_input
+        now = time.monotonic()
+        parts = [f'mode={mode}', f'cmd={cmd:+7.2f}', f'rate_in={rate_in:+.2f}']
+        for dev in sorted(self._sessions):
+            sess = self._sessions[dev]
+            enc = sess.encoder_rot
+            if dev not in self._wheels_armed or enc is None:
+                parts.append(f'dev{dev}[unarmed]')
+                continue
+            offset = self._offset.get(dev, 0.0)
+            age = now - sess.last_s2_monotonic
+            lag = (cmd + offset) - enc
+            parts.append(
+                f'dev{dev}[enc={enc:+7.2f} off={offset:+7.2f} '
+                f'lag={lag:+5.2f} age={age:.2f}s]')
+        self.get_logger().info('  '.join(parts))
 
     # ------------------------------------------------------------------
     # Shutdown
     # ------------------------------------------------------------------
 
     def destroy_node(self) -> None:
-        self._running = False
-        if hasattr(self, '_tx_thread'):
-            self._tx_thread.join(timeout=1.0)
-        if hasattr(self, '_rx_thread'):
-            self._rx_thread.join(timeout=1.0)
-        if getattr(self, '_ser', None):
+        for sess in getattr(self, '_sessions', {}).values():
             try:
-                self._ser.close()
+                sess.close()
             except Exception:
                 pass
         super().destroy_node()
@@ -340,9 +451,11 @@ class TestSwerveModuleNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
+    node = None
     try:
-        node = TestSwerveModuleNode()
-    except RuntimeError:
+        node = SwerveCoordinatorNode()
+    except RuntimeError as exc:
+        print(f'init failed: {exc}')
         rclpy.shutdown()
         return
     try:
