@@ -20,16 +20,15 @@
 
   <xacro:property name="payload_xyz_offset" value="0.433705 -0.098151 -0.155475"/>
   <xacro:property name="payload_rpy_offset" value="${pi/2} -${pi} -${pi/2}"/>
+  <xacro:property name="payload_mass" value="9.5"/>
 
   <!-- Wheel properties -->
-  <!-- <xacro:property name="wheel_mass" value="2.5"/> -->
   <xacro:property name="wheel_mass" value="5.0"/>
-  <xacro:property name="wheel_offset_z" value="-0.15"/>
-  <xacro:property name="wheel_radius" value="0.1"/>
+  <xacro:property name="wheel_radius" value="0.025"/>
 
   <!-- Base properties -->
   <!-- <xacro:property name="base_mass" value="6.0"/> -->
-  <xacro:property name="base_mass" value="10.0"/> 
+  <xacro:property name="base_mass" value="25.0"/> 
   <xacro:property name="base_footprint_height" value="0.640773"/>
   
   <!-- Initial orientations (radians) -->
@@ -51,7 +50,6 @@
       <parent link="base_footprint"/>
       <child link="base_link"/>
       <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
-      <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
   </joint>
 
   <!-- ========== Base Link ========== -->
@@ -96,7 +94,7 @@
     </collision>
     <inertial>
       <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="2.0"/>
+      <mass value="${payload_mass}"/>
       <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
     </inertial>
   </link>

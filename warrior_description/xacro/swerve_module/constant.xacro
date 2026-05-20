@@ -2,8 +2,8 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     
-    <xacro:property name="slewing_plate_mass" value="20.0"/>
-    <xacro:property name="steer_assembly_mass" value="0.7"/>
+    <xacro:property name="slewing_plate_mass" value="15.0"/>
+    <xacro:property name="steer_assembly_mass" value="6.0"/>
 
     <xacro:property name="steer_assembly_color" value="metal_gray"/>
     <xacro:property name="slewing_plate_color" value="medium_gray"/>
