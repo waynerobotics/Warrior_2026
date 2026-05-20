@@ -12,11 +12,16 @@ import time
 
 class GPSHardwareNode(Node):
     def __init__(self):
-        super().__init__('gps_hardware_node')
-        
         self.latitude = None
         self.longitude = None
         self.altitude = None
+
+        self.gps_sub = self.create_subscription(
+            NavSatFix,
+            '/gps/fix',  # Replace with your actual GPS topic name
+            self.gps_callback,
+            10
+        )
 
         # =================== CAMERA SETUP ===================
         self.cap = cv2.VideoCapture(2)
@@ -24,8 +29,12 @@ class GPSHardwareNode(Node):
             self.get_logger().error('Camera not found! Check connection.')
             return
 
+
+        super().__init__('gps_hardware_node')
+
         self.frame = np.zeros((300, 500, 3), dtype=np.uint8)
         cv2.namedWindow("AprilTag GPS Tracker")
+
         
         # Declare parameters
         self.declare_parameter('port', '/dev/ttyACM0')  # Common for GT-U7
@@ -45,6 +54,25 @@ class GPSHardwareNode(Node):
         self.num_satellites = 0
         self.hdop = 0.0
         self.last_fix_time = None
+
+        msg = NavSatFix()
+        msg.latitude = self.current_lat
+        msg.longitude = self.current_lon
+        msg.altitude = self.current_alt
+        self.frame[:] = (0, 0, 0)
+
+# Write GPS data
+        cv2.putText(self.frame, f"Latitude:  {msg.latitude:.6f}", (20, 80),  
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(self.frame, f"Longitude: {msg.longitude:.6f}", (20, 140), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        cv2.putText(self.frame, f"Altitude:  {msg.altitude:.2f} m", (20, 200),  
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+        # Display the frame
+        cv2.imshow("AprilTag GPS Tracker", self.frame)
+        cv2.waitKey(1)
+
         
         # Publishers
         self.gps_pub = self.create_publisher(
