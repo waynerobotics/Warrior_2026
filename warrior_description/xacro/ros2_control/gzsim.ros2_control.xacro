@@ -46,7 +46,7 @@
 
     <gazebo>
         <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-            <parameters>$(find warrior_control)/config/warrior_controllers.yaml</parameters>
+            <parameters>$(find warrior_control)/config/warrior_controllers_sim.yaml</parameters>
         </plugin>
 
         <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>

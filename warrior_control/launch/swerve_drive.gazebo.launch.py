@@ -18,10 +18,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
 from launch.event_handlers import OnProcessExit
-
+from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
     # Launch Arguments
+    is_real_robot = LaunchConfiguration('is_real_robot', default=False)
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
     gazebo_world = LaunchConfiguration('world_name', default='competition.world')
     
@@ -34,9 +35,9 @@ def generate_launch_description():
 
     world_file = PathJoinSubstitution([pkg_gazebo, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
-    controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
+    controller_yaml  = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers_sim.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
-
+    
 
     # Set GAZEBO model path
     pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
