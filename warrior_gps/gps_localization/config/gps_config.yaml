@@ -25,16 +25,16 @@ gps_localization:
       waypoint_tolerance: 0.3  # meters
 
       # COMPETITION WAYPOINTS
-      waypoint_1_lat: 42.363953
+      waypoint_1_lat: 42.303953
       waypoint_1_lon: -83.073156
 
-      waypoint_2_lat: 42.363958
+      waypoint_2_lat: 42.303958
       waypoint_2_lon: -83.073174
 
-      waypoint_3_lat: 42.363935
+      waypoint_3_lat: 42.303935
       waypoint_3_lon: -83.073179
 
-      waypoint_4_lat: 42.363932
+      waypoint_4_lat: 42.303932
       waypoint_4_lon: -83.073160
 
   robot_frame_node:

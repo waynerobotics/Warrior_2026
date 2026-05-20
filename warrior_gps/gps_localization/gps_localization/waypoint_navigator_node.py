@@ -86,13 +86,13 @@ class WaypointNavigator(Node):
         
         # Waypoints as GPS coordinates (lat, lon)
         # Competition provides 4 waypoints: 2 for entrance/exit, 2 for navigation
-        self.declare_parameter('waypoint_1_lat', 42.363953)
+        self.declare_parameter('waypoint_1_lat', 42.303953)
         self.declare_parameter('waypoint_1_lon', -83.073156)
-        self.declare_parameter('waypoint_2_lat', 42.363958)
+        self.declare_parameter('waypoint_2_lat', 42.303958)
         self.declare_parameter('waypoint_2_lon', -83.073174)
-        self.declare_parameter('waypoint_3_lat', 42.363935)
+        self.declare_parameter('waypoint_3_lat', 42.303935)
         self.declare_parameter('waypoint_3_lon', -83.073179)
-        self.declare_parameter('waypoint_4_lat', 42.363932)
+        self.declare_parameter('waypoint_4_lat', 42.303932)
         self.declare_parameter('waypoint_4_lon', -83.073160)
         
         # Load waypoints
