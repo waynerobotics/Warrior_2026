@@ -13,8 +13,8 @@ class AprilTagGPSBridge(Node):
         
         # Settings
         self.robot_name = 'shanti'
-        self.shanti_tag_id = 0  # Robot tag
-        self.master_tag_id = 1 # Reference tag
+        self.burger_tag_id = 0  # Robot tag
+        self.master_tag_id = 1  # Reference tag
         self.tag_size = 0.1875  # meters
         
         # Camera settings (from your original code)
@@ -35,15 +35,11 @@ class AprilTagGPSBridge(Node):
             f'/{self.robot_name}/apriltag_pose',
             10
         )
-        self.gps_publisher = self.create_publisher(
-            NavSatFix,
-            f'/{self.robot_name}/gps/fix',
-            10
-        )
+        
         # Subscribe to GPS to display it
         self.gps_sub = self.create_subscription(
             NavSatFix,
-            '/gps_reference',
+            f'/{self.robot_name}/gps_position',
             self.store_gps,
             10
         )
@@ -69,18 +65,6 @@ class AprilTagGPSBridge(Node):
         self.waypoint_status = None
         self.current_coords = {'x': 0.0, 'y': 0.0, 'z': 0.0}
         
-        # Reference GPS point (master tag location) - can be set manually or from incoming GPS
-        self.reference_gps = None
-        
-        # OPTION 1: Set a default reference GPS (replace with your actual coordinates)
-        # Uncomment and set to your master tag location if GPS is not available
-        # self.reference_gps = {
-        #     'latitude': 42.3601,
-        #     'longitude': -71.0589,
-        #     'altitude': 10.0
-        # }
-        # self.get_logger().info(f'Reference GPS set to: {self.reference_gps}')
-        
         # Timer to process camera
         self.timer = self.create_timer(0.033, self.process_frame)  # 30 FPS
         
@@ -89,27 +73,6 @@ class AprilTagGPSBridge(Node):
     def store_gps(self, msg):
         """Store latest GPS for display"""
         self.latest_gps = msg
-        
-        # Automatically set reference GPS if not already set
-        if self.reference_gps is None:
-            self.reference_gps = msg
-            self.get_logger().info(f'Reference GPS auto-set from incoming data: Lat {msg.latitude:.7f}, Lon {msg.longitude:.7f}')
-    
-    def set_reference_gps(self, latitude, longitude, altitude):
-        """
-        Manually set the reference GPS point (master tag location).
-        
-        Parameters:
-            latitude: GPS latitude
-            longitude: GPS longitude
-            altitude: Altitude in meters
-        """
-        self.reference_gps = {
-            'latitude': latitude,
-            'longitude': longitude,
-            'altitude': altitude
-        }
-        self.get_logger().info(f'Reference GPS set to: Lat {latitude:.7f}, Lon {longitude:.7f}, Alt {altitude:.2f}m')
     
     def store_waypoint_distance(self, msg):
         """Store distance to next waypoint"""
@@ -118,86 +81,6 @@ class AprilTagGPSBridge(Node):
     def store_waypoint_status(self, msg):
         """Store waypoint status message"""
         self.waypoint_status = msg.data
-    
-    def convert_pose_to_gps(self, relative_x, relative_y, relative_z):
-        """
-        Convert relative apriltag pose to GPS coordinates.
-        
-        Parameters:
-            relative_x: Forward/backward offset in meters
-            relative_y: Left/right offset in meters
-            relative_z: Up/down offset (altitude) in meters
-            
-        Returns:
-            Tuple of (latitude, longitude, altitude) or None if reference GPS unavailable
-        """
-        # Use reference_gps if set, otherwise use latest incoming GPS
-        ref_gps = self.reference_gps if self.reference_gps else self.latest_gps
-        print ("reference gps: ", ref_gps)
-        if ref_gps is None:
-            return None
-        
-        # Get reference coordinates
-        if isinstance(ref_gps, dict):
-            # If reference_gps is a dict
-            ref_lat = ref_gps['latitude']
-            ref_lon = ref_gps['longitude']
-            ref_alt = ref_gps['altitude']
-        else:
-            # If it's a NavSatFix message
-            ref_lat = ref_gps.latitude
-            ref_lon = ref_gps.longitude
-            ref_alt = ref_gps.altitude
-        
-        # Conversion factors
-        lat_to_meters = 111000  # meters per degree latitude
-        lon_to_meters = 111000 * np.cos(np.radians(ref_lat))  # meters per degree longitude
-        
-        # Convert meters to degrees
-        delta_lat = relative_x / lat_to_meters  # relative_x is forward/back (North/South)
-        delta_lon = relative_y / lon_to_meters  # relative_y is left/right (East/West)
-        
-        # Calculate new GPS coordinates
-        new_lat = ref_lat + delta_lat
-        new_lon = ref_lon + delta_lon
-        new_alt = ref_alt + relative_z  # relative_z is already in meters
-        
-        return new_lat, new_lon, new_alt
-    
-    def publish_gps_fix(self, relative_x, relative_y, relative_z):
-        """
-        Create and publish a NavSatFix message from apriltag pose.
-        
-        Parameters:
-            relative_x: Forward/backward offset in meters
-            relative_y: Left/right offset in meters
-            relative_z: Up/down offset (altitude) in meters
-        """
-        gps_coords = self.convert_pose_to_gps(relative_x, relative_y, relative_z)
-        
-        if gps_coords is None:
-            return  # No reference GPS available
-        
-        lat, lon, alt = gps_coords
-        
-        # Create NavSatFix message
-        gps_msg = NavSatFix()
-        gps_msg.header.stamp = self.get_clock().now().to_msg()
-        gps_msg.header.frame_id = f'{self.robot_name}/base_link'
-        
-        gps_msg.latitude = lat
-        gps_msg.longitude = lon
-        gps_msg.altitude = alt
-        
-        # Set covariance (can be adjusted based on AprilTag accuracy)
-        gps_msg.position_covariance = [1.0, 0.0, 0.0,
-                                        0.0, 1.0, 0.0,
-                                        0.0, 0.0, 1.0]
-        gps_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_APPROXIMATED
-        
-        # Publish the GPS fix
-        self.gps_publisher.publish(gps_msg)
-        print(f"Published GPS Fix: Lat {lat:.7f}, Lon {lon:.7f}, Alt {alt:.2f} m")
     
     def process_frame(self):
         """Process one camera frame"""
@@ -220,12 +103,12 @@ class AprilTagGPSBridge(Node):
         
         # Find our tags
         for tag in tags:
-            if tag.tag_id == self.shanti_tag_id:
+            if tag.tag_id == self.burger_tag_id:
                 robot_tag = tag
                 # Draw robot tag in cyan
                 corners = tag.corners.astype(int)
                 cv2.polylines(frame, [corners], True, (255, 255, 0), 2)
-                cv2.putText(frame, "Shanti Tag 0", tuple(corners[0]), 
+                cv2.putText(frame, "mini Shanti Tag 0", tuple(corners[0]), 
                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
                 # Draw corner dots
                 for corner in corners:
@@ -270,10 +153,6 @@ class AprilTagGPSBridge(Node):
             
             self.pose_publisher.publish(msg)
             
-            # Publish GPS fix from apriltag pose
-            self.publish_gps_fix(relative_x, relative_y, relative_z)
-            print ("published GPS fix from apriltag pose: ", self.current_coords)
-            
             # Draw line between tags
             robot_center = np.mean(robot_tag.corners, axis=0).astype(int)
             master_center = np.mean(master_tag.corners, axis=0).astype(int)
@@ -286,7 +165,7 @@ class AprilTagGPSBridge(Node):
             z_ft = relative_z * 3.28084
             
             # Display robot coordinates in a nice format
-            cv2.putText(frame, "Shantis Coordinates (from Master):", (10, 30),
+            cv2.putText(frame, "Mini Shantis Coordinates (from Master):", (10, 30),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
             
             cv2.putText(frame, f"X: {x_ft:+.2f} ft ({relative_x:+.3f} m)", (10, 55),
@@ -336,7 +215,7 @@ class AprilTagGPSBridge(Node):
         else:
             cv2.putText(frame, "Looking for tags...", (10, 30),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            cv2.putText(frame, f"Shantis tag (ID 0): {'Found' if robot_tag else 'Not found'}", (10, 60),
+            cv2.putText(frame, f"Mini Shantis tag (ID 0): {'Found' if robot_tag else 'Not found'}", (10, 60),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0) if robot_tag else (100, 100, 100), 1)
             cv2.putText(frame, f"Master tag (ID 1): {'Found' if master_tag else 'Not found'}", (10, 80),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0) if master_tag else (100, 100, 100), 1)

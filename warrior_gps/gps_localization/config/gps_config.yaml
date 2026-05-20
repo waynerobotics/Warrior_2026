@@ -14,8 +14,8 @@ gps_localization:
   world_gps_node:
     ros__parameters:
       use_hardware_gps: true  # Set to true for outdoor with GT-U7
-      fixed_latitude: 42.355813766840626
-      fixed_longitude: -83.07073585365939
+      fixed_latitude: 42.303943
+      fixed_longitude: -83.073173
       fixed_altitude: 200.0
 
   waypoint_navigator:
@@ -25,17 +25,17 @@ gps_localization:
       waypoint_tolerance: 0.3  # meters
 
       # COMPETITION WAYPOINTS
-      waypoint_1_lat: 42.3558190240252
-      waypoint_1_lon: -83.07073781236565
+      waypoint_1_lat: 42.363953
+      waypoint_1_lon: -83.073156
 
-      waypoint_2_lat: 42.35583925693282
-      waypoint_2_lon: -83.07074129876963
+      waypoint_2_lat: 42.363958
+      waypoint_2_lon: -83.073174
 
-      waypoint_3_lat: 42.35583038925074
-      waypoint_3_lon: -83.07071348530908
+      waypoint_3_lat: 42.363935
+      waypoint_3_lon: -83.073179
 
-      waypoint_4_lat: 42.35582092838962
-      waypoint_4_lon: -83.070709925549
+      waypoint_4_lat: 42.363932
+      waypoint_4_lon: -83.073160
 
   robot_frame_node:
     ros__parameters:

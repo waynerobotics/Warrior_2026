@@ -40,14 +40,6 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(
                 ["'",mode,"' == 'outdoor' or '",mode,"' == 'indoor'"]))
         ),
-        Node(
-            package='gps_localization',
-            executable='simulated_gps_node',
-            name='simulated_gps_node',
-            output='screen',
-            parameters=[config],
-            condition=IfCondition(PythonExpression(["'",mode,"' == 'gazebo'"]))
-        ),
          Node(
             package='gps_localization',
             executable='robot_frame_node',

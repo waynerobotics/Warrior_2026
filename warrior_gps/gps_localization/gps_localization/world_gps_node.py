@@ -19,8 +19,8 @@ class WorldGPSNode(Node):
         self.use_hardware_gps = self.get_parameter('use_hardware_gps').value
         
         # Fixed GPS reference (used when no hardware GPS)
-        self.declare_parameter('fixed_latitude', 42.363945)
-        self.declare_parameter('fixed_longitude', -83.073175)
+        self.declare_parameter('fixed_latitude', 42.303943)
+        self.declare_parameter('fixed_longitude', -83.073173)
         self.declare_parameter('fixed_altitude', 200.0)
         
         # Get fixed coordinates
@@ -37,7 +37,7 @@ class WorldGPSNode(Node):
         # Publishers
         self.gps_publisher = self.create_publisher(
             NavSatFix,
-            '/robot1/gps_position',
+            '/shanti/gps_position',
             10
         )
         
@@ -50,7 +50,7 @@ class WorldGPSNode(Node):
         # Subscribe to robot position from AprilTag
         self.create_subscription(
             PoseStamped,
-            '/robot1/apriltag_pose',
+            '/shanti/apriltag_pose',
             self.convert_to_gps,
             10
         )
@@ -120,12 +120,12 @@ class WorldGPSNode(Node):
     def convert_to_gps(self, msg):
         """Convert AprilTag position to GPS coordinates"""
         if not self.gps_fixed and self.use_hardware_gps:
-            self.get_logger().warn_once('Waiting for GPS fix from GT-U7...')
+            self.get_logger().warning('Waiting for GPS fix from GT-U7...')
             return
         
         # Get position in meters from AprilTag
         x_meters = msg.pose.position.x  # East-West
-        y_meters = msg.pose.position.y  # North-South
+        y_meters = msg.pose.position.y    # North-South
         z_meters = msg.pose.position.z  # Up-Down
         
         # Convert to GPS
