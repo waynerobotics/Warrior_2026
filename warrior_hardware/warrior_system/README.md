@@ -6,7 +6,9 @@ This package provides a topic-bridge interface for the low-level control layer w
 
 Unlike traditional implementations that directly interface with hardware drivers in C++, this package introduces ROS topic-based communication as an intermediate layer. Although this design may introduce a small amount of additional latency, it provides significantly greater flexibility for hardware communication and integration. For example, it enables serial communication implementations in Python rather than being restricted to C++ only.
 
-### Layer Diagram
+### System Layer Diagram
+
+---
 
 The flowchart below illustrates how the topic-bridged system communicates with the swerve controller and the hardware serial interface.
 
@@ -89,6 +91,9 @@ flowchart LR
 ```
 
 ### ros2-control Xacro Configuration
+
+---
+
 The ros2_control xacro configuration file is located at: [robot.ros2_control.xacro](../../warrior_description/xacro/ros2_control/robot.ros2_control.xacro).
 
 Currently, each swerve module supports the following hardware interfaces:
