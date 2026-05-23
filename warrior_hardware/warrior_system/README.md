@@ -6,69 +6,85 @@ This package provides a topic-bridge interface for the low-level control layer w
 
 Unlike traditional implementations that directly interface with hardware drivers in C++, this package introduces ROS topic-based communication as an intermediate layer. Although this design may introduce a small amount of additional latency, it provides significantly greater flexibility for hardware communication and integration. For example, it enables serial communication implementations in Python rather than being restricted to C++ only.
 
+### Layer Diagram
+
+The flowchart below illustrates how the topic-bridged system communicates with the swerve controller and the hardware serial interface.
+
 ```mermaid
-flowchart TB
+flowchart LR
 
     %% =========================
-    %% Controller Layer
+    %% Communication Layer
     %% =========================
-    CTRL["Warrior Swerve Controller"]
+    subgraph COMM["Communication Layer"]
+        direction TB
 
-    %% =========================
-    %% Core System
-    %% =========================
-    SYS([warrior_robot_ros2_control])
-
-    %% =========================
-    %% Topic Layer
-    %% =========================
-    subgraph TOPIC_LAYER["ROS Topic Communication"]
-        direction LR
         FB["/warrior_swerve_state"]
         CMD["/warrior_swerve_command"]
     end
 
+
+    %% =========================
+    %% ros2_control Core
+    %% =========================
+    subgraph CORE["ros2_control Core"]
+        direction TB
+
+        SYS([warrior_robot_ros2_control])
+
+        CTRL["Warrior Swerve Controller"]
+    end
+
+
     %% =========================
     %% Hardware Layer
     %% =========================
-    HW["Hardware Serial Interface"]
+    subgraph HWLAYER["Hardware Layer"]
+        direction TB
+
+        HW["Hardware Serial Interface"]
+    end
+
 
     %% =========================
-    %% Main Control Flow
+    %% Data Flow
     %% =========================
-    CTRL -->|"command interfaces"| SYS
-    SYS -->|"state interfaces"| CTRL
+    FB ==>|"read()"| SYS
+
+    SYS ==>|"write()"| CMD
+
+    CTRL -. "command interfaces" .-> SYS
+    SYS -. "state interfaces" .-> CTRL
+
+    CMD ==>|"tx"| HW
+    HW ==>|"rx"| FB
+
 
     %% =========================
-    %% Topic Bridge
+    %% Node Styles
     %% =========================
-    FB -->|"read"| SYS
-    SYS -->|"write"| CMD
+    classDef hardware fill:#1e293b,stroke:#64748b,color:#e2e8f0,stroke-width:2px;
+    classDef state fill:#1e3a5f,stroke:#3b82f6,color:#dbeafe,stroke-width:2px;
+    classDef command fill:#163826,stroke:#22c55e,color:#dcfce7,stroke-width:2px;
+    classDef system fill:#3b1f1f,stroke:#ef4444,color:#fee2e2,stroke-width:4px;
+    classDef controller fill:#312e81,stroke:#8b5cf6,color:#ede9fe,stroke-width:2px;
+
 
     %% =========================
-    %% Hardware Loop
+    %% Subgraph Styles
     %% =========================
-    HW --> FB
-    CMD --> HW
+    style COMM fill:#111827,stroke:#374151,stroke-width:2px,color:#d1d5db
+    style CORE fill:#18181b,stroke:#52525b,stroke-width:2px,color:#e4e4e7
+    style HWLAYER fill:#0f172a,stroke:#334155,stroke-width:2px,color:#cbd5e1
+
 
     %% =========================
-    %% Visual Balancing
+    %% Apply Classes
     %% =========================
-    FB --- CMD
-
-    %% =========================
-    %% Styles
-    %% =========================
-    classDef hardware fill:#f8fafc,stroke:#475569,color:#0f172a,stroke-width:2px;
-    classDef state fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:2px;
-    classDef command fill:#dcfce7,stroke:#16a34a,color:#14532d,stroke-width:2px;
-    classDef control fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:4px;
-    classDef controller fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:2px;
-
     class HW hardware;
     class FB state;
     class CMD command;
-    class SYS control;
+    class SYS system;
     class CTRL controller;
 ```
 
