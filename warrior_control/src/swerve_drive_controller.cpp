@@ -18,13 +18,11 @@ SwerveDriveController::command_interface_configuration() const
 
     for (const auto & name : steer_joint_names_) {
         cmd_config.names.push_back(name + "/position");
-        RCLCPP_INFO(get_node()->get_logger(),
-                    "Command Interface added: %s", (name + "/position").c_str());
+        // RCLCPP_INFO(get_node()->get_logger(), "Command Interface added: %s", (name + "/position").c_str());
     }
     for (const auto & name : drive_joint_names_) {
         cmd_config.names.push_back(name + "/velocity");
-        RCLCPP_INFO(get_node()->get_logger(),
-                    "Command Interface added: %s", (name + "/velocity").c_str());
+        // RCLCPP_INFO(get_node()->get_logger(), "Command Interface added: %s", (name + "/velocity").c_str());
     }
     return cmd_config;
 }
@@ -38,13 +36,13 @@ SwerveDriveController::state_interface_configuration() const
 
     for (const auto & name : steer_joint_names_) {
         state_config.names.push_back(name + "/position");
-        state_config.names.push_back(name + "/velocity");
-        state_config.names.push_back(name + "/effort");
+        // state_config.names.push_back(name + "/velocity");
+        // state_config.names.push_back(name + "/effort");
     }
     for (const auto & name : drive_joint_names_) {
-        state_config.names.push_back(name + "/position");
+        // state_config.names.push_back(name + "/position");
         state_config.names.push_back(name + "/velocity");
-        state_config.names.push_back(name + "/effort");
+        // state_config.names.push_back(name + "/effort");
     }
     return state_config;
 }
@@ -202,17 +200,17 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
 
     for (auto & cmd_interface : command_interfaces_) {
         std::string interface_name = cmd_interface.get_name();
+        RCLCPP_INFO(logger, "Interface name: %s", interface_name.c_str());  
+        
         for (const auto & steer_name : steer_joint_names_) {
             if (interface_name == steer_name + "/position") {
                 steer_cmd_.emplace_back(std::ref(cmd_interface));
             }
-            RCLCPP_INFO(logger, "Steer Interface name: %s", interface_name.c_str());
         }
         for (const auto & drive_name : drive_joint_names_) {
             if (interface_name == drive_name + "/velocity") {
                 drive_cmd_.emplace_back(std::ref(cmd_interface));
             }
-            RCLCPP_INFO(logger, "Drive Interface name: %s", interface_name.c_str());
         }
     }
 

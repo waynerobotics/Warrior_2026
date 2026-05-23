@@ -16,6 +16,8 @@
 namespace warrior::system {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
+
+
 class SwerveTopicBridge final : public hardware_interface::SystemInterface
 {
 public:
@@ -29,11 +31,11 @@ public:
 
 private:
 
-    // const std::unordered_map<std::string, std::string> swerve_id_map_ = {
-    //     {"front", warrior_msgs::msg::SwerveState::FRONT}, 
-    //     {"left", warrior_msgs::msg::SwerveState::LEFT}, 
-    //     {"right", warrior_msgs::msg::SwerveState::RIGHT}
-    // };
+    const std::unordered_map<std::string, std::string> swerve_id_map_ = {
+        {"front", warrior_msgs::msg::SwerveState::FRONT}, 
+        {"left", warrior_msgs::msg::SwerveState::LEFT}, 
+        {"right", warrior_msgs::msg::SwerveState::RIGHT}
+    };
 
     // Publisher and subscriber for the topic-bridge communication with the robot's joints
     rclcpp::Subscription<warrior_msgs::msg::SwerveState>::SharedPtr swerve_state_subscriber_;

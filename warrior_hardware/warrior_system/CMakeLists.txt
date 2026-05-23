@@ -13,6 +13,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   hardware_interface
   sensor_msgs
+  warrior_msgs
 )
 
 find_package(ament_cmake REQUIRED)
@@ -27,7 +28,7 @@ endforeach()
 # Declare a C++ library
 add_library(
   ${PROJECT_NAME}
-  src/warrior_system.cpp
+  src/swerve_topic_bridge.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_include_directories(${PROJECT_NAME}
@@ -47,39 +48,7 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-#############
-## Testing ##
-#############
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-  find_package(ament_lint_auto REQUIRED)
-  find_package(ament_cmake_pytest REQUIRED)
-  find_package(ros2_control_test_assets REQUIRED)
-  find_package(ros_testing REQUIRED)
-
-  # ROS2 linters, but disable copyright test. PickNik's copyright's may not conform
-  # to this test
-  set(ament_cmake_flake8_FOUND TRUE)
-  set(ament_cmake_pep257_FOUND TRUE)
-  set(ament_cmake_cpplint_FOUND TRUE)
-  set(ament_cmake_uncrustify_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-
-  # GTests
-  ament_add_gtest(warrior_system_test test/warrior_system_test.cpp)
-  target_link_libraries(warrior_system_test
-    ${PROJECT_NAME})
-  ament_target_dependencies(warrior_system_test ${THIS_PACKAGE_INCLUDE_DEPENDS} ros2_control_test_assets)
-
-  # Integration tests
-  add_ros_test(
-    test/ros2_control.test.py
-    TIMEOUT
-    120
-    ARGS
-    test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_warrior_system.py)
-endif()
 
 pluginlib_export_plugin_description_file(hardware_interface warrior_system_plugin.xml)
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)

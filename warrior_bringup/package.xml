@@ -11,6 +11,7 @@
   <depend>warrior_description</depend>
   <depend>warrior_control</depend>
   <depend>warrior_gazebo</depend>
+  <depend>warrior_system</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher</depend>
   <depend>controller_manager</depend>

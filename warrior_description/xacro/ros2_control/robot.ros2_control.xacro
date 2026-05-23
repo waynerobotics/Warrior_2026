@@ -3,45 +3,45 @@
 
     <ros2_control name="warrior_robot_ros2_control" type="system">
         <hardware>
-            <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
+            <plugin>warrior_system/SwerveTopicBridge</plugin>
             <param name="joint_commands_topic">/warrior_joint_commands</param>
             <param name="joint_states_topic">/warrior_joint_states</param>
         </hardware>
         <joint name="left_steer_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="velocity"/> -->
+            <!-- <state_interface name="effort"/> -->
         </joint>
         <joint name="left_drive_joint">
             <command_interface name="velocity"/>
-            <state_interface name="position"/>
+            <!-- <state_interface name="position"/> -->
             <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="effort"/> -->
         </joint>
         <joint name="right_steer_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="velocity"/> -->
+            <!-- <state_interface name="effort"/> -->
         </joint>
         <joint name="right_drive_joint">
             <command_interface name="velocity"/>
-            <state_interface name="position"/>
+            <!-- <state_interface name="position"/> -->
             <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="effort"/> -->
         </joint>
         <joint name="front_steer_joint">
             <command_interface name="position"/>
             <state_interface name="position"/>
-            <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="velocity"/> -->
+            <!-- <state_interface name="effort"/> -->
         </joint>
         <joint name="front_drive_joint">
             <command_interface name="velocity"/>
-            <state_interface name="position"/>
+            <!-- <state_interface name="position"/> -->
             <state_interface name="velocity"/>
-            <state_interface name="effort"/>
+            <!-- <state_interface name="effort"/> -->
         </joint>
     </ros2_control>
 </robot>    
