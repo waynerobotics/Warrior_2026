@@ -44,7 +44,7 @@ flowchart LR
     subgraph HWLAYER["Hardware Layer"]
         direction TB
 
-        HW["Hardware Serial Interface"]
+        HW["Warrior Serial"]
     end
 
 
@@ -94,9 +94,7 @@ flowchart LR
 
 ---
 
-The ros2_control xacro configuration file is located at: [robot.ros2_control.xacro](../../warrior_description/xacro/ros2_control/robot.ros2_control.xacro).
-
-Currently, each swerve module supports the following hardware interfaces:
+The ros2_control xacro configuration file is located at: [robot.ros2_control.xacro](../../warrior_description/xacro/ros2_control/robot.ros2_control.xacro). Currently, each swerve module supports the following hardware interfaces:
 
 - **Steering Motor**
   - State interface: `position`
