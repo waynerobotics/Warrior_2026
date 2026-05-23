@@ -53,9 +53,9 @@ class TwistToMotorNode(Node):
 
         for target in self._targets:
             cmd = SwerveCmd()
-            cmd.target  = target
-            cmd.spark   = spark
-            cmd.flipsky = flipsky
+            cmd.swerve_id = target
+            cmd.spark     = spark
+            cmd.flipsky   = flipsky
             self._pub.publish(cmd)
 
 

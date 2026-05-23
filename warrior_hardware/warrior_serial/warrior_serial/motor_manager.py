@@ -12,8 +12,8 @@ Responsibilities
   probes each one with ``<WHO>`` (exclusive open), and keeps the connection
   open if the device name matches a wanted target.
 * Routing — subscribes to ``/motor_cmd`` (warrior_msgs/MotorCommand) and
-  writes ``<MOT,target,spark,flipsky>`` only to the device whose name matches
-  ``msg.target``.
+  writes ``<MOT,swerve_id,spark,flipsky>`` only to the device whose name matches
+  ``msg.swerve_id``.
 * Reads — polls every connected device on a 50 Hz timer and logs
   ``<ACK,…>`` / ``<ERR,…>`` replies.
 * Reconnection — if a write or read raises SerialException the device is
@@ -276,12 +276,12 @@ class MotorManagerNode(Node):
         else:
             active_targets = [self._targets[self._active_idx]]
 
-        if msg.target not in active_targets:
-            self.get_logger().info(f'[motor_manager] DROP cmd for "{msg.target}" — active target is "{self._active_label()}"')
+        if msg.swerve_id not in active_targets:
+            self.get_logger().info(f'[motor_manager] DROP cmd for "{msg.swerve_id}" — active target is "{self._active_label()}"')
             return
 
         with self._lock:
-            ws = self._connections.get(msg.target)
+            ws = self._connections.get(msg.swerve_id)
         if ws is None:
             now = time.monotonic()
             if now - self._last_status_time >= _STATUS_INTERVAL_S:
@@ -289,17 +289,17 @@ class MotorManagerNode(Node):
                 with self._lock:
                     connected = list(self._connections.keys())
                 self.get_logger().warn(
-                    f'[tx] DROP cmd for "{msg.target}" — not connected yet. '
+                    f'[tx] DROP cmd for "{msg.swerve_id}" — not connected yet. '
                     f'Connected: {connected}')
             return
-        frame = f'<MOT,{msg.target},{msg.spark},{msg.flipsky}>'
+        frame = f'<MOT,{msg.swerve_id},{msg.spark},{msg.flipsky}>'
         self.get_logger().info(f'[tx] → {frame}')
         try:
-            ws.write_message('MOT', msg.target, str(msg.spark), str(msg.flipsky))
+            ws.write_message('MOT', msg.swerve_id, str(msg.spark), str(msg.flipsky))
         except (serial.SerialException, OSError) as exc:
-            self.get_logger().warn(f'[tx] {msg.target} write error: {exc} — will reconnect')
+            self.get_logger().warn(f'[tx] {msg.swerve_id} write error: {exc} — will reconnect')
             with self._lock:
-                dropped = self._connections.pop(msg.target, None)
+                dropped = self._connections.pop(msg.swerve_id, None)
             if dropped:
                 dropped.close()
 

@@ -216,9 +216,9 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
         }
     }
 
-    RCLCPP_INFO(logger,
-        "SwerveDriveController activated with %zu steer and %zu drive interfaces.",
+    RCLCPP_INFO(logger, "SwerveDriveController activated with %zu steer and %zu drive interfaces.",
         steer_cmd_.size(), drive_cmd_.size());
+        
     return controller_interface::CallbackReturn::SUCCESS;
 }
 

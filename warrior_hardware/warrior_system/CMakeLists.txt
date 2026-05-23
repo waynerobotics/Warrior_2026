@@ -81,7 +81,7 @@ if(BUILD_TESTING)
     test_file:=${CMAKE_CURRENT_SOURCE_DIR}/test/test_warrior_system.py)
 endif()
 
-pluginlib_export_plugin_description_file(hardware_interface warrior_system  _plugin_description.xml)
+pluginlib_export_plugin_description_file(hardware_interface warrior_system_plugin.xml)
 ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

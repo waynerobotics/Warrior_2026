@@ -4,8 +4,8 @@ warrior_serial.base_driver
 ROS 2 node: warrior_base_driver
 
 Connects to the ``00_base`` Arduino (LCD Keypad + RadioLink SBUS).
-Reads ``<MOT,target,spark,flipsky>`` frames from the device and publishes
-them as :class:`warrior_msgs.msg.MotorCommand` on ``/motor_cmd``.
+Reads ``<MOT,swerve_id,spark,flipsky>`` frames from the device and publishes
+them as :class:`warrior_msgs.msg.SwerveCmd` on ``/swerve_cmd``.
 
 State machine:
     DISCONNECTED -> DISCOVERING -> CONNECTED -> DISCONNECTED (on error)
@@ -131,7 +131,7 @@ class BaseDriverNode(Node):
             return
 
         msg = SwerveCmd()
-        msg.target = target
+        msg.swerve_id = target
         msg.spark = spark
         msg.flipsky = flipsky
         self._pub.publish(msg)
