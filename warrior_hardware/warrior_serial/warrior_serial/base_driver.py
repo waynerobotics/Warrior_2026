@@ -18,7 +18,7 @@ from rclpy.node import Node
 
 import serial
 
-from warrior_msgs.msg import MotorCommand
+from warrior_msgs.msg import SwerveCmd
 from warrior_serial.serial_protocol import (
     WarriorSerial,
     parse_message,
@@ -46,16 +46,12 @@ class BaseDriverNode(Node):
         super().__init__('warrior_base_driver')
 
         # Parameters
-        self._device_name = self.declare_parameter(
-            'device_name', EXPECTED_DEVICE).value
-        self._baud_rate = self.declare_parameter(
-            'baud_rate', BAUD_RATE_DEFAULT).value
-        self._discovery_retry_s = self.declare_parameter(
-            'discovery_retry_period_s', 2.0).value
-        self._read_timeout_s = self.declare_parameter(
-            'read_timeout_s', 0.1).value
+        self._device_name = self.declare_parameter('device_name', EXPECTED_DEVICE).value
+        self._baud_rate = self.declare_parameter('baud_rate', BAUD_RATE_DEFAULT).value
+        self._discovery_retry_s = self.declare_parameter('discovery_retry_period_s', 2.0).value
+        self._read_timeout_s = self.declare_parameter('read_timeout_s', 0.1).value
 
-        self._pub = self.create_publisher(MotorCommand, '/motor_cmd', 10)
+        self._pub = self.create_publisher(SwerveCmd, '/swerve_cmd', 10)
 
         self._ws: WarriorSerial | None = None
         self._state = self._DISCONNECTED
@@ -134,7 +130,7 @@ class BaseDriverNode(Node):
             self.get_logger().warn(f'Bad MOT values: {line}')
             return
 
-        msg = MotorCommand()
+        msg = SwerveCmd()
         msg.target = target
         msg.spark = spark
         msg.flipsky = flipsky

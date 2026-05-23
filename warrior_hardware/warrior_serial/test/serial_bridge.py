@@ -18,7 +18,7 @@ Usage:
 import argparse
 import time
 from serial.tools import list_ports
-from serial_protocol import WarriorSerial, query_device_name
+from Warrior_2026.warrior_hardware.warrior_serial.test.serial_protocol import WarriorSerial, query_device_name
 
 
 BAUDRATE = 115200

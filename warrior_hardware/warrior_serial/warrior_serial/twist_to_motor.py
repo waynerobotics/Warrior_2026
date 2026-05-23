@@ -24,7 +24,7 @@ ROS 2 parameters
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
-from warrior_msgs.msg import MotorCommand
+from warrior_msgs.msg import SwerveCmd
 
 
 class TwistToMotorNode(Node):
@@ -39,12 +39,10 @@ class TwistToMotorNode(Node):
         self._scale_flipsky = self.declare_parameter(
             'scale_flipsky', 100.0).value
 
-        self._pub = self.create_publisher(MotorCommand, '/motor_cmd', 10)
-        self._sub = self.create_subscription(
-            Twist, '/cmd_vel', self._cmd_vel_cb, 10)
+        self._pub = self.create_publisher(SwerveCmd, '/swerve_cmd', 10)
+        self._sub = self.create_subscription(Twist, '/cmd_vel', self._cmd_vel_cb, 10)
 
-        self.get_logger().info(
-            f'twist_to_motor started; targets={self._targets}')
+        self.get_logger().info(f'twist_to_motor started; targets={self._targets}')
 
     def _cmd_vel_cb(self, msg: Twist) -> None:
         spark   = int(msg.linear.x  * self._scale_spark)
@@ -54,7 +52,7 @@ class TwistToMotorNode(Node):
         flipsky = max(-100, min(100, flipsky))
 
         for target in self._targets:
-            cmd = MotorCommand()
+            cmd = SwerveCmd()
             cmd.target  = target
             cmd.spark   = spark
             cmd.flipsky = flipsky

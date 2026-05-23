@@ -37,7 +37,7 @@ import serial
 import serial.tools.list_ports
 from sensor_msgs.msg import Joy
 
-from warrior_msgs.msg import MotorCommand
+from warrior_msgs.msg import SwerveCmd
 from .serial_protocol import (
     WarriorSerial, parse_message, BAUD_RATE_DEFAULT, OPEN_RESET_DELAY_S,
 )
@@ -74,10 +74,8 @@ class MotorManagerNode(Node):
         self._connections: dict = {}
         self._lock = threading.Lock()
 
-        self._sub = self.create_subscription(
-            MotorCommand, '/motor_cmd', self._motor_cmd_cb, 10)
-        self._joy_sub = self.create_subscription(
-            Joy, '/joy', self._joy_cb, 10)
+        self._sub = self.create_subscription(SwerveCmd, '/swerve_cmd', self._swerve_cmd_cb, 10)
+        self._joy_sub = self.create_subscription(Joy, '/joy', self._joy_cb, 10)
 
         self._last_status_time: float = 0.0
 
@@ -248,8 +246,7 @@ class MotorManagerNode(Node):
                 if fields:
                     self._handle_incoming(name, fields)
             except (serial.SerialException, OSError) as exc:
-                self.get_logger().warn(
-                    f'[motor_manager] {name} read error: {exc} — will reconnect')
+                self.get_logger().warn(f'[motor_manager] {name} read error: {exc} — will reconnect')
                 to_remove.append(name)
 
         if to_remove:
@@ -269,10 +266,10 @@ class MotorManagerNode(Node):
             self.get_logger().debug(f'[rx] {name} → {fields}')
 
     # ------------------------------------------------------------------
-    # Motor command callback
+    # Swerve command callback
     # ------------------------------------------------------------------
 
-    def _motor_cmd_cb(self, msg: MotorCommand) -> None:
+    def _swerve_cmd_cb(self, msg: SwerveCmd) -> None:
         # Determine which targets should receive this command
         if self._active_idx is None:
             active_targets = self._targets  # ALL mode
@@ -280,6 +277,7 @@ class MotorManagerNode(Node):
             active_targets = [self._targets[self._active_idx]]
 
         if msg.target not in active_targets:
+            self.get_logger().info(f'[motor_manager] DROP cmd for "{msg.target}" — active target is "{self._active_label()}"')
             return
 
         with self._lock:
@@ -299,8 +297,7 @@ class MotorManagerNode(Node):
         try:
             ws.write_message('MOT', msg.target, str(msg.spark), str(msg.flipsky))
         except (serial.SerialException, OSError) as exc:
-            self.get_logger().warn(
-                f'[tx] {msg.target} write error: {exc} — will reconnect')
+            self.get_logger().warn(f'[tx] {msg.target} write error: {exc} — will reconnect')
             with self._lock:
                 dropped = self._connections.pop(msg.target, None)
             if dropped:

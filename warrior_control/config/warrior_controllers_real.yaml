@@ -37,6 +37,14 @@ swerve_drive_controller:
     odom_frame_id: "odom"
     base_frame_id: "base_footprint"
 
+    smoother:
+      max_accel_linear:  1.5    # Normal Velocity m/s²
+      max_accel_angular: 3.0    # Normal Angular Velocity rad/s²
+      max_decel_linear:  4.0    # Emergency Decel m/s²
+      max_decel_angular: 6.0    # Emergency Angular Decel rad/s²
+      stop_threshold_linear:  0.01
+      stop_threshold_angular: 0.01
+
     cmd_vel_limit:
       vx_limit: [-1.0, 1.0]  # m/s
       vy_limit: [-0.8, 0.8]  # m/s

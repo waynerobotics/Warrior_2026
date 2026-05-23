@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot_ros2_control">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="warrior_real_robot">
 
-    <ros2_control name="robot_ros2_control" type="system">
+    <ros2_control name="warrior_robot_ros2_control" type="system">
         <hardware>
-            <plugin>mock_components/GenericSystem</plugin>
-            <param name="calculate_dynamics">true</param>
+            <plugin>topic_based_ros2_control/TopicBasedSystem</plugin>
+            <param name="joint_commands_topic">/warrior_joint_commands</param>
+            <param name="joint_states_topic">/warrior_joint_states</param>
         </hardware>
         <joint name="left_steer_joint">
             <command_interface name="position"/>

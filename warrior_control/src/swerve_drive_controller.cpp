@@ -9,7 +9,6 @@ namespace warrior::control {
 // ═══════════════════════════════════════════════════════════════════════════
 //  Interface configuration
 // ═══════════════════════════════════════════════════════════════════════════
-
 controller_interface::InterfaceConfiguration
 SwerveDriveController::command_interface_configuration() const
 {
@@ -53,7 +52,6 @@ SwerveDriveController::state_interface_configuration() const
 // ═══════════════════════════════════════════════════════════════════════════
 //  Lifecycle callbacks
 // ═══════════════════════════════════════════════════════════════════════════
-
 controller_interface::CallbackReturn SwerveDriveController::on_init()
 {
     auto logger = get_node()->get_logger();
@@ -227,7 +225,6 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
 // ═══════════════════════════════════════════════════════════════════════════
 //  Main update loop
 // ═══════════════════════════════════════════════════════════════════════════
-
 controller_interface::return_type SwerveDriveController::update(
     const rclcpp::Time & time, const rclcpp::Duration & period)
 {
@@ -266,7 +263,6 @@ controller_interface::return_type SwerveDriveController::update(
 // ═══════════════════════════════════════════════════════════════════════════
 //  Velocity smoother
 // ═══════════════════════════════════════════════════════════════════════════
-
 /**
  * Rate-limits vx_cmd_, vy_cmd_, wz_cmd_ toward their respective targets.
  *
@@ -314,7 +310,6 @@ void SwerveDriveController::applyCmdVelLimits()
 // ═══════════════════════════════════════════════════════════════════════════
 //  Sensor reading
 // ═══════════════════════════════════════════════════════════════════════════
-
 void SwerveDriveController::readWheelAngularVel()
 {
     for (const auto & state_interface : state_interfaces_) {
@@ -346,7 +341,6 @@ void SwerveDriveController::readSteeringAngles()
 // ═══════════════════════════════════════════════════════════════════════════
 //  Kinematics — body twist estimation
 // ═══════════════════════════════════════════════════════════════════════════
-
 bool SwerveDriveController::estimateBodyTwist(Eigen::Vector3d & body_twist) const
 {
     Eigen::Matrix<double, 6, 3> A;
@@ -396,7 +390,6 @@ bool SwerveDriveController::estimateBodyTwist(Eigen::Vector3d & body_twist) cons
 // ═══════════════════════════════════════════════════════════════════════════
 //  Kalman filter
 // ═══════════════════════════════════════════════════════════════════════════
-
 void SwerveDriveController::kalmanPredict(double dt)
 {
     Eigen::Matrix<double, 6, 6> F = Eigen::Matrix<double, 6, 6>::Identity();
@@ -443,7 +436,6 @@ double SwerveDriveController::wrap2Pi(double angle)
 // ═══════════════════════════════════════════════════════════════════════════
 //  Odometry publish + TF
 // ═══════════════════════════════════════════════════════════════════════════
-
 void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & body_twist)
 {
     (void)dt;
@@ -493,7 +485,6 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
 // ═══════════════════════════════════════════════════════════════════════════
 //  Joint command output
 // ═══════════════════════════════════════════════════════════════════════════
-
 void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
 {
     const std::array<double, 3> current_angles = {
