@@ -1,8 +1,9 @@
-# Warrior 2026 — Setup
+# warrior_scripts
 
-ROS 2 Humble + Gazebo Fortress on Ubuntu 22.04 (WSL2).
+First-time install + dev helpers for the Warrior workspace. See the
+[workspace README](../README.md) for context.
 
-## Install
+## First-time install
 
 ```bash
 sudo bash installWarriorDependencies.sh
@@ -10,14 +11,28 @@ source ~/.bashrc
 ros_rebuild
 ```
 
-`installWarriorDependencies.sh` adds the ROS 2 apt repo and installs Humble
-desktop, Gazebo Fortress (`ros-humble-ros-gz`), `ros2_control`, and the
-bashrc lines (`source /opt/ros/humble/setup.bash`, `sorce`, `ros_rebuild`).
+`installWarriorDependencies.sh` adds the ROS 2 apt repo and installs:
 
-`ros_rebuild` is an alias for `cd ~/ros2_ws && colcon build && source install/setup.bash`.
+- ROS 2 **Humble** desktop
+- **Gazebo Fortress** (`ros-humble-ros-gz`)
+- `ros2_control`
 
-## Launch Gazebo
+It also appends two aliases to `~/.bashrc`:
 
-```bash
-bash launch_gazebo.sh
-```
+| Alias | Expands to |
+|---|---|
+| `sorce` | `source ~/.bashrc` |
+| `ros_rebuild` | `cd ~/ros2_ws && colcon build && source install/setup.bash` |
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `installWarriorDependencies.sh` | One-shot installer (run with `sudo`) |
+| `build_warrior_ws.sh` | Wrapper around `colcon build` |
+| `deprecated_installWarriorDeps.sh` | Old installer — kept for reference, don't use |
+
+## Launching
+
+This package only sets up the environment. To launch the robot, see
+[warrior_bringup](../warrior_bringup/README.md).

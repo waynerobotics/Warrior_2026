@@ -6,7 +6,7 @@ For direct use, this is still supported but consider using:
   ros2 launch warrior_bringup main.launch.py robot_type:=diff_sim [world_name:=...]
   ros2 launch warrior_bringup diff_sim.launch.py [world_name:=...]
 
-See warrior_bringup/LAUNCH_USAGE.md for complete documentation.
+See warrior_bringup/README.md for complete documentation.
 """
 import os
 from launch import LaunchDescription
