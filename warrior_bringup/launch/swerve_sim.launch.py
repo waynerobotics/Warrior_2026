@@ -10,18 +10,18 @@ Usage:
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare('warrior_bringup')
     world_name = LaunchConfiguration('world_name')
-    
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'world_name',
-            default_value='competition.world',  
+            default_value='competition.world',
             description='Name of the world file to load'
         ),
         DeclareLaunchArgument(
@@ -31,7 +31,7 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                str(pkg_warrior_bringup) + '/launch/main.launch.py'
+                PathJoinSubstitution([pkg_warrior_bringup, 'launch', 'main.launch.py'])
             ),
             launch_arguments={
                 'robot_type': 'swerve_sim',
