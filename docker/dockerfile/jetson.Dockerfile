@@ -50,6 +50,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN rosdep init || true && rosdep update
 
 
+# ------------ Install Perception Dependencies ------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-v4l2-camera \
+    ros-${ROS_DISTRO}-vision-msgs \
+    ros-${ROS_DISTRO}-sensor-msgs-py \
+    ros-${ROS_DISTRO}-pcl-conversions \
+    libpcl-dev \
+    python3-opencv \
+    python3-pyqt5 \
+    python3-yaml \
+    v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+
 # ------------ Create user ------------
 RUN useradd -m ${USERNAME} && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN mkdir -p ${THIRD_PARTY_PATH} && chown -R ${USERNAME}:${USERNAME} ${THIRD_PARTY_PATH}
