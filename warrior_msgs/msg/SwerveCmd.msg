@@ -1,4 +1,5 @@
-# Motor command addressed to a specific swerve module
-string swerve_id    # "02_swerve" | "03_swerve" | "04_swerve"
-float64 spark          # -100..100, 0 = neutral
-float64 flipsky        # -100..100, 0 = neutral
+# Per-module command from the controller to the hardware manager.
+string  swerve_id              # "front" | "left" | "right"
+float64 steer_position_rad     # absolute steering angle, radians
+float64 drive_velocity_rad_s   # wheel angular velocity, rad/s
+builtin_interfaces/Time stamp
