@@ -105,7 +105,7 @@ def generate_launch_description():
             PathJoinSubstitution([pkg_gz_ros, "launch", "gz_sim.launch.py"])
         ),
         launch_arguments={
-            "gz_args": ["-r -v 4 ", world_file]
+            "gz_args": ["-r -v 4 --render-engine ogre --render-engine-gui ogre ", world_file]
         }.items(),
     )
     

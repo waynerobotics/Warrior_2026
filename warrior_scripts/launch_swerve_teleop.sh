@@ -9,7 +9,7 @@
 
 set -e
 
-ROS_SETUP="/opt/ros/jazzy/setup.bash"
+ROS_SETUP="/opt/ros/humble/setup.bash"
 WS_SETUP="$HOME/ros2_ws/install/setup.bash"
 
 if [[ ! -f "$ROS_SETUP" ]]; then
