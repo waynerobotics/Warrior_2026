@@ -17,4 +17,9 @@ ros2 launch warrior_description display.launch.py
 
 ## Visualization
 
+The Visualization of the Warrior robot is displayed as below:
+
+<p align="center">
+<img src="./docs/rviz.png" alt="robot" height="800">
+</p>
 

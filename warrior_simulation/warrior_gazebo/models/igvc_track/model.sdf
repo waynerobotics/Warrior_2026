@@ -23,7 +23,7 @@
           <specular>0.2 0.2 0.2 1.0</specular>
           <pbr>
             <metal>
-              <albedo_map>model://igvc_track/textures/ground_surface/tarmac5.png</albedo_map>
+              <albedo_map>model://igvc_track/textures/ground_surface/tarmac2.png</albedo_map>
               <roughness>0.8</roughness>
               <metalness>0.0</metalness>
             </metal>
@@ -32,7 +32,7 @@
       </visual>
     </link>
     <link name="link2">
-      <pose>0 0 0.0 0 0 0</pose> 
+      <pose>0 0 0.006 0 0 0</pose> 
       <!-- <collision name="collision">
         <geometry>
           <box>
@@ -44,7 +44,7 @@
         <cast_shadows>false</cast_shadows>
         <geometry>
           <box>
-            <size>60 60 .007</size>
+            <size>60 60 .001</size>
           </box>
         </geometry>
         <material>

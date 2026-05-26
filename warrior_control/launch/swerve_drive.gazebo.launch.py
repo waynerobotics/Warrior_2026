@@ -18,7 +18,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
 from launch.event_handlers import OnProcessExit
-
+from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
     # Launch Arguments
@@ -34,9 +34,8 @@ def generate_launch_description():
 
     world_file = PathJoinSubstitution([pkg_gazebo, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
-    controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
+    controller_yaml  = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers_sim.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
-
 
     # Set GAZEBO model path
     pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
@@ -106,7 +105,7 @@ def generate_launch_description():
             PathJoinSubstitution([pkg_gz_ros, "launch", "gz_sim.launch.py"])
         ),
         launch_arguments={
-            "gz_args": ["-r -v 4 ", world_file]
+            "gz_args": ["-r -v 4 --render-engine ogre --render-engine-gui ogre ", world_file]
         }.items(),
     )
     
@@ -117,7 +116,7 @@ def generate_launch_description():
             "-topic", "robot_description",
             "-name", "warrior",
             "-allow_renaming", "true",
-            '-x', '0.', '-y', '0.', '-z', '0.3'
+            '-x', '0.', '-y', '0.', '-z', '0.1'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -133,8 +132,14 @@ def generate_launch_description():
             '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
             '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
             '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            "/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat",
+            "/odom_gt@nav_msgs/msg/Odometry[ignition.msgs.Odometry",
         ],
         parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ('/L1_lidar/scan', '/scan'),
+            ('/L1_lidar/scan/points', '/scan/points'),
+        ],
         output='screen',
     )
 

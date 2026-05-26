@@ -17,7 +17,7 @@
       <geometry>
         <box size="${imu_length} ${imu_width} ${imu_height}" />
       </geometry>
-      <material name="orange"/>
+      <material name="cyan"/>
     </visual>
   </link>
 

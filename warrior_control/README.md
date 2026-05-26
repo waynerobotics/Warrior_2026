@@ -14,36 +14,112 @@ This module provides inverse and forward kinematics solutions for a three-wheel 
 
 ## Principle
 
-The swerve drive kinematics is derived from rigid body dynamics principles.
+### Rigid Body Kinematics
 
-### Rigid Body Dynamics
+The kinematics of the swerve drive system are derived based on rigid body motion principles.
 
-<p align="center">
- <img src="./docs/rigid_body_dynamics.png" width="840" alt="Rigid body dynamics diagram"/> 
- <br><b>Fig 1. Rigid Body Dynamics</b>
-</p>
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><b>Fig 1. Schematic of Rigid Body Kinematics</b></td>
+    <td align="center"><b>Fig 2. Warrior Robot Kinematics</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/rigid_body_kinematics.png" height="430"/></td>
+    <td align="center"><img src="./docs/inverse_kinematics.png" height="430"/></td>
+  </tr>
+</table>
+</div>
 
-For a rigid body moving in 2D space, the velocity at any point can be expressed as:
+As illustrated in `Fig. 1`, for two points `A` and `B` on the same rigid body, both points share the same translational motion while point `B` simultaneously rotates about point `A`. Therefore, the velocity relationship between the two points can be expressed as:
 
-$$\mathbf{v}_i = \mathbf{v}_{center} + \boldsymbol{\omega} \times \mathbf{r}_i$$
+$$
+\mathbf{v}_B =
+\mathbf{v}_A +
+\boldsymbol{\omega}
+\times
+\mathbf{r}_{AB}
+$$
 
 where:
-- $\mathbf{v}_i$: velocity of wheel $i$
-- $\mathbf{v}_{center}$: linear velocity of robot center
-- $\boldsymbol{\omega}$: angular velocity of the robot
-- $\mathbf{r}_i$: position vector from center to wheel $i$
 
-### Inverse Kinematics
+- $\mathbf{v}_A$: translational velocity of point `A`
+- $\mathbf{v}_B$: velocity of point `B`
+- $\boldsymbol{\omega}$: angular velocity of point `B` relative to point `A`
+- $\mathbf{r}_{AB}$: position vector from point `A` to point `B`
 
-<p align="center">
- <img src="./docs/inverse_kinematics.png" width="840" alt="Inverse kinematics for three-wheel swerve"/> 
- <br><b>Fig 2. Inverse Kinematics for Warrior</b>
-</p>
+### Warrior Robot Kinematics
 
-Given desired body velocities $(v_x, v_y, \omega_z)$, the module calculates:
-- Wheel steering angles $\theta_f, \theta_l, \theta_r$
-- Wheel driving velocities $v_f, v_l, v_r$
+Based on the rigid body kinematics described above, the kinematics of the Warrior robot can be derived. As in `Fig 2`, given the desired base twist $\xi_b = [v_{bx},\ v_{by},\ \omega_z]^T$, the velocity relationship between the robot base and each swerve module is expressed as:
 
+$$
+\mathbf{v}_i = \mathbf{v}_b + \boldsymbol{\omega} \times \mathbf{r}_{bi}, \qquad i \in \\{1,2,3\\}
+$$
+
+
+where $v_b = [v_{bx}, v_{by}, 0]^T$ denotes the linear velocity of the robot base, $\boldsymbol{\omega} = [0,0,\omega_z]^T$ is the angular velocity of the base, and $v_i = [v_{ix}, v_{iy}, 0]^T$ is the velocity of the $i$-th swerve module. The vector $r_{bi} = [r_{ix}, r_{iy}, 0]^T$ represents the position vector from the robot base to the corresponding swerve module. Accordingly, the kinematic relationship can be expressed in matrix form as:
+
+$$
+\begin{bmatrix}
+v_{ix} \\
+v_{iy}
+\end{bmatrix} =
+\begin{bmatrix}
+1 & 0 & -r_{iy} \\
+0 & 1 & r_{ix}
+\end{bmatrix}
+\begin{bmatrix}
+v_{bx} \\
+v_{by} \\
+\omega_z
+\end{bmatrix},
+\qquad
+i \in \\{1,2,3\\}
+$$
+
+By inverse kinematics, the desired driving velocity and steering angle for each swerve module are given by:
+
+$$
+\|\mathbf{v}_i\|_2 =
+\sqrt{v_{ix}^2 + v_{iy}^2},
+\qquad
+i \in \\{1,2,3\\}
+$$
+
+$$
+\theta_i =
+\mathrm{atan2}(v_{iy}, v_{ix}),
+\qquad
+i \in \\{1,2,3\\}
+$$
+
+The corresponding wheel angular velocity for each separate driving motor can then be computed as:
+
+$$
+\omega_i^{wheel} =
+\frac{\|\mathbf{v}_i\|_2}{R_{i}},
+\qquad
+i \in \\{1,2,3\\}
+$$
+
+where $\|\mathbf{v}_i\|_2$ denotes the desired linear velocity of the $i$-th wheel, $\omega_i^{wheel}$ is the desired angular velocity of the driving wheel, $R_i$ is the wheel radius, and $\theta_i$ represents the desired steering angle of the corresponding steering motor.
+
+
+## Control Flow
+The overall and control pipeline are summarized below:
+
+The robot first receives the desired base twist $\mathbf{\xi}_b$. Through inverse kinematics (IK), the base motion is then transformed into swerve module commands, including the desired steering angle $\mathbf{\theta}_i$ and wheel speed $\omega_i$ for each module. The steering motors track the desired angles using PD control, while the driving motors regulate the wheel speeds through PWM-based velocity control.
+
+```mermaid
+graph LR
+    A["Base Twist​"] -->|IK| B["Swerve Command"]
+
+    B -->|θ_i| C["Steer Angle"]
+    B -->|ω_i| D["Wheel Speed"]
+
+    C -->|PD| E["Steering Motor"]
+    D -->|PWM| F["Driving Motor"]
+```
 
 ## Usage
 

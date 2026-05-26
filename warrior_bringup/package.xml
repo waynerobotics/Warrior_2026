@@ -11,11 +11,16 @@
   <depend>warrior_description</depend>
   <depend>warrior_control</depend>
   <depend>warrior_gazebo</depend>
+  <depend>warrior_system</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher</depend>
   <depend>controller_manager</depend>
   <depend>diff_drive_controller</depend>
   <depend>rviz2</depend>
+  <depend>warrior_joy</depend>
+  <depend>warrior_serial</depend>
+  <depend>warrior_msgs</depend>
+  <depend>joy</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
