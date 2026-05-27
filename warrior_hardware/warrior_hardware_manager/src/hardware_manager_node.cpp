@@ -305,6 +305,7 @@ void HardwareManagerNode::update()
         state_msg.swerve_id              = cfg.name;
         state_msg.steer_position_rad     = rt.fb_steer_position_rad;
         state_msg.steer_velocity_rad_s   = rt.fb_steer_velocity_rad_s;
+        
         // Drive velocity has no encoder feedback in this hardware path; echo the
         // commanded value. Consumers should treat this as open-loop.
         state_msg.drive_velocity_rad_s   = drive_cmd;

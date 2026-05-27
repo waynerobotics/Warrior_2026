@@ -4,7 +4,7 @@
   <name>warrior_description</name>
   <version>0.0.0</version>
   <description>The description of the 2026 WSU warrior robot</description>
-  <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
+  <maintainer email="yihaocai007@gmail.com">Yihao Cai</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

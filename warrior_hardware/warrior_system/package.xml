@@ -4,7 +4,7 @@
   <name>warrior_system</name>
   <version>0.0.0</version>
   <description>A low-level topic-bridge system for controlling Warrior Robots</description>
-  <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
+  <maintainer email="yihaocai007@gmail.com">Yihao Cai</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

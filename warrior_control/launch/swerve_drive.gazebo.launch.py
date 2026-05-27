@@ -126,14 +126,32 @@ def generate_launch_description():
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[
+        arguments=[            
+             # clock
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+
+            # RGB camera
             '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
             '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+
+            # Depth camera
+            '/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+
+            # lidar
             '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
-            "/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat",
-            "/odom_gt@nav_msgs/msg/Odometry[ignition.msgs.Odometry",
+            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+
+            # GPS
+            '/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat',
+
+            # odom
+            '/odom_gt@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+
+            # imu
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
         parameters=[{"use_sim_time": use_sim_time}],
         remappings=[

@@ -10,7 +10,7 @@ ARG UBUNTU_VERSION=22.04
 # ------------ Base Image ------------
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu${UBUNTU_VERSION}
 
-LABEL maintainer="Yihao Cai <yihao.cai@wayne.edu>" \
+LABEL maintainer="Yihao Cai <yihaocai007@gmail.com>" \
       version="v2.0.0" \
       description="X86_64 Platform: ROS2 Humble + CUDA 12.6 + Robotics Libraries" \
       license="Apache-2.0"

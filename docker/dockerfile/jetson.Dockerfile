@@ -5,7 +5,7 @@
 # ------------ Base Image ------------
 FROM nvcr.io/nvidia/l4t-jetpack:r36.4.0
 
-LABEL maintainer="Yihao Cai <yihao.cai@wayne.edu>" \
+LABEL maintainer="Yihao Cai <yihaocai007@gmail.com>" \
       version="v2.0.0" \
       description="Nvidia Jetson: ROS2 Humble + CUDA 12.6 + Robotics Libraries" \
       license="Apache-2.0"

@@ -163,17 +163,18 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
         "/odom_gt", 10,
         [this](const nav_msgs::msg::Odometry::SharedPtr msg)
         {
+            std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
             nav_msgs::msg::Odometry compensated = *msg;
             compensated.pose.pose.position.z += base_link_height_offset_;
             base_link_height_ = compensated.pose.pose.position.z;
             odom_pub_->publish(compensated);
 
             geometry_msgs::msg::TransformStamped tf_msg;
-            tf_msg.header            = compensated.header;
-            tf_msg.child_frame_id    = compensated.child_frame_id;
-            tf_msg.transform.translation.x = compensated.pose.pose.position.x;
-            tf_msg.transform.translation.y = compensated.pose.pose.position.y;
-            tf_msg.transform.translation.z = compensated.pose.pose.position.z;
+            tf_msg.header                   = compensated.header;
+            tf_msg.child_frame_id           = compensated.child_frame_id;
+            tf_msg.transform.translation.x  = compensated.pose.pose.position.x;
+            tf_msg.transform.translation.y  = compensated.pose.pose.position.y;
+            tf_msg.transform.translation.z  = compensated.pose.pose.position.z;
             tf_msg.transform.rotation       = compensated.pose.pose.orientation;
             tf_broadcaster_->sendTransform(tf_msg);
         });
@@ -472,10 +473,10 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
     odom.twist.covariance[35] = kf_cov_(5, 5);
 
     geometry_msgs::msg::TransformStamped tf_msg;
-    tf_msg.header        = odom.header;
-    tf_msg.child_frame_id = base_frame_;
-    tf_msg.transform.translation.x = x_;
-    tf_msg.transform.translation.y = y_;
+    tf_msg.header                   = odom.header;
+    tf_msg.child_frame_id           = base_frame_;
+    tf_msg.transform.translation.x  = x_;
+    tf_msg.transform.translation.y  = y_;
     tf_msg.transform.rotation       = odom.pose.pose.orientation;
     tf_broadcaster_->sendTransform(tf_msg);
 }
