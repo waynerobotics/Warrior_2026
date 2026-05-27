@@ -1,0 +1,7 @@
+yolo_node:
+  ros__parameters:
+    image_topic: camera/image_raw
+    mask_topic: ai/segmentation_mask
+    detections_topic: ai/detections
+    model_path: ""        # e.g. /opt/warrior/models/yolov8n-seg.pt
+    confidence_threshold: 0.25
