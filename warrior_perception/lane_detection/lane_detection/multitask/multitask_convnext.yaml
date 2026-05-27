@@ -1,0 +1,91 @@
+# ConvNeXt-B backbone — high-accuracy, ImageNet pretrained
+# Detection classes (0-indexed): barrel, pedestrian, stop_sign, unknown, tire, pothole
+backbone:
+  name: convnext_base
+  in_channels: 3
+  pretrained: true
+
+fpn:
+  out_channels: 256
+
+detection:
+  enabled: true
+  num_classes: 6
+  score_threshold: 0.20
+  nms_threshold: 0.5
+  max_detections: 100
+  class_names: [barrel, pedestrian, stop_sign, unknown, tire, pothole]
+
+segmentation:
+  enabled: true
+  num_classes: 2
+  loss: ce
+  ignore_index: -100
+  class_weights: [1.0, 3.0]
+
+optimizer:
+  lr: 0.00005    # lower LR for large pretrained model
+
+freeze_backbone_epochs: 5   # heads-only warmup before unfreezing backbone
+backbone_lr_scale: 0.1      # backbone gets 10% of head LR after unfreeze
+
+dataset:
+  train_manifest: data/train_manifest.json
+  val_manifest: data/val_manifest.json
+  image_root: .
+  seg_root: .
+  image_size: [640, 1280]
+  num_workers: 4
+  normalize: true
+
+augment:
+  albumentations:
+    enabled: true
+    horizontal_flip_p: 0.0
+    affine:
+      enabled: true
+      scale_limit: 0.08
+      translate_percent: 0.05
+      rotate_limit: 4.0
+      p: 0.40
+    brightness_contrast:
+      enabled: true
+      brightness_limit: 0.25
+      contrast_limit: 0.25
+      p: 0.50
+    hue_saturation:
+      enabled: true
+      hue_shift_limit: 8
+      sat_shift_limit: 15
+      val_shift_limit: 15
+      p: 0.30
+    blur:
+      enabled: true
+      blur_limit: 5
+      p: 0.15
+  circular_shift:
+    enabled: false
+    max_fraction: 0.15
+    shift_boxes: false
+
+loss_weights:
+  detection: 1.0
+  segmentation: 1.0
+
+mixed_precision:
+  enabled: true
+
+early_stopping:
+  enabled: true
+  patience: 12
+  min_delta: 0.001
+
+label_source: manual
+roi_mode: none
+loss_weighting: manual
+epochs: 50
+batch_size: 2        # large model — reduce batch to fit GPU memory
+log_every: 10
+seed: 42
+device: auto
+experiment_name: backbone_sweep_v1
