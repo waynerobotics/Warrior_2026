@@ -74,6 +74,17 @@ RUN apt-get update && apt-get install -y \
     ros-${ROS_DISTRO}-ros-gz-bridge \
     ros-${ROS_DISTRO}-gazebo-ros2-control \
     ros-${ROS_DISTRO}-gz-ros2-control \
+    ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-v4l2-camera \
+    ros-${ROS_DISTRO}-vision-msgs \
+    ros-${ROS_DISTRO}-sensor-msgs-py \
+    ros-${ROS_DISTRO}-pcl-conversions \
+    libpcl-dev \
+    python3-opencv \
+    python3-pyqt5 \
+    python3-yaml \
+    v4l-utils \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -134,7 +145,15 @@ RUN --mount=type=ssh \
 USER ${USERNAME}
 WORKDIR ${ROS2_WS_PATH}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
-    colcon build --packages-up-to warrior_bringup --symlink-install || true
+    colcon build \
+      --packages-up-to \
+        warrior_bringup \
+        unitree_lidar_ros2 \
+        unitree_l2_lidar \
+        insta360_camera \
+        ai_perception \
+        omnivision \
+      --symlink-install || true
 
 
 # ------------ Entrypoint ------------
