@@ -3,7 +3,7 @@
 <package format="3">
   <name>warrior_system</name>
   <version>0.0.0</version>
-  <description>A low-level topic-bridge system for controlling Warrior Robots</description>
+  <description>A low-level topic-bridge system for controlling Warrior Robot</description>
   <maintainer email="yihaocai007@gmail.com">Yihao Cai</maintainer>
   <license>Apache License 2.0</license>
 
