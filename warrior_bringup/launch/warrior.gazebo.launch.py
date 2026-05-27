@@ -7,7 +7,7 @@ For new projects, use the centralized launcher system:
   Or:  ros2 launch warrior_bringup swerve_sim.launch.py [world_name:=...]
   Or:  ros2 launch warrior_bringup diff_sim.launch.py [world_name:=...]
 
-See LAUNCH_USAGE.md for complete documentation and migration guide.
+See warrior_bringup/README.md for complete documentation.
 """
 from launch import LaunchDescription
 from launch.actions import (
