@@ -4,8 +4,8 @@
     <ros2_control name="warrior_robot_ros2_control" type="system">
         <hardware>
             <plugin>warrior_system/SwerveTopicBridge</plugin>
-            <param name="joint_commands_topic">/warrior_joint_commands</param>
-            <param name="joint_states_topic">/warrior_joint_states</param>
+            <param name="swerve_command_topic">/warrior_swerve_command</param>
+            <param name="swerve_state_topic">/warrior_swerve_state</param>
         </hardware>
         <joint name="left_steer_joint">
             <command_interface name="position"/>
