@@ -50,10 +50,8 @@ private:
     void on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg);
     void update();
     void publish_diagnostics();
-    void ingest_slcan_feedback();
     void drain_and_log_arduino_messages();
     Module * find_module(const std::string & name);
-    Module * find_module_by_can_id(int can_id);
 
     std::vector<Module> modules_;
     std::unordered_map<std::string, std::size_t> module_index_;

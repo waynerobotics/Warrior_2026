@@ -18,14 +18,15 @@ foreach(dep IN ITEMS ${THIS_PACKAGE_DEPS})
   find_package(${dep} REQUIRED)
 endforeach()
 
+find_package(Threads REQUIRED)
+
 add_executable(warrior_hardware_manager_node
   src/main.cpp
   src/hardware_manager_node.cpp
   src/arduino_serial_device.cpp
-  src/sparkmax_slcan_device.cpp
+  src/sparkmax_session.cpp
   src/device_registry.cpp
 )
-find_package(Threads REQUIRED)
 target_link_libraries(warrior_hardware_manager_node Threads::Threads)
 target_include_directories(warrior_hardware_manager_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -34,7 +35,18 @@ target_include_directories(warrior_hardware_manager_node PUBLIC
 target_compile_features(warrior_hardware_manager_node PUBLIC cxx_std_17)
 ament_target_dependencies(warrior_hardware_manager_node ${THIS_PACKAGE_DEPS})
 
-install(TARGETS warrior_hardware_manager_node
+add_executable(nudge_sparks_cli
+  src/nudge_sparks_cli.cpp
+  src/sparkmax_session.cpp
+)
+target_link_libraries(nudge_sparks_cli Threads::Threads)
+target_include_directories(nudge_sparks_cli PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(nudge_sparks_cli PUBLIC cxx_std_17)
+
+install(TARGETS warrior_hardware_manager_node nudge_sparks_cli
   DESTINATION lib/${PROJECT_NAME}
 )
 

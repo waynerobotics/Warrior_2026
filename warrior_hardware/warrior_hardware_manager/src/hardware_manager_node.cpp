@@ -48,8 +48,10 @@ HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_mana
     diagnostics_rate_hz_ = declare_parameter<double>("diagnostics_rate_hz", 1.0);
     baud_rate_           = declare_parameter<int>("arduino.baud_rate", 115200);
 
-    const auto slcan_port    = declare_parameter<std::string>("sparkmax.slcan_interface", "auto");
-    const auto slcan_bitrate = declare_parameter<std::string>("sparkmax.bitrate_code", "8");
+    // Declared but unused — kept so existing YAML configs don't generate
+    // "parameter not declared" warnings while folks migrate.
+    (void) declare_parameter<std::string>("sparkmax.slcan_interface", "auto");
+    (void) declare_parameter<std::string>("sparkmax.bitrate_code", "8");
 
     load_modules();
 
@@ -62,12 +64,16 @@ HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_mana
         }
     }
 
-    DeviceRegistry::SlcanConfig slcan_cfg;
-    slcan_cfg.port = slcan_port;
-    slcan_cfg.bitrate_code = slcan_bitrate.empty() ? '8' : slcan_bitrate.front();
+    DeviceRegistry::SparkConfig spark_cfg;
+    spark_cfg.wanted_can_ids.reserve(modules_.size());
+    for (const auto & m : modules_) {
+        if (m.config.spark_can_id > 0) {
+            spark_cfg.wanted_can_ids.push_back(m.config.spark_can_id);
+        }
+    }
 
     registry_ = std::make_unique<DeviceRegistry>(
-        get_logger(), std::move(arduino_cfg), std::move(slcan_cfg),
+        get_logger(), std::move(arduino_cfg), std::move(spark_cfg),
         std::chrono::duration<double>(discovery_period_s_));
     registry_->start();
 
@@ -92,11 +98,10 @@ HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_mana
 
     RCLCPP_INFO(get_logger(),
         "warrior_hardware_manager up: %zu modules, sub=%s, pub=%s, rate=%.1f Hz, "
-        "timeout=%.2fs, steer_stale=%.2fs, baud=%d, slcan=%s @ S%c, scan=%.1fs, diag=%.1f Hz",
+        "timeout=%.2fs, steer_stale=%.2fs, baud=%d, scan=%.1fs, diag=%.1f Hz",
         modules_.size(), command_topic_.c_str(), state_topic_.c_str(),
         update_rate_hz_, command_timeout_s_, steer_stale_after_s_, baud_rate_,
-        slcan_port.c_str(), slcan_cfg.bitrate_code, discovery_period_s_,
-        diagnostics_rate_hz_);
+        discovery_period_s_, diagnostics_rate_hz_);
 }
 
 HardwareManagerNode::~HardwareManagerNode()
@@ -160,14 +165,6 @@ HardwareManagerNode::Module * HardwareManagerNode::find_module(const std::string
     return &modules_[it->second];
 }
 
-HardwareManagerNode::Module * HardwareManagerNode::find_module_by_can_id(int can_id)
-{
-    for (auto & m : modules_) {
-        if (m.config.spark_can_id == can_id) return &m;
-    }
-    return nullptr;
-}
-
 void HardwareManagerNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg)
 {
     Module * module = find_module(msg->swerve_id);
@@ -203,40 +200,11 @@ void HardwareManagerNode::drain_and_log_arduino_messages()
     }
 }
 
-void HardwareManagerNode::ingest_slcan_feedback()
-{
-    if (!registry_) return;
-
-    const auto now = this->now();
-    for (const auto & frame : registry_->drain_slcan_frames()) {
-        const auto status = sparkmax::identify_periodic_status(frame.arbitration_id);
-        if (!status) continue;
-
-        Module * module = find_module_by_can_id(static_cast<int>(status->can_id));
-        if (!module) continue;
-
-        if (status->status_index == sparkmax::STATUS_INDEX_POSITION && frame.dlc >= 4) {
-            const float motor_rot = sparkmax::decode_status_position_rotations(frame.data.data());
-            module->runtime.fb_steer_position_rad =
-                motor_rotations_to_steer_rad(static_cast<double>(motor_rot), module->config);
-            module->runtime.last_steer_pos_time = now;
-        } else if (status->status_index == sparkmax::STATUS_INDEX_VELOCITY && frame.dlc >= 4) {
-            const float motor_rpm = sparkmax::decode_status_velocity_rpm(frame.data.data());
-            module->runtime.fb_steer_velocity_rad_s =
-                motor_rpm_to_steer_rad_s(static_cast<double>(motor_rpm), module->config);
-            module->runtime.last_steer_vel_time = now;
-        }
-    }
-}
-
 void HardwareManagerNode::update()
 {
     const auto now = this->now();
 
     drain_and_log_arduino_messages();
-    ingest_slcan_feedback();
-
-    const bool slcan_connected = registry_ && registry_->is_slcan_connected();
 
     for (auto & module : modules_) {
         const auto & cfg = module.config;
@@ -270,16 +238,34 @@ void HardwareManagerNode::update()
             registry_->send_drive_percent(cfg.drive_device_name, 0);
         }
 
-        // ── Steer path (SPARK MAX over SLCAN) ────────────────────────────
+        // ── Steer path (SPARK MAX over per-USB SLCAN) ────────────────────
+        const bool spark_connected =
+            registry_ && registry_->is_spark_connected(cfg.spark_can_id);
+
+        // Pull latest position from the session — updates rt.fb_steer_*
+        // and rt.last_steer_pos_time from registry state.
+        if (spark_connected) {
+            const auto pos_rot = registry_->spark_position_rot(cfg.spark_can_id);
+            const double pos_age =
+                registry_->seconds_since_spark_position(cfg.spark_can_id, now);
+            if (pos_rot.has_value() && pos_age >= 0.0
+                && pos_age < steer_stale_after_s_)
+            {
+                rt.fb_steer_position_rad =
+                    motor_rotations_to_steer_rad(static_cast<double>(*pos_rot), cfg);
+                rt.last_steer_pos_time = now - rclcpp::Duration::from_seconds(pos_age);
+            }
+        }
+
         const bool steer_pos_fresh =
             rt.last_steer_pos_time.nanoseconds() > 0 &&
             (now - rt.last_steer_pos_time).seconds() < steer_stale_after_s_;
 
         std::string steer_status;
         bool steer_connected_now = false;
-        if (!slcan_connected) {
+        if (!spark_connected) {
             steer_status = "scanning";
-        } else if (rt.have_command) {
+        } else if (rt.have_command && !timed_out) {
             const bool ok = registry_->send_steer_position(
                 cfg.spark_can_id, static_cast<float>(motor_rotations));
             steer_connected_now = ok && steer_pos_fresh;
@@ -291,6 +277,9 @@ void HardwareManagerNode::update()
                 steer_status = "active";
             }
         } else {
+            // No command (or command timed out) — stop driving setpoints but
+            // keep the session's heartbeat going so status frames flow.
+            registry_->release_steer(cfg.spark_can_id);
             steer_status = steer_pos_fresh ? "idle" : "no_feedback";
             steer_connected_now = steer_pos_fresh;
         }
@@ -369,20 +358,26 @@ void HardwareManagerNode::publish_diagnostics()
         msg.status.push_back(st);
     }
 
-    {
+    for (const auto & module : modules_) {
+        const auto & cfg = module.config;
         diagnostic_msgs::msg::DiagnosticStatus st;
-        st.name        = "warrior_hardware_manager: slcan_adapter";
-        const std::string port = registry_->slcan_port();
-        st.hardware_id = port.empty() ? "(not connected)" : port;
-        if (port.empty()) {
+        st.name        = "warrior_hardware_manager: spark " + std::to_string(cfg.spark_can_id)
+                         + " (" + cfg.name + ")";
+        const std::string port = registry_->spark_port(cfg.spark_can_id);
+        const bool connected = !port.empty();
+        st.hardware_id = connected ? port : "(not connected)";
+        if (!connected) {
             st.level   = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
-            st.message = "SLCAN adapter not connected";
+            st.message = "SPARK MAX not on USB";
         } else {
+            const auto applied = registry_->spark_applied_pct(cfg.spark_can_id);
             st.level   = diagnostic_msgs::msg::DiagnosticStatus::OK;
             st.message = "connected on " + port;
+            st.values.push_back(kv("applied_pct", applied.value_or(0.0f)));
         }
-        st.values.push_back(kv("connected", !port.empty()));
-        st.values.push_back(kv("port",      port.empty() ? std::string("(none)") : port));
+        st.values.push_back(kv("connected", connected));
+        st.values.push_back(kv("port", connected ? port : std::string("(none)")));
+        st.values.push_back(kv("can_id", cfg.spark_can_id));
         msg.status.push_back(st);
     }
 
