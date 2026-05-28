@@ -4,7 +4,7 @@ ROS 2 workspace for the Warrior swerve robot. Drive velocity is handled by
 three swerve Arduinos addressed by name over USB-serial; steering position
 is handled by three REV SPARK MAX motor controllers over USB-SLCAN. A
 `/cmd_vel` (Twist) → `swerve_drive_controller` → `SwerveTopicBridge` →
-`warrior_hardware_manager` pipeline fans commands to both transports. See
+`warrior_motor_manager` pipeline fans commands to both transports. See
 [warrior_hardware/README.md](warrior_hardware/README.md) for the topic-level
 diagram and [warrior_hardware/TEST_PLAN.md](warrior_hardware/TEST_PLAN.md)
 for the bring-up walkthrough.
@@ -20,12 +20,12 @@ When you find a new USB auto-connect issue, append it here with the date
    reboots and replugs. Discover devices, don't pin them.
 2. **Arduinos identify by handshake.** Send `<WHO>`, wait for `<NAME,…>`.
    Helper: `ArduinoSerialDevice::handshake()` in
-   [warrior_hardware/warrior_hardware_manager/src/arduino_serial_device.cpp](warrior_hardware/warrior_hardware_manager/src/arduino_serial_device.cpp).
+  [warrior_hardware/warrior_motor_manager/src/arduino_serial_device.cpp](warrior_hardware/warrior_motor_manager/src/arduino_serial_device.cpp).
 3. **SPARK MAXes have no software handshake.** They stream status frames
    unprompted. Identify by the lower 6 bits of any incoming CAN ID
    (`can_id & 0x3F == device_id`). Set the device_id once in REV Hardware
    Client and treat it as the only source of truth (logical name →
-   device_id table lives in `hardware_manager.yaml`).
+  device_id table lives in `motor_manager.yaml`).
 4. **SPARK MAX mode-broadcast byte 0 is a per-device-id bitmask.** Frame
    `T02052C80…`'s first data byte = `(1 << device_id)` enables that
    controller to follow setpoints; OR multiple bits together to drive
@@ -46,11 +46,11 @@ When you find a new USB auto-connect issue, append it here with the date
 6. **Open serial ports exclusively.** `TIOCEXCL` on Linux. Without this,
    two nodes will fight over the same port and both will see corrupted
    bytes. See
-   [arduino_serial_device.cpp:74](warrior_hardware/warrior_hardware_manager/src/arduino_serial_device.cpp#L74)
+  [arduino_serial_device.cpp:74](warrior_hardware/warrior_motor_manager/src/arduino_serial_device.cpp#L74)
    (`ioctl(fd, TIOCEXCL)`).
 7. **Wait after opening an Arduino.** DTR toggles on open and triggers a
    reset; the sketch is unresponsive for ~2 s. `ARDUINO_RESET_DELAY` in
-   [device_registry.cpp:16](warrior_hardware/warrior_hardware_manager/src/device_registry.cpp#L16).
+  [device_registry.cpp:16](warrior_hardware/warrior_motor_manager/src/device_registry.cpp#L16).
 8. **Skip `/dev/ttyS*` during scans.** Those are hardware UARTs, not our
    devices, and opens are slow.
 9. **Filter probe replies strictly.** Devices stream `<MOT,…>` or SLCAN
@@ -79,7 +79,7 @@ When you find a new USB auto-connect issue, append it here with the date
   scan each Spark port for ~1 s to read the device_id from the lower 6
   bits of any incoming CAN ID. Helper: `_find_spark_by_device_id()` in
   `warrior_serial/test_swerve_module.py` (legacy path; replaced by C++
-  port in [warrior_hardware_manager](warrior_hardware/warrior_hardware_manager/)
+  port in [warrior_motor_manager](warrior_hardware/warrior_motor_manager/)
   TBD).
 - **2026-05-17** — Mode-broadcast byte 0 is a device-id bitmask, not a
   control-mode enum. All three SPARK MAXes were originally at CAN ID 1,
@@ -140,7 +140,7 @@ When you find a new USB auto-connect issue, append it here with the date
 ## Repository layout
 
 - [warrior_hardware/](warrior_hardware/) — the real-robot stack:
-  - [warrior_hardware_manager/](warrior_hardware/warrior_hardware_manager/) —
+   - [warrior_motor_manager/](warrior_hardware/warrior_motor_manager/) —
     C++ node that owns every USB connection (drive Arduinos + SPARK
     MAXes), subscribes `/warrior_swerve_command`, publishes
     `/warrior_swerve_state`.

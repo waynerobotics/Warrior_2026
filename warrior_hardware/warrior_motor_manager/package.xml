@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>warrior_hardware_manager</name>
+  <name>warrior_motor_manager</name>
   <version>0.0.0</version>
   <description>Non-realtime hardware I/O for the Warrior robot. Translates per-module commands into Arduino serial / SPARK MAX SLCAN traffic and reports module state back.</description>
   <maintainer email="lord.daniel.w@hotmail.com">fire</maintainer>

@@ -10,16 +10,16 @@
 #include <warrior_msgs/msg/swerve_cmd.hpp>
 #include <warrior_msgs/msg/swerve_state.hpp>
 
-#include "warrior_hardware/device_registry.hpp"
-#include "warrior_hardware/module_config.hpp"
+#include "warrior_motor_manager/device_registry.hpp"
+#include "warrior_motor_manager/module_config.hpp"
 
 namespace warrior::hardware {
 
-class HardwareManagerNode : public rclcpp::Node
+class MotorManagerNode : public rclcpp::Node
 {
 public:
-    HardwareManagerNode();
-    ~HardwareManagerNode() override;
+    MotorManagerNode();
+    ~MotorManagerNode() override;
 
     // Called by main() before rclcpp::shutdown so the last serial write goes out.
     void send_safe_stop();

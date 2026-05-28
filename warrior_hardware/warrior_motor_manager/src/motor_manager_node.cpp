@@ -1,13 +1,13 @@
-#include "warrior_hardware/hardware_manager_node.hpp"
+#include "warrior_motor_manager/motor_manager_node.hpp"
 
 #include <chrono>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 #include <diagnostic_msgs/msg/key_value.hpp>
 
-#include "warrior_hardware/serial_protocol.hpp"
-#include "warrior_hardware/sparkmax_frame.hpp"
-#include "warrior_hardware/unit_conversions.hpp"
+#include "warrior_motor_manager/serial_protocol.hpp"
+#include "warrior_motor_manager/sparkmax_frame.hpp"
+#include "warrior_motor_manager/unit_conversions.hpp"
 
 namespace warrior::hardware {
 
@@ -37,7 +37,7 @@ diagnostic_msgs::msg::KeyValue kv(const std::string & key, int value)
 
 }  // namespace
 
-HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_manager")
+MotorManagerNode::MotorManagerNode() : rclcpp::Node("warrior_motor_manager")
 {
     command_topic_       = declare_parameter<std::string>("command_topic", "/warrior_swerve_command");
     state_topic_         = declare_parameter<std::string>("state_topic",   "/warrior_swerve_state");
@@ -79,7 +79,7 @@ HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_mana
 
     cmd_sub_ = create_subscription<warrior_msgs::msg::SwerveCmd>(
         command_topic_, rclcpp::QoS(10),
-        std::bind(&HardwareManagerNode::on_command, this, std::placeholders::_1));
+        std::bind(&MotorManagerNode::on_command, this, std::placeholders::_1));
 
     state_pub_ = create_publisher<warrior_msgs::msg::SwerveState>(
         state_topic_, rclcpp::QoS(10));
@@ -89,29 +89,29 @@ HardwareManagerNode::HardwareManagerNode() : rclcpp::Node("warrior_hardware_mana
     const auto update_period = std::chrono::duration<double>(1.0 / update_rate_hz_);
     update_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(update_period),
-        std::bind(&HardwareManagerNode::update, this));
+        std::bind(&MotorManagerNode::update, this));
 
     const auto diag_period = std::chrono::duration<double>(1.0 / diagnostics_rate_hz_);
     diag_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(diag_period),
-        std::bind(&HardwareManagerNode::publish_diagnostics, this));
+        std::bind(&MotorManagerNode::publish_diagnostics, this));
 
     RCLCPP_INFO(get_logger(),
-        "warrior_hardware_manager up: %zu modules, sub=%s, pub=%s, rate=%.1f Hz, "
+        "warrior_motor_manager up: %zu modules, sub=%s, pub=%s, rate=%.1f Hz, "
         "timeout=%.2fs, steer_stale=%.2fs, baud=%d, scan=%.1fs, diag=%.1f Hz",
         modules_.size(), command_topic_.c_str(), state_topic_.c_str(),
         update_rate_hz_, command_timeout_s_, steer_stale_after_s_, baud_rate_,
         discovery_period_s_, diagnostics_rate_hz_);
 }
 
-HardwareManagerNode::~HardwareManagerNode()
+MotorManagerNode::~MotorManagerNode()
 {
     if (registry_) {
         registry_->stop();
     }
 }
 
-void HardwareManagerNode::send_safe_stop()
+void MotorManagerNode::send_safe_stop()
 {
     if (registry_) {
         RCLCPP_INFO(get_logger(), "shutdown: sending drive 0%% to all connected Arduinos");
@@ -119,7 +119,7 @@ void HardwareManagerNode::send_safe_stop()
     }
 }
 
-void HardwareManagerNode::load_modules()
+void MotorManagerNode::load_modules()
 {
     const auto names = declare_parameter<std::vector<std::string>>(
         "module_names", std::vector<std::string>{});
@@ -158,14 +158,14 @@ void HardwareManagerNode::load_modules()
     }
 }
 
-HardwareManagerNode::Module * HardwareManagerNode::find_module(const std::string & name)
+MotorManagerNode::Module * MotorManagerNode::find_module(const std::string & name)
 {
     auto it = module_index_.find(name);
     if (it == module_index_.end()) return nullptr;
     return &modules_[it->second];
 }
 
-void HardwareManagerNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg)
+void MotorManagerNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg)
 {
     Module * module = find_module(msg->swerve_id);
     if (!module) {
@@ -179,7 +179,7 @@ void HardwareManagerNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedP
     module->runtime.last_command_time        = this->now();
 }
 
-void HardwareManagerNode::drain_and_log_arduino_messages()
+void MotorManagerNode::drain_and_log_arduino_messages()
 {
     if (!registry_) return;
     for (const auto & [device_name, line] : registry_->drain_arduino_messages()) {
@@ -200,7 +200,7 @@ void HardwareManagerNode::drain_and_log_arduino_messages()
     }
 }
 
-void HardwareManagerNode::update()
+void MotorManagerNode::update()
 {
     const auto now = this->now();
 
@@ -210,8 +210,7 @@ void HardwareManagerNode::update()
         const auto & cfg = module.config;
         auto & rt = module.runtime;
 
-        const bool timed_out =
-            rt.have_command &&
+        const bool timed_out = rt.have_command &&
             (now - rt.last_command_time).seconds() > command_timeout_s_;
 
         const double steer_cmd = rt.have_command ? rt.cmd_steer_position_rad : 0.0;
@@ -307,7 +306,7 @@ void HardwareManagerNode::update()
     }
 }
 
-void HardwareManagerNode::publish_diagnostics()
+void MotorManagerNode::publish_diagnostics()
 {
     if (!registry_) return;
     const auto now = this->now();
@@ -320,7 +319,7 @@ void HardwareManagerNode::publish_diagnostics()
         const auto & rt  = module.runtime;
 
         diagnostic_msgs::msg::DiagnosticStatus st;
-        st.name        = "warrior_hardware_manager: " + cfg.name;
+        st.name        = "warrior_motor_manager: " + cfg.name;
         st.hardware_id = cfg.drive_device_name + " / spark can=" + std::to_string(cfg.spark_can_id);
 
         const bool drive_ok = registry_->is_arduino_connected(cfg.drive_device_name);
@@ -361,7 +360,7 @@ void HardwareManagerNode::publish_diagnostics()
     for (const auto & module : modules_) {
         const auto & cfg = module.config;
         diagnostic_msgs::msg::DiagnosticStatus st;
-        st.name        = "warrior_hardware_manager: spark " + std::to_string(cfg.spark_can_id)
+        st.name        = "warrior_motor_manager: spark " + std::to_string(cfg.spark_can_id)
                          + " (" + cfg.name + ")";
         const std::string port = registry_->spark_port(cfg.spark_can_id);
         const bool connected = !port.empty();

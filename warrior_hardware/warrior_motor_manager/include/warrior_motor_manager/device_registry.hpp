@@ -15,8 +15,8 @@
 #include <rclcpp/logger.hpp>
 #include <rclcpp/time.hpp>
 
-#include "warrior_hardware/arduino_serial_device.hpp"
-#include "warrior_hardware/sparkmax_session.hpp"
+#include "warrior_motor_manager/arduino_serial_device.hpp"
+#include "warrior_motor_manager/sparkmax_session.hpp"
 
 namespace warrior::hardware {
 

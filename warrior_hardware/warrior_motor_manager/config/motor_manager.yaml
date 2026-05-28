@@ -1,7 +1,7 @@
-warrior_hardware_manager:
+warrior_motor_manager:
   ros__parameters:
-    command_topic: "/warrior_swerve_command"
     state_topic:   "/warrior_swerve_state"
+    command_topic: "/warrior_swerve_command"
 
     update_rate_hz:      50.0
     discovery_period_s:   2.0

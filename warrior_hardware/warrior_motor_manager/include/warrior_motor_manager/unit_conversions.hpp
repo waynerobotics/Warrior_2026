@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "warrior_hardware/module_config.hpp"
+#include "warrior_motor_manager/module_config.hpp"
 
 namespace warrior::hardware {
 

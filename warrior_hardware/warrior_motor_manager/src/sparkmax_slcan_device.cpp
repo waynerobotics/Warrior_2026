@@ -1,4 +1,4 @@
-#include "warrior_hardware/sparkmax_slcan_device.hpp"
+#include "warrior_motor_manager/sparkmax_slcan_device.hpp"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -9,7 +9,7 @@
 #include <chrono>
 #include <thread>
 
-#include "warrior_hardware/sparkmax_frame.hpp"
+#include "warrior_motor_manager/sparkmax_frame.hpp"
 
 namespace warrior::hardware {
 

@@ -21,7 +21,7 @@ See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
                                                                   │
                                                                   ▼
                                                   ┌──────────────────────────────┐
-                                                  │ warrior_hardware_manager     │
+                                                  │ warrior_motor_manager     │
                                                   │ owns every USB connection    │
                                                   └──┬──────────────────────┬────┘
                                                      │                      │
@@ -35,7 +35,7 @@ See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
                                                      │                      │ Status 0 / 2 frames
                                                      ▼                      ▼
                                                   ┌──────────────────────────────┐
-                                                  │ warrior_hardware_manager     │
+                                                  │ warrior_motor_manager     │
                                                   │ publishes /warrior_swerve_state │
                                                   └──────────────────────────────┘
 ```
@@ -44,7 +44,7 @@ See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
 
 | Package | Language | Role |
 |---|---|---|
-| [warrior_hardware_manager](warrior_hardware_manager/) | C++ | One node, one process. Owns USB discovery + reconnect, fans `SwerveCmd` to drive Arduinos and SPARK MAXes, drains feedback. |
+| [warrior_motor_manager](warrior_motor_manager/) | C++ | One node, one process. Owns USB discovery + reconnect, fans `SwerveCmd` to drive Arduinos and SPARK MAXes, drains feedback. |
 | [warrior_system](warrior_system/) | C++ | ros2_control `SystemInterface` plugin (`warrior::system::SwerveTopicBridge`). Translates joint-level command/state interfaces to/from `/warrior_swerve_command` & `/warrior_swerve_state`. |
 | [warrior_serial](warrior_serial/) | Python | Legacy + reference. The drive bridge is dead, but `nudge_sparks.py` and `sniff_usb.py` are the authoritative SPARK MAX SLCAN reference until the C++ port lands. |
 
@@ -65,7 +65,7 @@ See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
 
 Each SPARK MAX is its own SLCAN-over-USB endpoint — there is no shared
 CAN bus / external adapter. Logical-name ↔ `device_id` mapping lives in
-[warrior_hardware_manager/config/hardware_manager.yaml](warrior_hardware_manager/config/hardware_manager.yaml).
+[warrior_motor_manager/config/motor_manager.yaml](warrior_motor_manager/config/motor_manager.yaml).
 
 ## Wire protocol
 
@@ -115,16 +115,16 @@ silently misbehaves.
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-up-to warrior_hardware_manager warrior_system --symlink-install
+colcon build --packages-up-to warrior_motor_manager warrior_system --symlink-install
 source install/setup.bash
 
 # Manager alone (no controller):
-ros2 launch warrior_hardware_manager hardware_manager.launch.py
+ros2 launch warrior_motor_manager hardware_manager.launch.py
 
 # Full real-robot stack (controller_manager + bridge + manager):
 ros2 launch warrior_control swerve_drive.real.launch.py
 # (in another terminal)
-ros2 launch warrior_hardware_manager hardware_manager.launch.py
+ros2 launch warrior_motor_manager hardware_manager.launch.py
 ```
 
 For step-by-step bring-up + pass/fail criteria per phase, see

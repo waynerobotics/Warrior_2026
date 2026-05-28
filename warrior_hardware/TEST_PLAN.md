@@ -13,7 +13,7 @@ its **Pass** criteria are met.
                                           /warrior_swerve_command   (SwerveCmd, 3 msgs / tick)
                                                           │
                                                           ▼
-                                      warrior_hardware_manager
+ros2 launch warrior_motor_manager hardware_manager.launch.py
                                           │                  │
                                           │ <DRV,name,pct>   │ SPARK MAX position setpoints
                                           ▼                  ▼
@@ -26,20 +26,19 @@ its **Pass** criteria are met.
                                               periodic status frames
                                                           │
                                                           ▼
-                                      warrior_hardware_manager
+                                      warrior_motor_manager
                                                           │
                                                           ▼
                                           /warrior_swerve_state   (SwerveState, 3 msgs / tick)
                                                           │
                                                           ▼
-                                                  SwerveTopicBridge ─▶ controller (state ifs)
 ```
 
 ## Setup (once)
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-up-to warrior_hardware_manager warrior_system --symlink-install
+colcon build --packages-up-to warrior_motor_manager warrior_system --symlink-install
 source install/setup.bash
 ```
 
@@ -57,11 +56,9 @@ sudo apt install can-utils setserial socat
 types, and the discovery loop runs without crashing.
 
 ```bash
-ros2 launch warrior_hardware_manager hardware_manager.launch.py
+ros2 launch warrior_motor_manager hardware_manager.launch.py
 ```
-
 In another terminal:
-
 ```bash
 ros2 topic list | grep -E 'swerve|diag'
 ros2 topic info /warrior_swerve_command   # should be warrior_msgs/msg/SwerveCmd
@@ -69,7 +66,7 @@ ros2 topic info /warrior_swerve_state     # should be warrior_msgs/msg/SwerveSta
 ros2 topic hz   /warrior_swerve_state     # should be ~150 Hz (3 modules × 50 Hz)
 ros2 topic hz   /diagnostics              # should be ~1 Hz
 ```
-
+ros2 topic pub --once /warrior_swerve_command warrior_msgs/msg/SwerveCmd \
 **Pass:** all 3 topics exist with the right types, hz matches expected rates,
 no segfaults, log shows `[discovery] scanning: 3 Arduino(s) missing, slcan=missing`
 every 2 s.
@@ -82,10 +79,8 @@ every 2 s.
 echoes it through to the diagnostics.
 
 ```bash
-ros2 topic pub --once /warrior_swerve_command warrior_msgs/msg/SwerveCmd \
   "{swerve_id: 'front', steer_position_rad: 1.5708, drive_velocity_rad_s: 30.0}"
 
-ros2 topic echo --once /warrior_swerve_state | head -12
 ros2 topic echo --once /diagnostics | head -40
 ```
 
@@ -117,14 +112,12 @@ warning), diagnostics reflect the command timestamp.
    ```
 
 6. Sniff the serial in a third terminal (while hardware_manager has the port
-   open you cannot also open it — instead stop hardware_manager and watch
    first, or use a USB pass-through):
 
    ```bash
    # Stop hardware_manager, then:
    stty -F /dev/ttyACM0 115200 raw -echo
    cat /dev/ttyACM0   # expect <DRV,02_swerve,50> at 50 Hz once node restarts
-   ```
 
 7. `ros2 topic echo /warrior_swerve_state` should show `drive_connected: true`
    and `drive_status: active` for `front`.
@@ -145,7 +138,6 @@ the wire, timeout flips to 0 % when commands stop, motor stops within ~500 ms.
 3. All three should appear in the log within ~10 s. `/diagnostics` for `front`,
    `left`, `right` all show `drive_connected: true`.
 4. Drive each module independently:
-
    ```bash
    for m in front left right; do
      ros2 topic pub --once /warrior_swerve_command warrior_msgs/msg/SwerveCmd \
@@ -168,26 +160,20 @@ detected within 2 s, hot-replug reconnects without restarting hardware_manager.
 
 **Goal:** SLCAN discovery + `V`-probe doesn't collide with the Arduino probe.
 
-1. Plug in the CAN adapter alongside the Arduinos.
 2. Restart hardware_manager.
-3. Log should show `[discovery] connected SLCAN on /dev/ttyACMx (auto)`.
 4. `/diagnostics` for `slcan_adapter` flips from ERROR → OK with the port
    listed.
 5. Per-module diagnostics still show `SPARK MAX feedback stale or absent`
    (WARN) because nothing is emitting on the bus.
 
 If auto-detect mis-binds (e.g. probes an Arduino as SLCAN first), pin the
-SLCAN port explicitly in [config/hardware_manager.yaml](warrior_hardware_manager/config/hardware_manager.yaml):
+SLCAN port explicitly in [config/motor_manager.yaml](warrior_hardware/warrior_motor_manager/config/motor_manager.yaml):
 
 ```yaml
 sparkmax:
   slcan_interface: "/dev/ttyACM3"
 ```
 
-**Pass:** slcan_adapter status OK, all 3 Arduinos still discovered, no port
-collisions in the log.
-
----
 
 ## Phase 5 — SPARK MAX on the bus
 
@@ -209,7 +195,6 @@ configure the controller.
 
    ```bash
    ros2 topic pub -r 20 /warrior_swerve_command warrior_msgs/msg/SwerveCmd \
-     "{swerve_id: 'front', steer_position_rad: 1.5708, drive_velocity_rad_s: 0.0}"
    ```
 
    The front module's steering motor should rotate to π/2 rad (90°), and the
@@ -246,14 +231,13 @@ position is reached within the SPARK MAX's PID convergence time.
 2. In another terminal, start hardware_manager:
 
    ```bash
-   ros2 launch warrior_hardware_manager hardware_manager.launch.py
+   ros2 launch warrior_motor_manager hardware_manager.launch.py
    ```
 
 3. Verify the full pipe:
 
    ```bash
    ros2 topic hz /warrior_swerve_command   # ~150 Hz (3 × 50 Hz)
-   ros2 topic hz /warrior_swerve_state     # ~150 Hz
    ros2 control list_controllers           # swerve_drive_controller: active
    ```
 
@@ -281,11 +265,11 @@ the steering tracking the IK solution.
 | SLCAN found but feedback never arrives | SPARK MAX not on the bus, or bus bitrate mismatch — check `sparkmax.bitrate_code` (default `8` = 1 Mbps). |
 | Motor spins on setpoint but feedback shows wrong angle | `steer_motor_rot_per_module_rot` gear ratio in YAML is wrong, or `steer_sign` is inverted. |
 | `drive_status: timeout` even though publisher is running | `update_rate_hz × command_timeout_s < 1` — publisher rate is too low. |
-| Whole node segfaults shortly after start | Look at the stack-overflow gotcha in [hardware_manager_node.cpp:42](warrior_hardware_manager/src/hardware_manager_node.cpp#L42) — `kv()` overload trap. |
+| Whole node segfaults shortly after start | Look at the stack-overflow gotcha in [hardware_manager_node.cpp:42](warrior_motor_manager/src/hardware_manager_node.cpp#L42) — `kv()` overload trap. |
 
 ## See also
 
-- [warrior_hardware_manager/](warrior_hardware_manager/) — node source + config
+- [warrior_motor_manager/](warrior_hardware/warrior_motor_manager/) — node source + config
 - [warrior_system/](warrior_system/) — ros2_control SystemInterface plugin
 - [warrior_msgs/msg/SwerveCmd.msg](../warrior_msgs/msg/SwerveCmd.msg) / [SwerveState.msg](../warrior_msgs/msg/SwerveState.msg) — wire contract
 - [warrior_description/xacro/ros2_control/robot.ros2_control.xacro](../warrior_description/xacro/ros2_control/robot.ros2_control.xacro) — bridge plugin instantiation

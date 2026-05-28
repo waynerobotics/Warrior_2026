@@ -4,8 +4,8 @@
 // position, then nudges all of them by +5 motor rotations and prints
 // before/after.
 //
-// Run:  ros2 run warrior_hardware_manager nudge_sparks_cli
-// or:   ./build/warrior_hardware_manager/nudge_sparks_cli
+// Run:  ros2 run warrior_motor_manager nudge_sparks_cli
+// or:   ./build/warrior_motor_manager/nudge_sparks_cli
 
 #include <chrono>
 #include <cmath>
@@ -14,7 +14,7 @@
 #include <thread>
 #include <vector>
 
-#include "warrior_hardware/sparkmax_session.hpp"
+#include "warrior_motor_manager/sparkmax_session.hpp"
 
 using warrior::hardware::SparkMaxSession;
 using warrior::hardware::list_sparkmax_ports;

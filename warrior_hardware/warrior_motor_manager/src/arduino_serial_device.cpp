@@ -1,4 +1,4 @@
-#include "warrior_hardware/arduino_serial_device.hpp"
+#include "warrior_motor_manager/arduino_serial_device.hpp"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -10,7 +10,7 @@
 #include <cstring>
 #include <thread>
 
-#include "warrior_hardware/serial_protocol.hpp"
+#include "warrior_motor_manager/serial_protocol.hpp"
 
 namespace warrior::hardware {
 

@@ -1,4 +1,4 @@
-#include "warrior_hardware/device_registry.hpp"
+#include "warrior_motor_manager/device_registry.hpp"
 
 #include <glob.h>
 
@@ -9,7 +9,7 @@
 #include <rclcpp/clock.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include "warrior_hardware/serial_protocol.hpp"
+#include "warrior_motor_manager/serial_protocol.hpp"
 
 namespace warrior::hardware {
 

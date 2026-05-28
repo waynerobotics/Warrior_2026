@@ -1,4 +1,4 @@
-#include "warrior_hardware/sparkmax_session.hpp"
+#include "warrior_motor_manager/sparkmax_session.hpp"
 
 #include <fcntl.h>
 #include <glob.h>
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <thread>
 
-#include "warrior_hardware/sparkmax_frame.hpp"
+#include "warrior_motor_manager/sparkmax_frame.hpp"
 
 namespace warrior::hardware {
 
