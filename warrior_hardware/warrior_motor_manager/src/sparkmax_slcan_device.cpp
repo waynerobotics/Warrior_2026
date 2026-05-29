@@ -32,6 +32,12 @@ bool configure_115200(int fd)
     return true;
 }
 
+bool assert_dtr_rts(int fd)
+{
+    int modem_bits = TIOCM_DTR | TIOCM_RTS;
+    return ioctl(fd, TIOCMBIS, &modem_bits) == 0;
+}
+
 }  // namespace
 
 SparkMaxSlcanDevice::~SparkMaxSlcanDevice()
@@ -56,6 +62,11 @@ bool SparkMaxSlcanDevice::open(const std::string & port, char bitrate_code)
     fcntl(fd_, F_SETFL, flags & ~O_NONBLOCK);
 
     if (!configure_115200(fd_)) {
+        ::close(fd_);
+        fd_ = -1;
+        return false;
+    }
+    if (!assert_dtr_rts(fd_)) {
         ::close(fd_);
         fd_ = -1;
         return false;

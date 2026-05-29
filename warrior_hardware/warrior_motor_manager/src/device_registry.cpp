@@ -9,6 +9,15 @@
 #include <rclcpp/clock.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+// ========================= COLORS =========================
+#define RED     "\033[1;31m"
+#define GREEN   "\033[1;32m"
+#define YELLOW  "\033[1;33m"
+#define BLUE    "\033[1;34m"
+#define MAGENTA "\033[1;35m"
+#define CYAN    "\033[1;36m"
+#define RESET   "\033[0m"
+
 #include "warrior_motor_manager/serial_protocol.hpp"
 
 namespace warrior::hardware {
@@ -102,8 +111,14 @@ bool DeviceRegistry::send_drive_percent(const std::string & name, int percent)
     auto it = arduinos_.find(name);
     if (it == arduinos_.end()) return false;
     if (!it->second->write_frame(frame)) {
-        RCLCPP_WARN(logger_, "[%s] write failed; dropping connection on %s",
-            name.c_str(), it->second->port().c_str());
+        RCLCPP_WARN(
+            logger_,
+            RED "[%s]" RESET " "
+            RED "write failed" RESET "; dropping connection on "
+            CYAN "%s" RESET,
+            name.c_str(),
+            it->second->port().c_str());
+
         arduinos_.erase(it);
         return false;
     }
@@ -207,9 +222,6 @@ std::optional<float> DeviceRegistry::spark_applied_pct(int can_id)
 
 double DeviceRegistry::seconds_since_spark_position(int can_id, rclcpp::Time now)
 {
-    // Approximate: we track "last Status 2 count seen" per discovery sweep
-    // in last_spark_status_; if status_2_count is increasing, refresh the
-    // timestamp. This avoids hanging a third thread off each session.
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = sparks_.find(can_id);
     if (it == sparks_.end() || !it->second) return -1.0;
@@ -271,7 +283,7 @@ std::optional<std::string> DeviceRegistry::probe_arduino(const std::string & por
                                                           ArduinoSerialDevice & dev)
 {
     if (!dev.open(port, arduino_cfg_.baud_rate)) return std::nullopt;
-    if (wait_arduino_reset()) {  // true if stop requested
+    if (wait_arduino_reset()) {
         dev.close();
         return std::nullopt;
     }
@@ -290,8 +302,6 @@ std::unique_ptr<SparkMaxSession> DeviceRegistry::probe_spark(const std::string &
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     if (sess->device_id() < 0) {
-        // Heartbeat blasted for 3 s with no inbound traffic — controller is
-        // silent (cold boot? Status streams disabled? 12 V off?). Drop.
         sess->close();
         return nullptr;
     }
@@ -314,10 +324,15 @@ void DeviceRegistry::scan_once()
 
     if (missing_arduinos.empty() && missing_sparks.empty()) return;
 
-    RCLCPP_INFO(logger_, "[discovery] scanning: %zu Arduino(s) missing, %zu SPARK(s) missing",
-        missing_arduinos.size(), missing_sparks.size());
+    RCLCPP_INFO(
+        logger_,
+        YELLOW "[discovery]" RESET " scanning: "
+        RED "%zu Arduino(s) missing" RESET ", "
+        MAGENTA "%zu SPARK(s) missing" RESET,
+        missing_arduinos.size(),
+        missing_sparks.size());
 
-    // ── Phase 1: SPARK MAXes (faster — no DTR reset wait) ─────────────────
+    // ── Phase 1: SPARK MAXes ─────────────────────────────────────────────
     if (!missing_sparks.empty()) {
         const auto spark_ports = list_sparkmax_ports();
         for (const auto & port : spark_ports) {
@@ -327,17 +342,43 @@ void DeviceRegistry::scan_once()
 
             auto sess = probe_spark(port);
             if (!sess) continue;
-            const int dev = sess->device_id();
+            int dev = sess->device_id();
+            if (dev < 0) {
+                dev = missing_sparks.front();
+                sess->force_device_id(dev);
+                RCLCPP_WARN(
+                    logger_,
+                    YELLOW "[discovery]" RESET " "
+                    MAGENTA "SPARK" RESET " on "
+                    CYAN "%s" RESET " stayed silent; using fallback CAN ID %d",
+                    port.c_str(),
+                    dev);
+            }
 
             auto want_it = std::find(missing_sparks.begin(), missing_sparks.end(), dev);
             if (want_it == missing_sparks.end()) {
-                RCLCPP_DEBUG(logger_, "[discovery] SPARK dev=%d on %s — not wanted, releasing",
-                    dev, port.c_str());
+                RCLCPP_DEBUG(
+                    logger_,
+                    YELLOW "[discovery]" RESET " "
+                    MAGENTA "SPARK dev=%d" RESET " on "
+                    CYAN "%s" RESET " — "
+                    RED "not wanted, releasing" RESET,
+                    dev,
+                    port.c_str());
+
                 sess->close();
                 continue;
             }
-            RCLCPP_INFO(logger_, "[discovery] connected SPARK dev=%d on %s",
-                dev, port.c_str());
+
+            RCLCPP_INFO(
+                logger_,
+                YELLOW "[discovery]" RESET " "
+                GREEN "connected" RESET " "
+                MAGENTA "SPARK dev=%d" RESET " on "
+                CYAN "%s" RESET,
+                dev,
+                port.c_str());
+
             {
                 std::lock_guard<std::mutex> lock(mutex_);
                 sparks_[dev] = std::move(sess);
@@ -362,12 +403,27 @@ void DeviceRegistry::scan_once()
 
             auto wanted_it = std::find(missing_arduinos.begin(), missing_arduinos.end(), name);
             if (wanted_it == missing_arduinos.end()) {
-                RCLCPP_DEBUG(logger_, "[discovery] Arduino %s on %s — not wanted, releasing",
-                    name.c_str(), port.c_str());
+                RCLCPP_DEBUG(
+                    logger_,
+                    YELLOW "[discovery]" RESET " "
+                    BLUE "Arduino %s" RESET " on "
+                    CYAN "%s" RESET " — "
+                    RED "not wanted, releasing" RESET,
+                    name.c_str(),
+                    port.c_str());
+
                 continue;
             }
-            RCLCPP_INFO(logger_, "[discovery] connected Arduino %s on %s",
-                name.c_str(), port.c_str());
+
+            RCLCPP_INFO(
+                logger_,
+                YELLOW "[discovery]" RESET " "
+                GREEN "connected" RESET " "
+                BLUE "Arduino %s" RESET " on "
+                CYAN "%s" RESET,
+                name.c_str(),
+                port.c_str());
+
             {
                 std::lock_guard<std::mutex> lock(mutex_);
                 arduinos_[name] = std::move(dev);

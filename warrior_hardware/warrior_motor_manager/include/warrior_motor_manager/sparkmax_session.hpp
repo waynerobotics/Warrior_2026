@@ -47,6 +47,9 @@ public:
 
     // -1 until the rx thread parses the first inbound frame.
     int device_id() const { return device_id_.load(); }
+    // Force a fallback device_id when the controller stays silent during
+    // discovery. Used only by the manager as a last-resort pairing.
+    void force_device_id(int device_id);
 
     // Latest Status 2 position (motor rotations). NaN until first frame.
     float position_rotations() const { return position_rot_.load(); }

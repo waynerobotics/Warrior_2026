@@ -44,6 +44,12 @@ bool configure_115200_raw(int fd)
     return true;
 }
 
+bool assert_dtr_rts(int fd)
+{
+    int modem_bits = TIOCM_DTR | TIOCM_RTS;
+    return ioctl(fd, TIOCMBIS, &modem_bits) == 0;
+}
+
 // Walk up from /sys/class/tty/<name>/device until idVendor + idProduct exist.
 // Returns (vid, pid) or 0/0 on failure.
 std::pair<unsigned, unsigned> read_usb_vid_pid_for_tty(const std::string & tty_basename)
@@ -122,6 +128,10 @@ bool SparkMaxSession::open(const std::string & port)
         ::close(fd);
         return false;
     }
+    if (!assert_dtr_rts(fd)) {
+        ::close(fd);
+        return false;
+    }
 
     fd_   = fd;
     port_ = port;
@@ -165,6 +175,11 @@ void SparkMaxSession::disable()
     enabled_ = false;
 }
 
+void SparkMaxSession::force_device_id(int device_id)
+{
+    device_id_.store(device_id);
+}
+
 bool SparkMaxSession::write_all_fd(const std::string & s)
 {
     if (fd_ < 0) return false;
@@ -186,6 +201,7 @@ void SparkMaxSession::tx_loop()
 {
     using namespace sparkmax;
     constexpr uint8_t BROADCAST_BITMASK = 0xFF;  // all 8 device_ids
+    constexpr int MAX_CAN_ID = 62;
 
     while (running_.load()) {
         const int dev = device_id_.load();
@@ -204,7 +220,18 @@ void SparkMaxSession::tx_loop()
             enabled = enabled_;
             target  = target_position_rot_;
         }
-        if (enabled && dev >= 0) {
+        if (dev < 0) {
+            // Discovery mode: send the current setpoint to every possible CAN
+            // ID so at least one controller can respond and reveal its ID.
+            const auto payload = encode_position_payload(target);
+            for (int candidate = 1; candidate <= MAX_CAN_ID; ++candidate) {
+                const uint32_t arb = encode_arbitration_id(
+                    API_CLASS_SETPOINT,
+                    API_INDEX_SETPOINT_POSITION,
+                    static_cast<uint32_t>(candidate));
+                burst += to_slcan_frame(arb, payload.data(), payload.size());
+            }
+        } else if (enabled) {
             const uint32_t arb = encode_arbitration_id(
                 API_CLASS_SETPOINT,
                 API_INDEX_SETPOINT_POSITION,
