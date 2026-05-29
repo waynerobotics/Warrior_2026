@@ -17,6 +17,7 @@ map_origin_latitude:=42.400556255 map_origin_longitude:=-83.130645144
 
 
 """
+
 def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
     waypoint_file = LaunchConfiguration('waypoint_file')

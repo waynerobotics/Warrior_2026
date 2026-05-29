@@ -38,6 +38,7 @@ controller_server:
     goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
     controller_plugins: ["FollowPath"]
     use_realtime_priority: false
+    enable_stamped_cmd_vel: true
 
     # Progress checker parameters
     progress_checker:
@@ -283,6 +284,7 @@ behavior_server:
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
+    enable_stamped_cmd_vel: true
 
 waypoint_follower:
   ros__parameters:
@@ -331,6 +333,8 @@ velocity_smoother:
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+    enable_stamped_cmd_vel: true
+
 
 collision_monitor:
   ros__parameters:
@@ -343,6 +347,8 @@ collision_monitor:
     source_timeout: 1.0
     base_shift_correction: True
     stop_pub_timeout: 2.0
+    enable_stamped_cmd_vel: true
+
     # Polygons represent zone around the robot for "stop", "slowdown" and "limit" action types,
     # and robot footprint for "approach" action type.
     polygons: ["FootprintApproach"]
@@ -376,7 +382,7 @@ docking_server:
     fixed_frame: "odom"
     dock_backwards: false
     dock_prestaging_tolerance: 0.5
-
+    enable_stamped_cmd_vel: true
     # Types of docks
     dock_plugins: ['simple_charging_dock']
     simple_charging_dock:
