@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rosdep python3-rosinstall python3-vcstool python3-colcon-common-extensions \
     ros-${ROS_DISTRO}-desktop ros-${ROS_DISTRO}-backward-ros ros-${ROS_DISTRO}-common-interfaces \
     ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers ros-${ROS_DISTRO}-octomap \
-    ros-${ROS_DISTRO}-xacro ros-${ROS_DISTRO}-ros-gz* joystick \
+    ros-${ROS_DISTRO}-xacro ros-${ROS_DISTRO}-ros-gz* ros-${ROS_DISTRO}-gz-ros2-control joystick \
     ros-${ROS_DISTRO}-octomap-msgs \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
