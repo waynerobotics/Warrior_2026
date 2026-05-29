@@ -49,13 +49,13 @@ def generate_launch_description():
 
     declare_map_origin_latitude = DeclareLaunchArgument(
         'map_origin_latitude',
-        default_value='42.35911527890909',
+        default_value='42.400556255',
         description='Latitude of map origin (where robot starts)'
     )
 
     declare_map_origin_longitude = DeclareLaunchArgument(
         'map_origin_longitude',
-        default_value='-83.06651728263228',
+        default_value='-83.130645144',
         description='Longitude of map origin (where robot starts)'
     )
 
@@ -67,7 +67,7 @@ def generate_launch_description():
 
     declare_utm_zone = DeclareLaunchArgument(
         'utm_zone',
-        default_value='10',
+        default_value='17',
         description='UTM zone used for GPS to map conversion'
     )
 
