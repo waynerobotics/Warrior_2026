@@ -1,0 +1,21 @@
+# Persisted yaw calibration written by transformation_reconfigure /
+# transformation_calibrator. Values below are the identity defaults; the
+# calibration tools overwrite this file in place.
+transformation_matrix:
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+yaw_angle_degrees: 0.0

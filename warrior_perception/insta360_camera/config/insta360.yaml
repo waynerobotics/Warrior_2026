@@ -1,0 +1,7 @@
+insta360_node:
+  ros__parameters:
+    device: /dev/video0
+    frame_id: insta360_optical_frame
+    width: 1920
+    height: 1080
+    fps: 30.0

@@ -1,0 +1,28 @@
+source:
+  type: camera
+  camera_index: 0
+  path: ""
+
+display:
+  width: 1280
+  height: 640
+  show_window: true
+
+inference:
+  width: 960
+  height: 480
+  run_every_n_frames: 1
+  crop_mode: full_frame
+
+saving:
+  enabled: true
+  save_every_n_frames: 2
+  output_dir: outputs
+
+model:
+  checkpoint_path: ""
+  device: auto
+  confidence_threshold: 0.3
+
+stats:
+  rolling_window: 30

@@ -9,36 +9,39 @@
   <xacro:include filename="$(find warrior_description)/xacro/sensors/imu.xacro"/>
   <!-- <xacro:include filename="$(find warrior_description)/xacro/sensors/gps.xacro"/> -->
 
-
   <!-- ========== Properties ========== -->
-  <xacro:property name="angle_offset" value="${pi/6}"/>
+  <xacro:property name="front_rpy_offset" value="0 0 -${pi/2}"/>
+  <xacro:property name="left_rpy_offset" value="0 0 ${pi/6}"/>
+  <xacro:property name="right_rpy_offset" value="0 0 ${-pi/6 - pi}"/>
 
-   <xacro:property name="front_plate_offset" value="0.838 0.003 -0.349"/>
-   <xacro:property name="left_plate_offset" value="0.025 0.47 -0.349"/>
-   <xacro:property name="right_plate_offset" value="0.024 -0.468 -0.349"/>
+  <xacro:property name="front_xyz_offset" value="0.852889 0.002164 -0.3615845"/>
+  <xacro:property name="left_xyz_offset" value="0.035531 0.474066 -0.3615845"/>
+  <xacro:property name="right_xyz_offset" value="0.035468 -0.469762 -0.3615845"/>
+
+  <xacro:property name="payload_xyz_offset" value="0.433705 -0.098151 -0.155475"/>
+  <xacro:property name="payload_rpy_offset" value="${pi/2} -${pi} -${pi/2}"/>
+  <xacro:property name="payload_mass" value="9.5"/>
 
   <!-- Wheel properties -->
-  <!-- <xacro:property name="wheel_mass" value="2.5"/> -->
   <xacro:property name="wheel_mass" value="5.0"/>
-  <xacro:property name="wheel_offset_z" value="-0.15"/>
-  <xacro:property name="wheel_radius" value="0.1"/>
+  <xacro:property name="wheel_radius" value="0.025"/>
 
   <!-- Base properties -->
   <!-- <xacro:property name="base_mass" value="6.0"/> -->
-  <xacro:property name="base_mass" value="10.0"/> 
-  <xacro:property name="base_footprint_height" value="${0.508 + wheel_radius}"/>
+  <xacro:property name="base_mass" value="25.0"/> 
+  <xacro:property name="base_footprint_height" value="0.640773"/>
   
   <!-- Initial orientations (radians) -->
   <xacro:property name="front_initial_angle" value="${pi/2}"/>   <!-- forwarding -->
-  <xacro:property name="left_initial_angle" value="${pi/3}"/>    <!-- forwarding -->
-  <xacro:property name="right_initial_angle" value="-${pi/3 + pi}"/>  <!-- forwarding -->
+  <xacro:property name="left_initial_angle" value="-${pi/6}"/>    <!-- forwarding -->
+  <xacro:property name="right_initial_angle" value="${pi/6 + pi}"/>  <!-- forwarding -->
   
   <!-- lidar properties -->
   <xacro:property name="pole_height" value="0.527"/>
   <xacro:property name="lidar_offset" value="0.135 -0.005 0.075"/>
 
   <!-- camera properties -->
-  <xacro:property name="camera_offset" value="0.415 0.0 -0.015"/>
+  <xacro:property name="camera_offset" value="0.425 0.0 -0.015"/>
 
   <!-- ========== Base Footprint Link ========== -->
   <link name="base_footprint"/>
@@ -47,7 +50,6 @@
       <parent link="base_footprint"/>
       <child link="base_link"/>
       <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
-      <!-- z = wheel_offset_z (0.15) + wheel_radius (0.1) = 0.25 -->
   </joint>
 
   <!-- ========== Base Link ========== -->
@@ -56,7 +58,9 @@
       <geometry>
         <mesh filename="file://$(find warrior_description)/meshes/warrior_body.stl"/>
       </geometry>
-      <material name="medium_gray"/>
+      <!-- <material name="medium_gray"/> -->
+      <material name="space_gray"/>
+
     </visual>
     <collision>
       <geometry>
@@ -70,13 +74,38 @@
     </inertial>
   </link>
 
+  <!-- =================== Payload =================== -->
+  <joint name="base_to_payload" type="fixed">
+    <parent link="base_link"/>
+    <child link="payload_link"/>
+    <origin xyz="${payload_xyz_offset}" rpy="${payload_rpy_offset}"/>
+  </joint>
+  <link name="payload_link">
+    <visual>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/payload.stl"/>
+      </geometry>
+      <material name="wood"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="file://$(find warrior_description)/meshes/payload.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="${payload_mass}"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+  </link>
+
   <!-- ========== Instantiate Swerve Modules ========== -->
 
   <!-- Front Plate Joint -->
   <joint name="base_to_front_plate" type="fixed">
     <parent link="base_link"/>
     <child link="front_slewing_plate_link"/>
-    <origin xyz="${front_plate_offset}" rpy="0 0 0"/>
+    <origin xyz="${front_xyz_offset}" rpy="${front_rpy_offset}"/>
   </joint>
 
   <!-- Front Swerve Module -->
@@ -86,7 +115,7 @@
   <joint name="base_to_left_plate" type="fixed">
     <parent link="base_link"/>
     <child link="left_slewing_plate_link"/>
-    <origin xyz="${left_plate_offset}" rpy="0 0 ${angle_offset}"/>
+    <origin xyz="${left_xyz_offset}" rpy="${left_rpy_offset}"/>
   </joint>
 
   <!-- Left Swerve Module -->
@@ -96,7 +125,7 @@
   <joint name="base_to_right_plate" type="fixed">
     <parent link="base_link"/>
     <child link="right_slewing_plate_link"/>
-    <origin xyz="${right_plate_offset}" rpy="0 0 ${-angle_offset}"/>
+    <origin xyz="${right_xyz_offset}" rpy="${right_rpy_offset}"/>
   </joint>
 
   <!-- Right Swerve Module -->

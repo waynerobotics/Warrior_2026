@@ -11,11 +11,19 @@
   </material>
 
   <material name="medium_gray">
-    <color rgba="0.55 0.55 0.55 1"/>
+    <color rgba="0.57 0.58 0.59 1"/>
   </material>
 
   <material name="light_gray">
     <color rgba="0.8 0.8 0.8 1"/>
+  </material>
+
+  <material name="metal_gray">
+    <color rgba="0.35 0.35 0.38 1"/>
+  </material>
+
+  <material name="wood">
+    <color rgba="0.65 0.50 0.39 1.0"/>
   </material>
 
   <material name="white">
@@ -56,7 +64,7 @@
   </material>
 
   <material name="warning_orange">
-    <color rgba="0.9 0.35 0.05 0.75"/>
+    <color rgba="0.9 0.35 0.05 0.90"/>
   </material>
 
   <material name="purple">
@@ -87,6 +95,10 @@
   <!-- ========== Metallic / Robotics Colors ========== -->
   <material name="silver">
     <color rgba="0.75 0.75 0.75 1"/>
+  </material>
+
+  <material name="space_gray">
+    <color rgba="0.68 0.68 0.7 1"/>
   </material>
 
   <material name="gold">

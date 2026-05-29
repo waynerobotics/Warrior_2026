@@ -1,0 +1,61 @@
+warrior_motor_manager:
+  ros__parameters:
+    state_topic:   "/warrior_swerve_state"
+    command_topic: "/warrior_swerve_command"
+
+    update_rate_hz:      50.0
+    discovery_period_s:   2.0
+    command_timeout_s:    0.5
+
+    # Module list. Each name below must have a matching modules.<name> block.
+    # (Structured as a flat list + nested keys because rclcpp doesn't expand
+    #  YAML list-of-dicts into typed sub-parameters.)
+    module_names: ["front", "left", "right"]
+
+    modules:
+      front:
+        drive_device_name: "02_swerve"
+        steer_device_name: "02_spark"
+        spark_can_id: 2
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: 1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      left:
+        drive_device_name: "03_swerve"
+        steer_device_name: "03_spark"
+        spark_can_id: 3
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: 1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      right:
+        drive_device_name: "04_swerve"
+        steer_device_name: "04_spark"
+        spark_can_id: 4
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: 1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+    # Used by milestone 2+ (Arduino discovery / SLCAN). Declared early so the
+    # YAML is the single source of truth for configuration.
+    arduino:
+      baud_rate: 115200
+      read_timeout_ms: 20
+      handshake_request: "<WHO>"
+      expected_name_prefixes:
+        - "02_swerve"
+        - "03_swerve"
+        - "04_swerve"
+
+    sparkmax:
+      slcan_interface: "auto"     # "auto" to scan, or "/dev/ttyACM0" to pin
+      bitrate_code:    "8"        # 0=10k 1=20k 2=50k 3=100k 4=125k 5=250k 6=500k 7=800k 8=1M
+      position_pid_slot: 0
+      enable_closed_loop_position: true

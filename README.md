@@ -1,109 +1,77 @@
-# Warrior_2026
+# Warrior 2026
 
-This repo will contain all ROS2 Jazzy code needed for the 2026 IGVC competition for Wayne Robotics. 
+ROS 2 stack for Wayne Robotics' 2026 IGVC entry. Targets **ROS 2 Humble** +
+**Gazebo Fortress** on **Ubuntu 22.04**.
 
-#These packages need to be installed:
-Make sure to also run
-sudo apt update first.
+## Quick start
 
-```bash
-sudo apt install -y \
-    ros-humble-desktop \
-    ros-humble-gazebo-ros-pkgs \
-    ros-humble-gazebo-ros \
-    ros-humble-joint-state-publisher \
-    ros-humble-robot-localization \
-    ros-humble-nav2-bringup \
-    ros-humble-tf2-ros \
-    ros-humble-tf2-tools \
-    ros-humble-ros2-control \
-    ros-humble-joint-state-publisher-gui \
-    ros-humble-xacro \
-    ros-humble-nmea-msgs \
-    ros-humble-mavros-msgs \
-    ros-humble-rosbridge-server \
-    ros-humble-ros-gz-sim \
-    ros-humble-ros-gz-bridge \
-    ros-humble-gazebo-ros2-control \
-    ros-humble-gz-ros2-control
+### Installation
+Follow the warrior_scripts Readme for installation instructions
 
+### Launch
+Follow the warrior_bringup Readme for launch instructions
+
+## System layout
+
+```mermaid
+flowchart LR
+    subgraph INPUT["Input"]
+        JOY[warrior_joy]
+        NAV[warrior_navigation]
+    end
+
+    subgraph BRAIN["Estimation & Control"]
+        LOC[warrior_localization]
+        GPS[warrior_gps]
+        CTRL[warrior_control]
+    end
+
+    subgraph PLANT["Plant"]
+        SIM[warrior_simulation]
+        HW[warrior_hardware]
+    end
+
+    DESC[warrior_description]
+    BRINGUP[warrior_bringup]
+    MSGS[warrior_msgs]
+
+    JOY -->|cmd_vel| CTRL
+    NAV -->|cmd_vel| CTRL
+    CTRL -->|joint cmds| HW
+    CTRL -->|joint cmds| SIM
+    HW -->|joint states, sensors| LOC
+    SIM -->|joint states, sensors| LOC
+    GPS --> LOC
+    LOC -->|odom, tf| NAV
+    DESC -.->|URDF| SIM
+    DESC -.->|URDF| CTRL
+    BRINGUP -.->|launches| BRAIN
+    BRINGUP -.->|launches| PLANT
+    BRINGUP -.->|launches| INPUT
+    MSGS -.->|types| BRAIN
+    MSGS -.->|types| PLANT
 ```
 
----
+## Packages
 
-## Swerve Teleop — Xbox Controller
+| Package | What it does | README |
+|---|---|---|
+| [warrior_bringup](warrior_bringup/) | Top-level launchers (sim, real, turtlebot variants) + systemd unit | [README](warrior_bringup/README.md) |
+| [warrior_control](warrior_control/) | Swerve / diff drive controllers, kinematics | [README](warrior_control/README.md) |
+| [warrior_description](warrior_description/) | URDF / xacro / meshes | [README](warrior_description/README.md) |
+| [warrior_gps](warrior_gps/) | GPS + AprilTag fusion nodes | — |
+| [warrior_hardware](warrior_hardware/) | `ros2_control` HW interface + USB driver for swerve Arduinos and SPARK MAXes | [README](warrior_hardware/README.md) · [TEST_PLAN](warrior_hardware/TEST_PLAN.md) |
+| [warrior_joy](warrior_joy/) | Gamepad → cmd_vel | [README](warrior_joy/README.md) |
+| [warrior_localization](warrior_localization/) | EKF, SLAM, sensor fusion | — |
+| [warrior_msgs](warrior_msgs/) | Custom message definitions | — |
+| [warrior_navigation](warrior_navigation/) | Costmaps, path planning, Nav2 integration | — |
+| [warrior_scripts](warrior_scripts/) | Install scripts + dev helpers | [README](warrior_scripts/README.md) |
+| [warrior_simulation/warrior_gazebo](warrior_simulation/warrior_gazebo/) | Gazebo worlds + SDF models | [README](warrior_simulation/warrior_gazebo/README.md) |
 
-### Run manually
+## Where things live
 
-```bash
-~/ros2_ws/src/Warrior_2026/warrior_scripts/launch_swerve_teleop.sh
-```
-
-Or directly:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source ~/ros2_ws/install/setup.bash
-ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
-```
-
-**RB** cycles the active swerve: `02_swerve → 03_swerve → 04_swerve → 02_swerve …`  
-Left stick Y = spark motor, right stick X = flipsky motor.
-
----
-
-### Launch on startup (systemd)
-
-1. **Create the service file:**
-
-```bash
-sudo nano /etc/systemd/system/warrior-swerve-teleop.service
-```
-
-Paste:
-
-```ini
-[Unit]
-Description=Warrior Swerve Teleop ROS 2 Launch
-After=network.target bluetooth.service
-
-[Service]
-Type=simple
-User=fire
-Environment=ROS_DOMAIN_ID=30
-ExecStart=/home/fire/ros2_ws/src/Warrior_2026/warrior_scripts/launch_swerve_teleop.sh
-Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-```
-
-2. **Enable and start:**
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable warrior-swerve-teleop.service
-sudo systemctl start warrior-swerve-teleop.service
-```
-
-3. **Check status / logs:**
-
-```bash
-sudo systemctl status warrior-swerve-teleop.service
-journalctl -u warrior-swerve-teleop.service -f
-```
-
-4. **Stop or disable:**
-
-```bash
-sudo systemctl stop warrior-swerve-teleop.service
-sudo systemctl disable warrior-swerve-teleop.service
-```
-
-> **Note:** The Xbox controller must be paired before the service starts, or
-> `joy_node` will wait until a joystick appears. The motor_manager will keep
-> retrying USB discovery regardless, so plugging in swerve Arduinos after boot
-> is fine.
+- **Launch anything** → [warrior_bringup](warrior_bringup/README.md)
+- **Install / first-time setup** → [warrior_scripts](warrior_scripts/README.md)
+- **Robot kinematics & math** → [warrior_control](warrior_control/README.md)
+- **Sim worlds** → [warrior_gazebo](warrior_simulation/warrior_gazebo/README.md)
+- **Real-hw control flow** → [warrior_hardware](warrior_hardware/README.md)

@@ -1,0 +1,9 @@
+<library path="warrior_system">
+  <class name="warrior_system/SwerveTopicBridge"
+         type="warrior::system::SwerveTopicBridge"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      The topic-bridge ros2_control hardware interface for Warrior robot.
+    </description>
+  </class>
+</library>

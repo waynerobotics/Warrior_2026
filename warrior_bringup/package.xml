@@ -4,13 +4,14 @@
   <name>warrior_bringup</name>
   <version>0.0.0</version>
   <description>The bringup package for the Warrior robot</description>
-  <maintainer email="yihao.cai@wayne.edu">Yihao Cai</maintainer>
+  <maintainer email="yihaocai007@gmail.com">Yihao Cai</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>warrior_description</depend>
   <depend>warrior_control</depend>
   <depend>warrior_gazebo</depend>
+  <depend>warrior_system</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher</depend>
   <depend>controller_manager</depend>

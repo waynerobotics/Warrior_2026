@@ -52,8 +52,8 @@
             <horizontal>
               <samples>360</samples>
               <resolution>1</resolution>
-              <min_angle>-3.14</min_angle>
-              <max_angle>3.14</max_angle>
+              <min_angle>0.4</min_angle>
+              <max_angle>6.0</max_angle>
             </horizontal>
             <vertical>
               <samples>40</samples>

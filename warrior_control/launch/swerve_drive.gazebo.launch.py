@@ -6,7 +6,7 @@ For direct use, this is still supported but consider using:
   ros2 launch warrior_bringup main.launch.py robot_type:=swerve_sim [world_name:=...]
   ros2 launch warrior_bringup swerve_sim.launch.py [world_name:=...]
 
-See warrior_bringup/LAUNCH_USAGE.md for complete documentation.
+See warrior_bringup/README.md for complete documentation.
 """
 import os
 from ament_index_python import get_package_share_directory
@@ -18,7 +18,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import ExecuteProcess
 from launch.event_handlers import OnProcessExit
-
+from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
     # Launch Arguments
@@ -34,9 +34,8 @@ def generate_launch_description():
 
     world_file = PathJoinSubstitution([pkg_gazebo, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
-    controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
+    controller_yaml  = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers_sim.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
-
 
     # Set GAZEBO model path
     pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
@@ -49,7 +48,7 @@ def generate_launch_description():
         os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
 
     rviz2_config_file = PathJoinSubstitution(
-        [pkg_warrior_bringup, "rviz", "warrior.rviz"]
+        [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
     )
 
     robot_description = Command(["xacro ", xacro_file])
@@ -106,7 +105,7 @@ def generate_launch_description():
             PathJoinSubstitution([pkg_gz_ros, "launch", "gz_sim.launch.py"])
         ),
         launch_arguments={
-            "gz_args": ["-r -v 4 ", world_file]
+            "gz_args": ["-r -v 4 --render-engine ogre --render-engine-gui ogre ", world_file]
         }.items(),
     )
     
@@ -117,7 +116,7 @@ def generate_launch_description():
             "-topic", "robot_description",
             "-name", "warrior",
             "-allow_renaming", "true",
-            '-x', '0.', '-y', '0.', '-z', '0.3'
+            '-x', '0.', '-y', '0.', '-z', '0.1'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -127,14 +126,38 @@ def generate_launch_description():
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[
+        arguments=[            
+             # clock
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+
+            # RGB camera
             '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
             '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+
+            # Depth camera
+            '/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+            '/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+
+            # lidar
             '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+
+            # GPS
+            '/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat',
+
+            # odom
+            '/odom_gt@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+
+            # imu
+            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
         ],
         parameters=[{"use_sim_time": use_sim_time}],
+        remappings=[
+            ('/L1_lidar/scan', '/scan'),
+            ('/L1_lidar/scan/points', '/scan/points'),
+        ],
         output='screen',
     )
 

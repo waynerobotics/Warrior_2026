@@ -6,7 +6,7 @@ For direct use, this is still supported but consider using:
   ros2 launch warrior_bringup main.launch.py robot_type:=diff_sim [world_name:=...]
   ros2 launch warrior_bringup diff_sim.launch.py [world_name:=...]
 
-See warrior_bringup/LAUNCH_USAGE.md for complete documentation.
+See warrior_bringup/README.md for complete documentation.
 """
 import os
 from launch import LaunchDescription
@@ -93,7 +93,7 @@ def generate_launch_description():
             PathJoinSubstitution([pkg_gz_ros, "launch", "gz_sim.launch.py"])
         ),
         launch_arguments={
-            "gz_args": ["-r -v 4 ", world_file]
+            "gz_args": ["-r -v 4 --render-engine ogre --render-engine-gui ogre ", world_file]
         }.items(),
     )
     

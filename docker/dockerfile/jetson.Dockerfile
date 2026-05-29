@@ -5,7 +5,7 @@
 # ------------ Base Image ------------
 FROM nvcr.io/nvidia/l4t-jetpack:r36.4.0
 
-LABEL maintainer="Yihao Cai <yihao.cai@wayne.edu>" \
+LABEL maintainer="Yihao Cai <yihaocai007@gmail.com>" \
       version="v2.0.0" \
       description="Nvidia Jetson: ROS2 Humble + CUDA 12.6 + Robotics Libraries" \
       license="Apache-2.0"
@@ -48,6 +48,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-${ROS_DISTRO}-rmw-connextdds
 
 RUN rosdep init || true && rosdep update
+
+
+# ------------ Install Perception Dependencies ------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-cv-bridge \
+    ros-${ROS_DISTRO}-image-transport \
+    ros-${ROS_DISTRO}-v4l2-camera \
+    ros-${ROS_DISTRO}-vision-msgs \
+    ros-${ROS_DISTRO}-sensor-msgs-py \
+    ros-${ROS_DISTRO}-pcl-conversions \
+    libpcl-dev \
+    python3-opencv \
+    python3-pyqt5 \
+    python3-yaml \
+    v4l-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # ------------ Create user ------------
