@@ -1,14 +1,16 @@
 steer_calibration:
   ros__parameters:
-    # Topic published by warrior_driver with per-module swerve state
-    state_topic: "/warrior_swerve_state"
+    # SLCAN bitrate code passed to the 'S' command (8 = 1 Mbit/s — matches
+    # warrior_driver defaults and the SPARK MAX factory setting).
+    bitrate_code: 8
 
-    # Max age (seconds) of the last feedback message before calibration is
-    # aborted.  Increase if CAN bus latency is high.
-    feedback_timeout_s: 2.0
+    # How long (seconds) to wait for Status 2 position frames from each
+    # SPARK MAX before giving up.  Increase if a cold-boot controller is slow
+    # to start emitting telemetry.
+    read_timeout_s: 5.0
 
     # Directory where the timestamped YAML result file is saved.
-    # The file is also printed to the console so you can copy it immediately.
+    # The result is also printed to the console.
     output_dir: "/tmp/warrior_calibration"
 
     # ── Module list ──────────────────────────────────────────────────────────
@@ -45,3 +47,4 @@ steer_calibration:
         steer_sign: -1.0
         drive_sign:  1.0
         max_drive_rad_s: 60.0
+

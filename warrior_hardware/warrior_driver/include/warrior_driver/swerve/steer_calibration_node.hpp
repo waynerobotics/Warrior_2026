@@ -1,47 +1,43 @@
 #pragma once
 
-#include <memory>
+#include <limits>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <rclcpp/rclcpp.hpp>
 #include <std_srvs/srv/trigger.hpp>
-#include <warrior_msgs/msg/swerve_state.hpp>
 
 #include "warrior_driver/swerve/swerve_config.hpp"
 
 namespace warrior::driver {
 
-/// Holds the live state received from /warrior_swerve_state for one module.
-struct CalibModuleState
-{
-    double steer_position_rad = 0.0;
-    bool   have_feedback      = false;
-    rclcpp::Time last_feedback_time;
-};
-
 /**
- * @brief SteerCalibrationNode
+ * @brief SteerCalibrationNode — standalone steer-offset calibrator.
  *
- * Subscribes to /warrior_swerve_state and, when the ~/calibrate service is
- * called, captures the current steer position of every module and computes the
- * steer_offset_rad that would make that position read as 0 rad (straight
- * forward).
+ * DOES NOT require warrior_driver to be running. It opens each SPARK MAX
+ * USB-SLCAN port directly, sends only broadcast heartbeats (no setpoints),
+ * waits for Status 2 position frames, then computes per-module
+ * steer_offset_rad values that make the current encoder positions read as 0
+ * (straight forward).
  *
- * The computed offsets are:
- *   new_steer_offset_rad = current_steer_position_rad * steer_sign + old_steer_offset_rad
- *
- * Results are printed to the ROS logger and written as a ready-to-paste
- * YAML snippet to a timestamped file in /tmp/.
- *
- * Usage:
- *   1. Physically align all wheels to point straight forward.
- *   2. Start warrior_driver_node so SPARK MAX feedback is live.
- *   3. Start this node (or use the launch file).
- *   4. Call the service:
+ * Procedure:
+ *   1. Power OFF the robot.
+ *   2. Physically rotate ALL wheels to point straight forward.
+ *   3. Power ON the SPARK MAXes (they boot in neutral — wheels stay free).
+ *   4. Run this node (warrior_driver must NOT be running):
+ *        ros2 run warrior_driver steer_calibration_node \
+ *          --ros-args --params-file .../steer_calibration.yaml
+ *   5. Call the service:
  *        ros2 service call /steer_calibration/calibrate std_srvs/srv/Trigger "{}"
- *   5. Copy the printed YAML offsets into warrior_driver.yaml.
+ *   6. Paste the printed steer_offset_rad values into warrior_driver.yaml.
+ *
+ * Why warrior_driver must be off:
+ *   warrior_driver sends enable + mode + setpoint heartbeats at ~50 Hz from
+ *   the moment it starts. Once those arrive, the SPARK MAX locks to its last
+ *   setpoint (0 on first boot) and the wheel can no longer be pushed by hand.
+ *   This node sends heartbeats WITHOUT setpoints, so the SPARK MAX streams
+ *   its encoder position but never drives.
  */
 class SteerCalibrationNode : public rclcpp::Node
 {
@@ -50,28 +46,43 @@ public:
 
 private:
     void load_modules();
-    void on_state(const warrior_msgs::msg::SwerveState::SharedPtr msg);
+
     void on_calibrate(
         const std_srvs::srv::Trigger::Request::SharedPtr  request,
         std_srvs::srv::Trigger::Response::SharedPtr       response);
 
-    // Module configuration (mirrors warrior_driver parameters)
-    struct CalibModule
+    // ── per-port SLCAN state (used only during on_calibrate) ─────────────────
+    struct PortState
     {
-        SwerveModuleConfig  config;
-        CalibModuleState    state;
+        int         fd                = -1;
+        std::string path;
+        std::string rx_buf;
+        int         can_id            = -1;  ///< learned from first inbound Status frame
+        float       position_rot      = std::numeric_limits<float>::quiet_NaN();
+        bool        telemetry_sent    = false;
     };
 
-    std::vector<CalibModule>                     modules_;
-    std::unordered_map<std::string, std::size_t> module_index_;
+    bool  open_slcan_port(PortState & ps) const;
+    void  close_slcan_port(PortState & ps) const;
+    bool  write_port(PortState & ps, const std::string & data) const;
+    void  drain_port(PortState & ps) const;  ///< read + parse one burst of bytes
 
-    // ROS interfaces
-    rclcpp::Subscription<warrior_msgs::msg::SwerveState>::SharedPtr state_sub_;
-    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr              calibrate_srv_;
+    // ── module registry ───────────────────────────────────────────────────────
+    struct CalibModule
+    {
+        SwerveModuleConfig config;
+    };
 
-    std::string state_topic_;
-    double      feedback_timeout_s_ = 2.0;   ///< Max age of feedback before refusing to calibrate
-    std::string output_dir_;                  ///< Directory to write the YAML snippet
+    std::vector<CalibModule>                modules_;
+    std::unordered_map<int, std::size_t>    can_id_to_module_;  ///< spark_can_id → index
+
+    // ── ROS interfaces ────────────────────────────────────────────────────────
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr calibrate_srv_;
+
+    // ── parameters ────────────────────────────────────────────────────────────
+    char        bitrate_code_    = '8';  ///< SLCAN 'S' command code (8 = 1 Mbit/s)
+    double      read_timeout_s_  = 5.0; ///< How long to wait for all Status 2 frames
+    std::string output_dir_;
 };
 
 }  // namespace warrior::driver
