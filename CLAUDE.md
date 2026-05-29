@@ -41,8 +41,10 @@ When you find a new USB auto-connect issue, append it here with the date
    Period). If it's set to 0 or huge, the controller still streams Status
    0 (faults / applied output) but you'll never see position. Diagnostic
    counters (`status_0_count`, `status_2_count`) in `nudge_sparks.py` let
-   you tell that apart from a dead controller. Fix: in REV, set Status 2
-   ≤ ~50 ms, Burn Flash, power-cycle that controller.
+   you tell that apart from a dead controller. **As of 2026-05-29 you no
+   longer need Burn Flash for this** — send the telemetry-enable frame
+   (rule 12) and Status 2-6 turn on in software. Burn-Flashing Status 2
+   ≤ ~50 ms in REV still works as a fallback but is no longer required.
 6. **Open serial ports exclusively.** `TIOCEXCL` on Linux. Without this,
    two nodes will fight over the same port and both will see corrupted
    bytes. See
@@ -61,6 +63,28 @@ When you find a new USB auto-connect issue, append it here with the date
     it.** Do not try to recover the existing connection in-place. The
     discovery thread runs every `discovery_period_s` (default 2.0 s) and
     will pick the port back up after the kernel releases it.
+11. **Open the SLCAN CAN channel before writing any `T…` frame.** A
+    cold-booted SPARK MAX brings its USB-SLCAN bridge up with the CAN
+    channel *closed* — every `T…` frame you write is silently dropped and
+    nothing ever streams back. Send `S8\r` (bitrate 1 Mbit/s) then `O\r`
+    at session open. SLCAN keeps the channel open until `C\r` or a
+    power-cycle, which is why a warm controller (one a prior REV/session
+    already opened) appears to "just work" while a cold one is silent.
+    Helpers: `_OPEN_FRAME` in
+    [warrior_hardware/warrior_driver/scripts/nudge_sparks.py](warrior_hardware/warrior_driver/scripts/nudge_sparks.py);
+    C++ does `C\r`/`S\r`/`O\r` in `SparkMaxSlcanDevice::open()`.
+12. **Status 2-6 (incl. position) need a one-time telemetry-enable
+    frame.** Opening the channel (rule 11) gets Status 0 streaming, but a
+    cold controller still won't broadcast Status 2-6 until it receives:
+    CAN ID `0x02050400 | device_id`, dlc 4, payload `7C 00 FF FF`
+    (api_class 0x01, api_index 0x00). The device_id is in the low 6 bits,
+    so **build it per controller** (`…402` for dev 2, `…403` for dev 3 —
+    do not hardcode). Resend each tx tick until Status 2 appears, then
+    stop (it's a register write, not a heartbeat). Helpers:
+    `_make_enable_telemetry_frame()` in `nudge_sparks.py`,
+    `sparkmax::make_enable_telemetry_frame()` in
+    [sparkmax_frame.hpp](warrior_hardware/warrior_driver/include/warrior_driver/sparkmax/sparkmax_frame.hpp).
+    This replaces the old "open REV once after cold boot" workaround.
 
 ### History
 
@@ -127,15 +151,34 @@ When you find a new USB auto-connect issue, append it here with the date
   controllers keep streaming Status 0/2 long enough to be discovered.
   After 12 V was confirmed on, all 3 controllers came up and nudged
   cleanly (+4.905 of commanded +5.000).
-- **2026-05-27 — OPEN ISSUE** — on this session, none of the 3
-  controllers streamed until REV Hardware Client was opened and
-  connected once after 12 V power-on. After that, the bare `nudge_sparks`
-  heartbeat alone is sufficient to keep them streaming across runs.
-  Unknown whether REV did some persistent firmware-side state change
-  during its connect, or whether the heartbeat fix above would have
-  worked on a fully cold-booted controller given enough time. Capture
-  REV's connect sequence with `sniff_usb.py` next time the bus is cold
-  to find out — see [project-sparkmax-rev-bump-on-boot].
+- **2026-05-27 — (was OPEN, RESOLVED 2026-05-29)** — on this session,
+  none of the 3 controllers streamed until REV Hardware Client was opened
+  and connected once after 12 V power-on. After that, the bare
+  `nudge_sparks` heartbeat alone was sufficient to keep them streaming.
+  Root cause turned out to be **two stacked problems**, both fixed below;
+  REV's connect happened to do both, which is why "open REV once" worked.
+- **2026-05-29** — Captured REV's cold-boot connect with the upgraded
+  `sniff_usb.py` (now multi-device + timestamps; tails usbmon `0u`) into
+  `/tmp/rev_cold_connect.log`. Two findings closed the 2026-05-27 issue:
+  1. **CAN channel closed on cold boot.** REV's *first* two bytes are
+     `S8\r` then `O\r`; Status 0 starts ~20 ms later. `nudge_sparks` never
+     sent these and wrote `T…` frames into a closed channel that the
+     adapter silently dropped — total silence. A *warm* controller worked
+     because SLCAN keeps the channel open from a prior session. Fix:
+     `_OPEN_FRAME = "S8\rO\r"` at `SparkSession` open (rule 11). After
+     this, a cold power-cycle gave `S0=498` where before it was `S0=0`.
+  2. **Status 2-6 need a telemetry-enable.** With the channel open we got
+     Status 0 but `S2=0` (no position). In the log, Status 2-6 all turn on
+     together ~20 ms after a single frame REV sent: CAN ID
+     `0x02050400 | device_id`, dlc 4, payload `7C 00 FF FF`. Confirmed
+     REV-free by replaying REV's own bytes with the new
+     `scripts/probe_status2.py` (PASS on dev 2), then verified the
+     device_id is embedded by re-sniffing dev 3 (`…403` vs dev 2's `…402`).
+     Fix: `_make_enable_telemetry_frame(device_id)`, sent until Status 2
+     appears (rule 12). Folded into the C++ side too
+     (`sparkmax::make_enable_telemetry_frame()` + `SparkMaxSession::tx_loop`).
+     The old REV-connect workaround ([project-sparkmax-rev-bump-on-boot])
+     is no longer needed.
 
 ## Repository layout
 

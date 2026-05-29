@@ -207,4 +207,29 @@ inline std::string make_mode_frame(uint8_t bitmask)
 // device_id (it's a broadcast). Send alongside the mode frame.
 inline constexpr const char * ENABLE_FRAME = "T000502C0101\r";
 
+// ─── Telemetry-enable ──────────────────────────────────────────────────────
+//
+// Opening the SLCAN channel + heartbeat gets Status 0 streaming, but a
+// cold-booted SPARK MAX still won't broadcast Status 2-6 — and *position*
+// lives in Status 2 — until it receives this frame once. Sniffed from REV
+// Hardware Client 2026-05-29 (scripts/sniff_usb.py): api_class=0x01,
+// api_index=0x00, dlc 4, payload 7C 00 FF FF, addressed to the controller's
+// device_id (low 6 bits of the arbitration ID). Status 2-6 begin ~20 ms
+// later. Without it, position-discovery times out and the controller looks
+// "stuck on Status 0" — which is exactly what used to require a one-off REV
+// "connect" to clear (CLAUDE.md, the 2026-05-27 cold-boot issue). It carries
+// the device_id, so it must be built per controller (verified dev 2 ->
+// ...402, dev 3 -> ...403). Resend until Status 2 appears, then stop — it's a
+// register write, not a heartbeat. Verified REV-free with scripts/probe_status2.py.
+constexpr uint32_t API_CLASS_ENABLE_TELEMETRY = 0x01;
+constexpr uint32_t API_INDEX_ENABLE_TELEMETRY = 0x00;
+
+inline std::string make_enable_telemetry_frame(uint32_t can_id)
+{
+    const uint32_t arb = encode_arbitration_id(
+        API_CLASS_ENABLE_TELEMETRY, API_INDEX_ENABLE_TELEMETRY, can_id);
+    static constexpr uint8_t payload[4] = {0x7C, 0x00, 0xFF, 0xFF};
+    return to_slcan_frame(arb, payload, sizeof(payload));
+}
+
 }  // namespace warrior::driver::sparkmax

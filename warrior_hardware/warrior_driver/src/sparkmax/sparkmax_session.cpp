@@ -241,6 +241,15 @@ void SparkMaxSession::tx_loop()
             burst = to_slcan_frame(arb, payload.data(), payload.size()) + burst;
         }
 
+        // Once we know the device_id, keep asking the controller to broadcast
+        // Status 2-6 until position actually arrives, then stop (it's a
+        // register write, not a heartbeat). Without this a cold controller
+        // streams Status 0 but never Status 2, so position-discovery hangs —
+        // see make_enable_telemetry_frame() and CLAUDE.md (2026-05-27 issue).
+        if (dev >= 0 && status_2_count_.load() == 0) {
+            burst += make_enable_telemetry_frame(static_cast<uint32_t>(dev));
+        }
+
         if (!write_all_fd(burst)) {
             // Drop fd; rx loop will also exit on its next read error.
             // (Caller can re-open the session.)
