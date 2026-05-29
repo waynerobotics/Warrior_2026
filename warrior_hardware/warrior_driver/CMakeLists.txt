@@ -50,7 +50,9 @@ target_compile_features(nudge_sparks_cli PUBLIC cxx_std_17)
 add_executable(steer_calibration_node
   src/steer_calibration_main.cpp
   src/swerve/steer_calibration_node.cpp
+  src/sparkmax/sparkmax_session.cpp
 )
+target_link_libraries(steer_calibration_node Threads::Threads)
 target_include_directories(steer_calibration_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
