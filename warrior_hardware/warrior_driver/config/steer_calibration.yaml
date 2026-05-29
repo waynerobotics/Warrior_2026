@@ -1,0 +1,47 @@
+steer_calibration:
+  ros__parameters:
+    # Topic published by warrior_driver with per-module swerve state
+    state_topic: "/warrior_swerve_state"
+
+    # Max age (seconds) of the last feedback message before calibration is
+    # aborted.  Increase if CAN bus latency is high.
+    feedback_timeout_s: 2.0
+
+    # Directory where the timestamped YAML result file is saved.
+    # The file is also printed to the console so you can copy it immediately.
+    output_dir: "/tmp/warrior_calibration"
+
+    # ── Module list ──────────────────────────────────────────────────────────
+    # Must match warrior_driver.yaml exactly.
+    module_names: ["front", "left", "right"]
+
+    modules:
+      front:
+        drive_device_name: "04_swerve"
+        steer_device_name: "04_spark"
+        spark_can_id: 4
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0   # <── paste updated value here after calibration
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      left:
+        drive_device_name: "02_swerve"
+        steer_device_name: "02_spark"
+        spark_can_id: 2
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      right:
+        drive_device_name: "03_swerve"
+        steer_device_name: "03_spark"
+        spark_can_id: 3
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0

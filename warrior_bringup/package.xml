@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>warrior_description</depend>
   <depend>warrior_control</depend>
+  <depend>warrior_driver</depend>
   <depend>warrior_gazebo</depend>
   <depend>warrior_system</depend>
   <depend>robot_state_publisher</depend>
