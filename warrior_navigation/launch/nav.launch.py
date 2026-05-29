@@ -5,8 +5,18 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from launch.conditions import IfCondition
+from ament_index_python.packages import get_package_share_directory
+import os
 
 
+"""
+Practice launch: 
+ros2 launch warrior_navigation nav2_gps_waypoint_follower.launch.py
+map_origin_latitude:=42.400556255 map_origin_longitude:=-83.130645144
+
+
+
+"""
 def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
     waypoint_file = LaunchConfiguration('waypoint_file')
@@ -17,6 +27,14 @@ def generate_launch_description():
     utm_zone = LaunchConfiguration('utm_zone')
     utm_hemisphere = LaunchConfiguration('utm_hemisphere')
 
+    # Practice map origin
+    #  - latitude: 42.400556255
+    #   longitude: -83.130645144
+    #
+    # get_package_share_directory('warrior_navigation'),
+    # 'config',
+    # 'turtlebot_sim_waypoints.yaml'
+    
     declare_use_sim = DeclareLaunchArgument(
         'use_sim',
         default_value='true',
@@ -68,6 +86,18 @@ def generate_launch_description():
         'nav2_params.yaml'
     ])
 
+    practice_waypoints_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'config',
+        'practice_waypoints.yaml'
+    )
+
+    real_waypoints_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'config',
+        'real_waypoints.yaml'
+    )
+    
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -115,7 +145,7 @@ def generate_launch_description():
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
-            'waypoint_file': waypoint_file,
+            'waypoint_file': practice_waypoints_file,
             'map_origin_latitude': map_origin_latitude,
             'map_origin_longitude': map_origin_longitude,
             'map_origin_yaw': map_origin_yaw,
