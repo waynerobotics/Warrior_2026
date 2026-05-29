@@ -68,9 +68,9 @@ swerve_drive_controller:
 
     # Positions of wheels relative to robot center of mass
     wheel_to_center:
-      front: 0.538   # m
-      left: 0.545    # m
-      right: 0.545   # m
+      front: 0.6096   # m
+      left: 0.6096    # m
+      right: 0.6096   # m
 
 
     # Assuming the vehicle body coordinate system is placed at the center of the robot, 

@@ -13,7 +13,7 @@ LABEL maintainer="Yihao Cai <yihaocai007@gmail.com>" \
 
 # ------------ System Environment ------------
 ARG USER_UID=1000
-ARG USERNAME=warrior    
+ARG USERNAME=wrclub
 ARG HOME_PATH=/home/${USERNAME}
 
 ENV ROS_DISTRO=humble
@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-rosdep python3-rosinstall python3-vcstool python3-colcon-common-extensions \
     ros-${ROS_DISTRO}-desktop ros-${ROS_DISTRO}-backward-ros ros-${ROS_DISTRO}-common-interfaces \
     ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers ros-${ROS_DISTRO}-octomap \
+    ros-${ROS_DISTRO}-xacro ros-${ROS_DISTRO}-ros-gz* joystick \
     ros-${ROS_DISTRO}-octomap-msgs \
     ros-${ROS_DISTRO}-rmw-fastrtps-cpp \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
@@ -68,13 +69,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # ------------ Create user ------------
 RUN useradd -m ${USERNAME} && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-RUN mkdir -p ${THIRD_PARTY_PATH} && chown -R ${USERNAME}:${USERNAME} ${THIRD_PARTY_PATH}
 USER ${USERNAME}
 WORKDIR ${HOME_PATH}
 
 # ------------ ROS2 Workspace ------------
 ARG MAKE_JOBS=$(nproc)
-ARG ROS2_WS_NAME=edge_ws
+ARG ROS2_WS_NAME=warrior_ws
 ARG ROS2_WS_PATH=/home/${USERNAME}/${ROS2_WS_NAME}
 SHELL ["/bin/bash", "-c"]
 
@@ -91,13 +91,12 @@ RUN mkdir torch_libs && cd torch_libs && \
     # cd .. && rm -rf torch_libs
 
 
-    # ------------ Set Paths ------------
+# ------------ Set Paths ------------
 RUN echo '' >> ${HOME_PATH}/.bashrc
 RUN echo '################## Add CUDA Library ##################' >> ${HOME_PATH}/.bashrc
 RUN echo 'export PATH=/usr/local/cuda-12.6/bin:$PATH' >> ${HOME_PATH}/.bashrc
 RUN echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.6/lib64:$LD_LIBRARY_PATH' >> ${HOME_PATH}/.bashrc
 RUN echo '' >> ${HOME_PATH}/.bashrc
-
 
 
 # ------------ Set Other ENV ------------
@@ -107,6 +106,31 @@ ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics
 ENV PYTHONPATH=/usr/lib/python3/dist-packages:${ROS2_WS_PATH}/install/lib/python3.10/site-packages
+
+
+# ------------ Pull private repo ------------
+USER root
+RUN --mount=type=ssh \
+    mkdir -p ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts && \
+    mkdir -p ${HOME_PATH}/warrior_ws/src/ && cd ${HOME_PATH}/warrior_ws/src/ && \
+    git clone git@github.com:waynerobotics/Warrior_2026.git && \
+    chown -R ${USERNAME}:${USERNAME} ${HOME_PATH}/warrior_ws
+
+
+# ------------ Build custom ROS2 packages ------------
+USER ${USERNAME}
+WORKDIR ${HOME_PATH}/warrior_ws
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    colcon build \
+      --packages-up-to \
+        warrior_bringup \
+        unitree_lidar_ros2 \
+        unitree_l2_lidar \
+        insta360_camera \
+        ai_perception \
+        omnivision \
+      --symlink-install || true
 
 
 # ------------ Entrypoint ------------
