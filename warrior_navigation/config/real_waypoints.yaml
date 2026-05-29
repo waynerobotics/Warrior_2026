@@ -1,0 +1,18 @@
+
+#real gps points I think maybe percahnce
+waypoints:
+  - latitude: 42.400577100
+    longitude: -83.130962509
+    yaw: 0.0
+
+  - latitude: 42.400523432
+    longitude: -83.130969819
+    yaw: 0.0
+
+  - latitude: 42.400507588
+    longitude: -83.130969297
+    yaw: 0.0
+
+  - latitude: 42.400453974
+    longitude: -83.130957951
+    yaw: 0.0
