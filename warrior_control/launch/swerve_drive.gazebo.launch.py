@@ -122,42 +122,52 @@ def generate_launch_description():
         # parameters=[{"use_sim_time": use_sim_time}],
     )
     
+    bridge_params = os.path.join(
+        get_package_share_directory('warrior_bringup'),
+        'config',
+        'warrior_bridge.yaml'
+    )
 
     gz_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[            
-             # clock
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-
-            # RGB camera
-            '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+        #arguments=[            
+        #     # clock
+        #    '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
+        #
+        #    # RGB camera
+        #    '/camera/image_raw@sensor_msgs/msg/Image@gz.msgs.Image',
+        #    '/camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
 
             # Depth camera
-            '/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
-            '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
-            '/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+        #    '/depth_camera/image@sensor_msgs/msg/Image@gz.msgs.Image',
+        #    '/depth_camera/depth_image@sensor_msgs/msg/Image@gz.msgs.Image',
+        #    '/depth_camera/camera_info@sensor_msgs/msg/CameraInfo@gz.msgs.CameraInfo',
+        #    '/depth_camera/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
 
             # lidar
-            '/L1_lidar/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-            '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
+        #    '/L1_lidar/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan',
+        #    '/L1_lidar/scan/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked',
 
             # GPS
-            '/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat',
+        #    '/navsat@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat',
 
             # odom
-            '/odom_gt@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+        #    '/odom_gt@nav_msgs/msg/Odometry@gz.msgs.Odometry',
 
             # imu
-            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+        #    '/imu@sensor_msgs/msg/Imu@gz.msgs.IMU',
+        #],
+        arguments=[
+            '--ros-args',
+            '-p',
+            f'config_file:={bridge_params}',
         ],
         parameters=[{"use_sim_time": use_sim_time}],
-        remappings=[
-            ('/L1_lidar/scan', '/scan'),
-            ('/L1_lidar/scan/points', '/scan/points'),
-        ],
+        #remappings=[
+        #    ('/L1_lidar/scan', '/scan'),
+        #    ('/L1_lidar/scan/points', '/scan/points'),
+        #],
         output='screen',
     )
 
