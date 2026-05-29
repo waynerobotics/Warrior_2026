@@ -14,7 +14,10 @@ LABEL maintainer="Yihao Cai <yihaocai007@gmail.com>" \
 # ------------ System Environment ------------
 ARG USER_UID=1000
 ARG USERNAME=wrclub
+
+ARG ROS_WS_NAME=warrior_ws
 ARG HOME_PATH=/home/${USERNAME}
+ARG REPO_URL=git@github.com:waynerobotics/Warrior_2026.git
 
 ENV ROS_DISTRO=humble
 ENV DEBIAN_FRONTEND=noninteractive
@@ -68,14 +71,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 # ------------ Create user ------------
-RUN useradd -m ${USERNAME} && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN useradd -m ${USERNAME} \
+    && usermod -aG dialout ${USERNAME} \
+    && echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+    
 USER ${USERNAME}
 WORKDIR ${HOME_PATH}
 
 # ------------ ROS2 Workspace ------------
 ARG MAKE_JOBS=$(nproc)
 ARG ROS2_WS_NAME=warrior_ws
-ARG ROS2_WS_PATH=/home/${USERNAME}/${ROS2_WS_NAME}
+ARG ROS2_WS_PATH=${HOME_PATH}/${ROS2_WS_NAME}
 SHELL ["/bin/bash", "-c"]
 
 
@@ -113,14 +119,14 @@ USER root
 RUN --mount=type=ssh \
     mkdir -p ~/.ssh && \
     ssh-keyscan github.com >> ~/.ssh/known_hosts && \
-    mkdir -p ${HOME_PATH}/warrior_ws/src/ && cd ${HOME_PATH}/warrior_ws/src/ && \
-    git clone git@github.com:waynerobotics/Warrior_2026.git && \
-    chown -R ${USERNAME}:${USERNAME} ${HOME_PATH}/warrior_ws
+    mkdir -p ${ROS2_WS_PATH}/src/ && cd ${ROS2_WS_PATH}/src/ && \
+    git clone ${REPO_URL} && \
+    chown -R ${USERNAME}:${USERNAME} ${ROS2_WS_PATH}
 
 
 # ------------ Build custom ROS2 packages ------------
 USER ${USERNAME}
-WORKDIR ${HOME_PATH}/warrior_ws
+WORKDIR ${ROS2_WS_PATH}
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     colcon build \
       --packages-up-to \
