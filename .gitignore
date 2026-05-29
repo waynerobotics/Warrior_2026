@@ -52,6 +52,9 @@ tags
 .env
 .venv/
 
+# Calibration images / large datasets
+trt_calibration_images*
+
 # Ignore generated/temporary mesh or model files
 # *.dae
 # *.stl
