@@ -207,6 +207,13 @@ inline std::string make_mode_frame(uint8_t bitmask)
 // device_id (it's a broadcast). Send alongside the mode frame.
 inline constexpr const char * ENABLE_FRAME = "T000502C0101\r";
 
+// SLCAN channel-open sequence (adapter command, not a CAN frame). A cold
+// SPARK MAX boots with its CAN channel CLOSED — every T… frame is silently
+// dropped until this is sent once at port open. "S8" = 1 Mbit/s bitrate,
+// "O" = open channel. SLCAN keeps it open until "C\r" or power-cycle. See
+// CLAUDE.md rule 11; mirrors _OPEN_FRAME in nudge_sparks.py.
+inline constexpr const char * SLCAN_OPEN_SEQUENCE = "S8\rO\r";
+
 // ─── Telemetry-enable ──────────────────────────────────────────────────────
 //
 // Opening the SLCAN channel + heartbeat gets Status 0 streaming, but a

@@ -72,7 +72,9 @@ When you find a new USB auto-connect issue, append it here with the date
     already opened) appears to "just work" while a cold one is silent.
     Helpers: `_OPEN_FRAME` in
     [warrior_hardware/warrior_driver/scripts/nudge_sparks.py](warrior_hardware/warrior_driver/scripts/nudge_sparks.py);
-    C++ does `C\r`/`S\r`/`O\r` in `SparkMaxSlcanDevice::open()`.
+    C++ `sparkmax::SLCAN_OPEN_SEQUENCE`, sent in `SparkMaxSession::open()`
+    (the live class — note `SparkMaxSlcanDevice` also has a C/S/O open but
+    is **not compiled** into any target, so don't be fooled by it).
 12. **Status 2-6 (incl. position) need a one-time telemetry-enable
     frame.** Opening the channel (rule 11) gets Status 0 streaming, but a
     cold controller still won't broadcast Status 2-6 until it receives:

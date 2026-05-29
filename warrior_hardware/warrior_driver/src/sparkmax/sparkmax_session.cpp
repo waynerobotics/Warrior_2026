@@ -138,6 +138,15 @@ bool SparkMaxSession::open(const std::string & port)
     port_ = port;
     rx_buf_.clear();
 
+    // Open the SLCAN CAN channel before any T… frame, or a cold controller
+    // silently drops everything and never streams status. See
+    // sparkmax::SLCAN_OPEN_SEQUENCE / CLAUDE.md rule 11.
+    if (!write_all_fd(sparkmax::SLCAN_OPEN_SEQUENCE)) {
+        ::close(fd_);
+        fd_ = -1;
+        return false;
+    }
+
     running_.store(true);
     tx_thread_ = std::thread(&SparkMaxSession::tx_loop, this);
     rx_thread_ = std::thread(&SparkMaxSession::rx_loop, this);
