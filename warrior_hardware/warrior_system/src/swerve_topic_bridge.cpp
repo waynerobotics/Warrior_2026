@@ -44,6 +44,7 @@ CallbackReturn SwerveTopicBridge::on_init(const hardware_interface::HardwareInfo
             auto it = modules_.find(msg->swerve_id);
             if (it == modules_.end()) return;
             it->second.state_steer_position_rad   = msg->steer_position_rad;
+            it->second.state_drive_position_rad   = msg->drive_position_rad;
             it->second.state_drive_velocity_rad_s = msg->drive_velocity_rad_s;
         });
 
@@ -85,13 +86,22 @@ std::vector<hardware_interface::StateInterface> SwerveTopicBridge::export_state_
         identify_joint(joint.name, module_key, is_steer);
 
         auto& scratch = modules_.at(module_key);
-        const std::string expected_iface = is_steer ? hardware_interface::HW_IF_POSITION
-                                                    : hardware_interface::HW_IF_VELOCITY;
-
         for (const auto& interface : joint.state_interfaces) {
-            if (interface.name != expected_iface) continue;
-            double* ptr = is_steer ? &scratch.state_steer_position_rad
-                                   : &scratch.state_drive_velocity_rad_s;
+            if (is_steer && interface.name != hardware_interface::HW_IF_POSITION) {
+                continue;
+            }
+            if (!is_steer && interface.name != hardware_interface::HW_IF_POSITION &&
+                interface.name != hardware_interface::HW_IF_VELOCITY) {
+                continue;
+            }
+            double* ptr = nullptr;
+            if (is_steer) {
+                ptr = &scratch.state_steer_position_rad;
+            } else if (interface.name == hardware_interface::HW_IF_POSITION) {
+                ptr = &scratch.state_drive_position_rad;
+            } else {
+                ptr = &scratch.state_drive_velocity_rad_s;
+            }
             state_interfaces.emplace_back(joint.name, interface.name, ptr);
         }
     }

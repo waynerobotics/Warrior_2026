@@ -41,6 +41,7 @@ private:
     struct ModuleScratch
     {
         double state_steer_position_rad   = 0.0;
+        double state_drive_position_rad   = 0.0;
         double state_drive_velocity_rad_s = 0.0;
         double cmd_steer_position_rad     = 0.0;
         double cmd_drive_velocity_rad_s   = 0.0;

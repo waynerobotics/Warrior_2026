@@ -48,7 +48,7 @@ def generate_launch_description():
         os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
 
     rviz2_config_file = PathJoinSubstitution(
-        [pkg_warrior_bringup, "rviz", "warrior.rviz"]
+        [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
     )
 
     robot_description = Command(["xacro ", xacro_file])

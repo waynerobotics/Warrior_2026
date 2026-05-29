@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "warrior_hardware/sparkmax_frame.hpp"
+#include "warrior_motor_manager/sparkmax_frame.hpp"
 
 namespace warrior::hardware {
 

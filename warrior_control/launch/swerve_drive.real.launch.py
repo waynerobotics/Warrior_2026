@@ -33,7 +33,7 @@ def generate_launch_description():
         os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
 
     rviz2_config_file = PathJoinSubstitution(
-        [pkg_warrior_bringup, "rviz", "warrior.rviz"]
+        [pkg_warrior_bringup, "rviz", "warrior.real.rviz"]
     )
 
     robot_description = Command(["xacro ", xacro_file])
@@ -42,7 +42,10 @@ def generate_launch_description():
     controller_manager = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[controller_yaml],
+        parameters=[
+            {"robot_description": robot_description},
+            controller_yaml,
+        ],
         remappings=[
             ("~/robot_description", "/robot_description"),
         ],

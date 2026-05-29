@@ -15,7 +15,7 @@
         </joint>
         <joint name="left_drive_joint">
             <command_interface name="velocity"/>
-            <!-- <state_interface name="position"/> -->
+            <state_interface name="position"/>
             <state_interface name="velocity"/>
             <!-- <state_interface name="effort"/> -->
         </joint>
@@ -27,7 +27,7 @@
         </joint>
         <joint name="right_drive_joint">
             <command_interface name="velocity"/>
-            <!-- <state_interface name="position"/> -->
+            <state_interface name="position"/>
             <state_interface name="velocity"/>
             <!-- <state_interface name="effort"/> -->
         </joint>
@@ -39,7 +39,7 @@
         </joint>
         <joint name="front_drive_joint">
             <command_interface name="velocity"/>
-            <!-- <state_interface name="position"/> -->
+            <state_interface name="position"/>
             <state_interface name="velocity"/>
             <!-- <state_interface name="effort"/> -->
         </joint>
