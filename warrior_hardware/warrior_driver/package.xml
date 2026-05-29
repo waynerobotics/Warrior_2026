@@ -9,6 +9,7 @@
 
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>builtin_interfaces</depend>
   <depend>diagnostic_msgs</depend>
   <depend>warrior_msgs</depend>
