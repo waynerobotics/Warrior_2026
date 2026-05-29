@@ -1,0 +1,70 @@
+{
+  "backbone": "resnet18",
+  "checkpoint": "outputs\\backbone_sweep\\checkpoints\\resnet18\\best.pt",
+  "status": "ok",
+  "passed": true,
+  "epoch": 28,
+  "image_size": [
+    640,
+    1280
+  ],
+  "num_det_classes": 6,
+  "pred_dim": 11,
+  "opset": 17,
+  "export_time_sec": 0.79,
+  "onnx_size_mb": 60.51,
+  "onnx_graph_check": "pass",
+  "divergence": {
+    "outputs": {
+      "det_p3": {
+        "shape": [
+          1,
+          11,
+          80,
+          160
+        ],
+        "max_abs_diff": 6.2e-06,
+        "mean_abs_diff": 5e-07,
+        "atol": 0.05,
+        "passed": true
+      },
+      "det_p4": {
+        "shape": [
+          1,
+          11,
+          40,
+          80
+        ],
+        "max_abs_diff": 5.7e-06,
+        "mean_abs_diff": 5e-07,
+        "atol": 0.05,
+        "passed": true
+      },
+      "det_p5": {
+        "shape": [
+          1,
+          11,
+          20,
+          40
+        ],
+        "max_abs_diff": 7.6e-06,
+        "mean_abs_diff": 6e-07,
+        "atol": 0.05,
+        "passed": true
+      },
+      "seg_logits": {
+        "shape": [
+          1,
+          2,
+          640,
+          1280
+        ],
+        "max_abs_diff": 2e-05,
+        "mean_abs_diff": 2.1e-06,
+        "atol": 0.05,
+        "passed": true
+      }
+    },
+    "all_passed": true
+  }
+}

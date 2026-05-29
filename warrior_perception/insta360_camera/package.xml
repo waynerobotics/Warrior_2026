@@ -3,22 +3,17 @@
 <package format="3">
   <name>insta360_camera</name>
   <version>0.0.0</version>
-  <description>ROS 2 driver for the Insta360 X4 / X5 camera in USB / UVC mode.</description>
+  <description>ROS 2 C++ driver for the Insta360 X4 / X5 camera in USB / UVC mode.</description>
   <maintainer email="lord.daniel.w@hotmail.com">fire</maintainer>
   <license>Apache License 2.0</license>
 
-  <depend>rclpy</depend>
-  <depend>sensor_msgs</depend>
-  <depend>std_msgs</depend>
-  <depend>cv_bridge</depend>
-  <exec_depend>python3-opencv</exec_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
