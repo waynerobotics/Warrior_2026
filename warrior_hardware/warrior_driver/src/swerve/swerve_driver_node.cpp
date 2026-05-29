@@ -5,9 +5,9 @@
 
 #include "warrior_driver/arduino/arduino_serial_device.hpp"     
 #include "warrior_driver/sparkmax/sparkmax_frame.hpp"
-#include "warrior_driver/utils/unit_conversions.hpp"
+#include "warrior_driver/swerve/unit_conversions.hpp"
 #include "warrior_driver/swerve/swerve_driver_node.hpp"
-#include "warrior_driver/sparkmax/serial_protocol.hpp"
+#include "warrior_driver/arduino/serial_protocol.hpp"
 
 namespace warrior::driver {
 
@@ -53,7 +53,7 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
     (void) declare_parameter<std::string>("sparkmax.slcan_interface", "auto");
     (void) declare_parameter<std::string>("sparkmax.bitrate_code", "8");
 
-    load_modules();
+    load_modules();     // populates modules_ and module_index_ from parameters
 
     DeviceRegistry::ArduinoConfig arduino_cfg;
     arduino_cfg.baud_rate = baud_rate_;
@@ -72,25 +72,32 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
         }
     }
 
+    // Start the device registry 
     registry_ = std::make_unique<DeviceRegistry>(
         get_logger(), std::move(arduino_cfg), std::move(spark_cfg),
         std::chrono::duration<double>(discovery_period_s_));
     registry_->start();
 
+    // Subscribe to command topic
     cmd_sub_ = create_subscription<warrior_msgs::msg::SwerveCmd>(
         command_topic_, rclcpp::QoS(10),
         std::bind(&SwerveDriverNode::on_command, this, std::placeholders::_1));
 
+    // Publish state updates
     state_pub_ = create_publisher<warrior_msgs::msg::SwerveState>(
         state_topic_, rclcpp::QoS(10));
+    
+    // Diagnostics publisher
     diag_pub_ = create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
         "/diagnostics", rclcpp::QoS(10));
 
+    // Set up update timer
     const auto update_period = std::chrono::duration<double>(1.0 / update_rate_hz_);
     update_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(update_period),
         std::bind(&SwerveDriverNode::update, this));
 
+    // Set up diagnostics timer
     const auto diag_period = std::chrono::duration<double>(1.0 / diagnostics_rate_hz_);
     diag_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(diag_period),
@@ -132,7 +139,7 @@ void SwerveDriverNode::load_modules()
 
     modules_.reserve(names.size());
     for (const auto & name : names) {
-        ModuleConfig cfg;
+        SwerveModuleConfig cfg;
         cfg.name                            = name;
         cfg.drive_device_name               = declare_parameter<std::string>("modules." + name + ".drive_device_name", "");
         cfg.steer_device_name               = declare_parameter<std::string>("modules." + name + ".steer_device_name", "");
@@ -144,9 +151,9 @@ void SwerveDriverNode::load_modules()
         cfg.max_drive_rad_s                 = declare_parameter<double>(     "modules." + name + ".max_drive_rad_s", 1.0);
 
         module_index_[name] = modules_.size();
-        Module m;
+        SwerveModule m;
         m.config = cfg;
-        m.runtime.last_command_time = this->now();
+        m.state.last_command_time = this->now();
         modules_.push_back(std::move(m));
 
         RCLCPP_INFO(get_logger(),
@@ -158,7 +165,7 @@ void SwerveDriverNode::load_modules()
     }
 }
 
-SwerveDriverNode::Module * SwerveDriverNode::find_module(const std::string & name)
+SwerveModule * SwerveDriverNode::find_module(const std::string & name)
 {
     auto it = module_index_.find(name);
     if (it == module_index_.end()) return nullptr;
@@ -167,16 +174,16 @@ SwerveDriverNode::Module * SwerveDriverNode::find_module(const std::string & nam
 
 void SwerveDriverNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg)
 {
-    Module * module = find_module(msg->swerve_id);
+    SwerveModule *module = find_module(msg->swerve_id);
     if (!module) {
         RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
             "Ignoring command for unknown swerve_id '%s'", msg->swerve_id.c_str());
         return;
     }
-    module->runtime.cmd_steer_position_rad   = msg->steer_position_rad;
-    module->runtime.cmd_drive_velocity_rad_s = msg->drive_velocity_rad_s;
-    module->runtime.have_command             = true;
-    module->runtime.last_command_time        = this->now();
+    module->state.cmd_steer_position_rad   = msg->steer_position_rad;
+    module->state.cmd_drive_velocity_rad_s = msg->drive_velocity_rad_s;
+    module->state.have_command             = true;
+    module->state.last_command_time        = this->now();
 }
 
 void SwerveDriverNode::drain_and_log_arduino_messages()
@@ -208,13 +215,13 @@ void SwerveDriverNode::update()
 
     for (auto & module : modules_) {
         const auto & cfg = module.config;
-        auto & rt = module.runtime;
+        auto & state = module.state;
 
-        const bool timed_out = rt.have_command &&
-            (now - rt.last_command_time).seconds() > command_timeout_s_;
+        const bool timed_out = state.have_command &&
+            (now - state.last_command_time).seconds() > command_timeout_s_;
 
-        const double steer_cmd = rt.have_command ? rt.cmd_steer_position_rad : 0.0;
-        const double drive_cmd = (rt.have_command && !timed_out) ? rt.cmd_drive_velocity_rad_s : 0.0;
+        const double steer_cmd = state.have_command ? state.cmd_steer_position_rad : 0.0;
+        const double drive_cmd = (state.have_command && !timed_out) ? state.cmd_drive_velocity_rad_s : 0.0;
 
         const double motor_rotations = steer_rad_to_motor_rotations(steer_cmd, cfg);
         const int    drive_percent   = drive_rad_s_to_percent(drive_cmd, cfg);
@@ -229,7 +236,7 @@ void SwerveDriverNode::update()
         } else if (timed_out) {
             drive_status = "timeout";
             registry_->send_drive_percent(cfg.drive_device_name, 0);
-        } else if (rt.have_command) {
+        } else if (state.have_command) {
             const bool ok = registry_->send_drive_percent(cfg.drive_device_name, drive_percent);
             drive_status = ok ? "active" : "write_failed";
         } else {
@@ -250,21 +257,21 @@ void SwerveDriverNode::update()
             if (pos_rot.has_value() && pos_age >= 0.0
                 && pos_age < steer_stale_after_s_)
             {
-                rt.fb_steer_position_rad =
+                state.fb_steer_position_rad =
                     motor_rotations_to_steer_rad(static_cast<double>(*pos_rot), cfg);
-                rt.last_steer_pos_time = now - rclcpp::Duration::from_seconds(pos_age);
+                state.last_steer_pos_time = now - rclcpp::Duration::from_seconds(pos_age);
             }
         }
 
         const bool steer_pos_fresh =
-            rt.last_steer_pos_time.nanoseconds() > 0 &&
-            (now - rt.last_steer_pos_time).seconds() < steer_stale_after_s_;
+            state.last_steer_pos_time.nanoseconds() > 0 &&
+            (now - state.last_steer_pos_time).seconds() < steer_stale_after_s_;
 
         std::string steer_status;
         bool steer_connected_now = false;
         if (!spark_connected) {
             steer_status = "scanning";
-        } else if (rt.have_command && !timed_out) {
+        } else if (state.have_command && !timed_out) {
             const bool ok = registry_->send_steer_position(
                 cfg.spark_can_id, static_cast<float>(motor_rotations));
             steer_connected_now = ok && steer_pos_fresh;
@@ -286,13 +293,13 @@ void SwerveDriverNode::update()
         RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
             "[%s] steer cmd=%.3f rad / fb=%.3f rad (%s) | drive cmd=%.3f rad/s -> %d%% (%s)",
             cfg.name.c_str(),
-            steer_cmd, rt.fb_steer_position_rad, steer_status.c_str(),
+            steer_cmd, state.fb_steer_position_rad, steer_status.c_str(),
             drive_cmd, drive_percent, drive_status.c_str());
 
         warrior_msgs::msg::SwerveState state_msg;
         state_msg.swerve_id              = cfg.name;
-        state_msg.steer_position_rad     = rt.fb_steer_position_rad;
-        state_msg.steer_velocity_rad_s   = rt.fb_steer_velocity_rad_s;
+        state_msg.steer_position_rad     = state.fb_steer_position_rad;
+        state_msg.steer_velocity_rad_s   = state.fb_steer_velocity_rad_s;
 
         // Drive velocity has no encoder feedback in this hardware path; echo the
         // commanded value. Consumers should treat this as open-loop.
@@ -317,18 +324,18 @@ void SwerveDriverNode::publish_diagnostics()
 
     for (const auto & module : modules_) {
         const auto & cfg = module.config;
-        const auto & rt  = module.runtime;
+        const auto & state  = module.state;
 
         diagnostic_msgs::msg::DiagnosticStatus st;
         st.name        = "warrior_swerve_driver: " + cfg.name;
         st.hardware_id = cfg.drive_device_name + " / spark can=" + std::to_string(cfg.spark_can_id);
 
         const bool drive_ok = registry_->is_arduino_connected(cfg.drive_device_name);
-        const double steer_pos_age = rt.last_steer_pos_time.nanoseconds() > 0
-            ? (now - rt.last_steer_pos_time).seconds() : -1.0;
+        const double steer_pos_age = state.last_steer_pos_time.nanoseconds() > 0
+            ? (now - state.last_steer_pos_time).seconds() : -1.0;
         const bool steer_fresh = steer_pos_age >= 0.0 && steer_pos_age < steer_stale_after_s_;
-        const bool cmd_recent  = rt.have_command &&
-                                 (now - rt.last_command_time).seconds() < command_timeout_s_;
+        const bool cmd_recent  = state.have_command &&
+                                 (now - state.last_command_time).seconds() < command_timeout_s_;
 
         if (drive_ok && steer_fresh) {
             st.level   = diagnostic_msgs::msg::DiagnosticStatus::OK;
@@ -348,11 +355,11 @@ void SwerveDriverNode::publish_diagnostics()
         st.values.push_back(kv("drive_open_loop",          true));
         st.values.push_back(kv("steer_feedback_fresh",     steer_fresh));
         st.values.push_back(kv("steer_feedback_age_s",     steer_pos_age));
-        st.values.push_back(kv("steer_position_rad",       rt.fb_steer_position_rad));
-        st.values.push_back(kv("steer_velocity_rad_s",     rt.fb_steer_velocity_rad_s));
+        st.values.push_back(kv("steer_position_rad",       state.fb_steer_position_rad));
+        st.values.push_back(kv("steer_velocity_rad_s",     state.fb_steer_velocity_rad_s));
         st.values.push_back(kv("cmd_recent",               cmd_recent));
-        st.values.push_back(kv("cmd_steer_rad",            rt.cmd_steer_position_rad));
-        st.values.push_back(kv("cmd_drive_rad_s",          rt.cmd_drive_velocity_rad_s));
+        st.values.push_back(kv("cmd_steer_rad",            state.cmd_steer_position_rad));
+        st.values.push_back(kv("cmd_drive_rad_s",          state.cmd_drive_velocity_rad_s));
         st.values.push_back(kv("spark_can_id",             cfg.spark_can_id));
 
         msg.status.push_back(st);

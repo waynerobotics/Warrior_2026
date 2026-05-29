@@ -11,9 +11,30 @@
 #include <warrior_msgs/msg/swerve_state.hpp>
 
 #include "warrior_driver/swerve/device_registry.hpp"
-#include "warrior_driver/utils/module_config.hpp"
+#include "warrior_driver/swerve/swerve_config.hpp"
 
 namespace warrior::driver {
+
+struct SwerveModuleState
+{
+    // Latest command (from /warrior_swerve_command)
+    double cmd_steer_position_rad   = 0.0;
+    double cmd_drive_velocity_rad_s = 0.0;
+    bool   have_command             = false;
+    rclcpp::Time last_command_time;
+
+    // Latest feedback from SPARK MAX (over SLCAN)
+    double fb_steer_position_rad     = 0.0;
+    double fb_steer_velocity_rad_s   = 0.0;
+    rclcpp::Time last_steer_pos_time;  // zero if never received
+    rclcpp::Time last_steer_vel_time;
+};
+
+struct SwerveModule
+{
+    SwerveModuleConfig   config;
+    SwerveModuleState     state;
+};
 
 class SwerveDriverNode : public rclcpp::Node
 {
@@ -25,35 +46,15 @@ public:
     void send_safe_stop();
 
 private:
-    struct ModuleRuntimeState
-    {
-        // Latest command (from /warrior_swerve_command)
-        double cmd_steer_position_rad   = 0.0;
-        double cmd_drive_velocity_rad_s = 0.0;
-        bool   have_command             = false;
-        rclcpp::Time last_command_time;
-
-        // Latest feedback from SPARK MAX (over SLCAN)
-        double fb_steer_position_rad     = 0.0;
-        double fb_steer_velocity_rad_s   = 0.0;
-        rclcpp::Time last_steer_pos_time;  // zero if never received
-        rclcpp::Time last_steer_vel_time;
-    };
-
-    struct Module
-    {
-        warrior::driver::ModuleConfig config;
-        ModuleRuntimeState runtime;
-    };
 
     void load_modules();
     void on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg);
     void update();
     void publish_diagnostics();
     void drain_and_log_arduino_messages();
-    Module * find_module(const std::string & name);
+    SwerveModule * find_module(const std::string & name);
 
-    std::vector<Module> modules_;
+    std::vector<SwerveModule> modules_;
     std::unordered_map<std::string, std::size_t> module_index_;
 
     std::string command_topic_;

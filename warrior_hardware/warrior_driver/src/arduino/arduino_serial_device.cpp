@@ -8,7 +8,7 @@
 #include <cstring>
 #include <thread>
 
-#include "warrior_driver/sparkmax/serial_protocol.hpp"
+#include "warrior_driver/arduino/serial_protocol.hpp"
 #include "warrior_driver/arduino/arduino_serial_device.hpp"
 
 namespace warrior::driver {

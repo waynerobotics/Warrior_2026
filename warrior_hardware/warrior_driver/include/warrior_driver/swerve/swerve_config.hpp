@@ -4,7 +4,7 @@
 
 namespace warrior::driver {
 
-struct ModuleConfig
+struct SwerveModuleConfig
 {
     std::string name;
 

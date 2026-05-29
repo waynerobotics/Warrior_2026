@@ -7,7 +7,7 @@
 #include <rclcpp/clock.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include "warrior_driver/swerve/device_registry.hpp"
-#include "warrior_driver/sparkmax/serial_protocol.hpp"
+#include "warrior_driver/arduino/serial_protocol.hpp"
 
 namespace warrior::driver::colors {
     constexpr const char* RED     = "\033[1;31m";
