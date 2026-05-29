@@ -64,7 +64,7 @@ swerve_drive_controller:
       - "position"
       - "velocity"
     
-    wheel_radius: 0.1015
+    wheel_radius: 0.1015   # m
 
     # Positions of wheels relative to robot center of mass
     wheel_to_center:
