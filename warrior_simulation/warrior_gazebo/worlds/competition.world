@@ -17,10 +17,11 @@
 
     <spherical_coordinates>
       <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
       <latitude_deg>42.66791</latitude_deg>
       <longitude_deg>-83.21958</longitude_deg>
       <elevation>286</elevation>
-      <heading_deg>90</heading_deg>
+      <heading_deg>0</heading_deg>
     </spherical_coordinates>
 
     <physics name="1ms" type="ODE">
@@ -36,6 +37,11 @@
     </plugin> -->
     <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
     <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <!-- Navsat plugin -->
+    <plugin
+      filename="gz-sim-navsat-system"
+      name="gz::sim::systems::NavSat">
+    </plugin>
 
     <!-- Ground Plane -->
     <include>
