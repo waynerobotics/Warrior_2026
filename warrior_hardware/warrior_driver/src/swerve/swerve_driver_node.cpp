@@ -153,6 +153,7 @@ void SwerveDriverNode::load_modules()
         module_index_[name] = modules_.size();
         SwerveModule m;
         m.config = cfg;
+        m.state.last_update_time = this->now();
         m.state.last_command_time = this->now();
         modules_.push_back(std::move(m));
 
@@ -213,14 +214,16 @@ void SwerveDriverNode::update()
 
     drain_and_log_arduino_messages();
 
+    // std::cout << "The number of modules_: " << modules_.size() << std::endl;
     for (auto & module : modules_) {
         const auto & cfg = module.config;
         auto & state = module.state;
+        // std::cout << "Processing module: " << cfg.name << std::endl;
 
         const bool timed_out = state.have_command &&
             (now - state.last_command_time).seconds() > command_timeout_s_;
 
-        const double steer_cmd = state.have_command ? state.cmd_steer_position_rad : 0.0;
+        const double steer_cmd = state.cmd_steer_position_rad;  // steer command keeps its last value even if timed out
         const double drive_cmd = (state.have_command && !timed_out) ? state.cmd_drive_velocity_rad_s : 0.0;
 
         const double motor_rotations = steer_rad_to_motor_rotations(steer_cmd, cfg);
@@ -296,6 +299,18 @@ void SwerveDriverNode::update()
             steer_cmd, state.fb_steer_position_rad, steer_status.c_str(),
             drive_cmd, drive_percent, drive_status.c_str());
 
+
+        // ── Drive position integration (open-loop, no encoder) ───────────────
+        const double dt = (now - state.last_update_time).seconds();
+        state.last_update_time = now;
+
+        if (dt > 0.0 && dt < 1.0) {  // 1.0s protection against large jumps (e.g. from pausing in a debugger)
+            state.fb_drive_position_rad += drive_cmd * dt;
+            // std::cout << "state_msg.swerve_id=" << cfg.name << ", dt=" << dt << "s, drive_cmd=" << drive_cmd
+            //           << " rad/s, new drive_position_rad=" << state.fb_drive_position_rad
+            //           << " rad" << std::endl;
+        }
+
         warrior_msgs::msg::SwerveState state_msg;
         state_msg.swerve_id              = cfg.name;
         state_msg.steer_position_rad     = state.fb_steer_position_rad;
@@ -303,7 +318,7 @@ void SwerveDriverNode::update()
 
         // Drive velocity has no encoder feedback in this hardware path; echo the
         // commanded value. Consumers should treat this as open-loop.
-        state_msg.drive_position_rad     = 0.0;
+        state_msg.drive_position_rad     = state.fb_drive_position_rad;
         state_msg.drive_velocity_rad_s   = drive_cmd;
         state_msg.steer_connected        = steer_connected_now;
         state_msg.drive_connected        = drive_connected;
