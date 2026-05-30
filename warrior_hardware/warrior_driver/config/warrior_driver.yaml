@@ -14,32 +14,32 @@ warrior_driver:
 
     modules:
       front:
-        drive_device_name: "02_swerve"
-        steer_device_name: "02_spark"
-        spark_can_id: 2
-        steer_motor_rot_per_module_rot: 42.0
-        steer_offset_rad: 0.0
-        steer_sign: 1.0
-        drive_sign:  1.0
-        max_drive_rad_s: 60.0
-
-      left:
-        drive_device_name: "03_swerve"
-        steer_device_name: "03_spark"
-        spark_can_id: 3
-        steer_motor_rot_per_module_rot: 42.0
-        steer_offset_rad: 0.0
-        steer_sign: 1.0
-        drive_sign:  1.0
-        max_drive_rad_s: 60.0
-
-      right:
         drive_device_name: "04_swerve"
         steer_device_name: "04_spark"
         spark_can_id: 4
         steer_motor_rot_per_module_rot: 42.0
         steer_offset_rad: 0.0
-        steer_sign: 1.0
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      left:
+        drive_device_name: "02_swerve"
+        steer_device_name: "02_spark"
+        spark_can_id: 2
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 60.0
+
+      right:
+        drive_device_name: "03_swerve"
+        steer_device_name: "03_spark"
+        spark_can_id: 3
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.0
+        steer_sign: -1.0
         drive_sign:  1.0
         max_drive_rad_s: 60.0
 

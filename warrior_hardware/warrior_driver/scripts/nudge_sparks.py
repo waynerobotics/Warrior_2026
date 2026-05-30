@@ -25,6 +25,32 @@ _SPARK_PID = 0xA30E
 _SETPOINT_ID_BASE = 0x02050100
 _ENABLE_FRAME = "T000502C0101\r"
 
+# SLCAN channel-open sequence. A cold-booted SPARK MAX brings its USB-SLCAN
+# bridge up with the CAN channel CLOSED — every T... frame we write is
+# silently dropped and the controller never streams Status 0/2 to anyone.
+# REV Hardware Client opens it on connect; captured 2026-05-29 with
+# sniff_usb.py, REV sends exactly "S8\r" (bitrate 1 Mbit/s) then "O\r"
+# (open) before any traffic, and status starts ~20 ms later. SLCAN keeps the
+# channel open until a "C\r" or power-cycle, which is why a single REV connect
+# used to unstick the whole session. Send it ourselves at every session open.
+_OPEN_FRAME = "S8\rO\r"
+
+# Telemetry-enable. Opening the channel gets Status 0 streaming, but a cold
+# controller still won't broadcast Status 2-6 (encoder position lives in
+# Status 2) until something enables them — which is why position-discovery
+# used to need a REV "connect". Sniffing REV (2026-05-29) showed Status 2-6
+# all turn on ~20 ms after a single frame: CAN ID (0x02050400 | device_id),
+# dlc 4, payload 7c 00 ff ff. The device_id is in the low 6 bits, so it must
+# be built per controller (verified on dev 2 -> ...402 and dev 3 -> ...403).
+# Confirmed REV-free with probe_status2.py.
+_TELEMETRY_ID_BASE = 0x02050400
+
+
+def _make_enable_telemetry_frame(device_id: int) -> str:
+    """SLCAN frame that makes one SPARK MAX start broadcasting Status 2-6."""
+    can_id = _TELEMETRY_ID_BASE | (device_id & 0x3F)
+    return f"T{can_id:08X}47C00FFFF\r"
+
 
 def _make_mode_frame(device_ids) -> str:
     """Build the broadcast-mode SLCAN frame for the given device_ids.
@@ -63,6 +89,9 @@ class SparkSession:
     def __init__(self, port: str):
         self.port = port
         self.ser = serial.Serial(port, 115200, timeout=0.05, exclusive=True)
+        # Open the SLCAN channel before anything else, or a cold controller
+        # silently drops every frame we send (see _OPEN_FRAME).
+        self.ser.write(_OPEN_FRAME.encode())
         self.device_id: int | None = None
         self.cur_pos: float | None = None
         self.cur_out_pct: float = 0.0
@@ -74,6 +103,10 @@ class SparkSession:
         self.status_0_count = 0
         self.status_2_count = 0
         self.other_frame_count = 0
+        # One-shot SLCAN frames to splice into the tx burst from another
+        # thread (used by probe_status2.py to replay captured REV frames
+        # without interleaving bytes mid-frame). list.pop(0) is GIL-atomic.
+        self._inject: list[str] = []
         self.tx_thread = threading.Thread(target=self._tx_loop, daemon=True)
         self.rx_thread = threading.Thread(target=self._rx_loop, daemon=True)
         self.tx_thread.start()
@@ -95,11 +128,21 @@ class SparkSession:
                     payload = struct.pack('<ff', float(self.target_pos), 0.0)
                     setpoint_frame = f'T{setpoint_id:08X}8{payload.hex()}\r'
                     mode_frame = _make_mode_frame([self.device_id])
-                    self.ser.write(
-                        (setpoint_frame + mode_frame + _ENABLE_FRAME).encode())
+                    burst = setpoint_frame + mode_frame + _ENABLE_FRAME
                 else:
                     # Heartbeat only — keeps the controller streaming status.
-                    self.ser.write((broadcast_mode + _ENABLE_FRAME).encode())
+                    burst = broadcast_mode + _ENABLE_FRAME
+                # Once we know the device_id, keep asking it to broadcast
+                # Status 2-6 until position actually shows up; stop after, so
+                # we don't keep poking the register on a working controller.
+                if self.device_id is not None and self.status_2_count == 0:
+                    burst += _make_enable_telemetry_frame(self.device_id)
+                self.ser.write(burst.encode())
+                # Splice in any one-shot frames queued from another thread,
+                # whole-frame at a time so we never corrupt a \r-terminated
+                # SLCAN line.
+                while self._inject:
+                    self.ser.write(self._inject.pop(0).encode())
                 self.tx_count += 1
             except Exception as exc:
                 print(f'[{self.port}] tx error: {exc}')
@@ -148,6 +191,11 @@ class SparkSession:
             self.cur_pos, = struct.unpack_from('<f', data, 4)
         else:
             self.other_frame_count += 1
+
+    def inject(self, frame: str):
+        """Queue a raw SLCAN frame (e.g. 'T0205040247c00ffff\\r') to be sent
+        once, spliced cleanly between heartbeat bursts by the tx thread."""
+        self._inject.append(frame)
 
     def close(self):
         self.running = False

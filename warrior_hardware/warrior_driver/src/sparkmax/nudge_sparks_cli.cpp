@@ -51,7 +51,12 @@ int main()
 
     std::printf("Waiting up to %lds for all controllers to publish device_id + position...\n",
                 static_cast<long>(std::chrono::duration_cast<std::chrono::seconds>(DISCOVERY_TIMEOUT).count()));
+    std::printf("  (live counters: S0=Status0/applied+faults, S2=Status2/position, "
+                "tx=heartbeat ticks)\n");
+    std::printf("  S0 climbing => SLCAN channel open OK.  S0>0 but S2=0 => telemetry-"
+                "enable not taking.\n");
     const auto t0 = std::chrono::steady_clock::now();
+    auto next_diag = t0;
     while (std::chrono::steady_clock::now() - t0 < DISCOVERY_TIMEOUT) {
         bool all_ready = true;
         for (const auto & s : sessions) {
@@ -60,6 +65,21 @@ int main()
             }
         }
         if (all_ready) break;
+        // Live diagnostics every 1 s so we can see exactly where it stalls.
+        if (std::chrono::steady_clock::now() >= next_diag) {
+            const double t_rel = std::chrono::duration<double>(
+                std::chrono::steady_clock::now() - t0).count();
+            for (const auto & s : sessions) {
+                const float pos = s->position_rotations();
+                std::printf("  t=%4.1fs [%s] dev=%2d S0=%-5lu S2=%-5lu other=%-5lu "
+                            "tx=%-5lu pos=%s\n",
+                            t_rel, s->port().c_str(), s->device_id(),
+                            s->status_0_count(), s->status_2_count(),
+                            s->other_frame_count(), s->tx_count(),
+                            std::isnan(pos) ? "   nan" : "  ok");
+            }
+            next_diag += std::chrono::seconds(1);
+        }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 

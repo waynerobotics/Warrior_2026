@@ -38,7 +38,7 @@ def generate_launch_description():
             output='screen',
             parameters=[config],
             condition=IfCondition(PythonExpression(
-                ["'",mode,"' == 'outdoor' or '",mode,"' == 'indoor'"]))
+                ["'", mode, "' == 'indoor'"]))
         ),
         Node(
             package='gps_localization',

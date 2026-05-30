@@ -138,6 +138,15 @@ bool SparkMaxSession::open(const std::string & port)
     port_ = port;
     rx_buf_.clear();
 
+    // Open the SLCAN CAN channel before any T… frame, or a cold controller
+    // silently drops everything and never streams status. See
+    // sparkmax::SLCAN_OPEN_SEQUENCE / CLAUDE.md rule 11.
+    if (!write_all_fd(sparkmax::SLCAN_OPEN_SEQUENCE)) {
+        ::close(fd_);
+        fd_ = -1;
+        return false;
+    }
+
     running_.store(true);
     tx_thread_ = std::thread(&SparkMaxSession::tx_loop, this);
     rx_thread_ = std::thread(&SparkMaxSession::rx_loop, this);
@@ -239,6 +248,15 @@ void SparkMaxSession::tx_loop()
                 static_cast<uint32_t>(dev));
             const auto payload = encode_position_payload(target);
             burst = to_slcan_frame(arb, payload.data(), payload.size()) + burst;
+        }
+
+        // Once we know the device_id, keep asking the controller to broadcast
+        // Status 2-6 until position actually arrives, then stop (it's a
+        // register write, not a heartbeat). Without this a cold controller
+        // streams Status 0 but never Status 2, so position-discovery hangs —
+        // see make_enable_telemetry_frame() and CLAUDE.md (2026-05-27 issue).
+        if (dev >= 0 && status_2_count_.load() == 0) {
+            burst += make_enable_telemetry_frame(static_cast<uint32_t>(dev));
         }
 
         if (!write_all_fd(burst)) {
