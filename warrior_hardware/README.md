@@ -5,8 +5,8 @@ single C++ node that owns every USB connection. Steering position goes
 to REV SPARK MAX motor controllers over USB-SLCAN; drive velocity goes
 to swerve Arduinos as ASCII frames over USB-serial.
 
-See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
-[../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules & known issues.
+See [../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules & known issues,
+and the **Build & run** section below for bring-up commands.
 
 ## Architecture
 
@@ -115,20 +115,142 @@ silently misbehaves.
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-up-to warrior_motor_manager warrior_system --symlink-install
+colcon build --packages-up-to warrior_driver warrior_system --symlink-install
 source install/setup.bash
 
-# Manager alone (no controller):
-ros2 launch warrior_motor_manager hardware_manager.launch.py
+# Driver alone (no controller) — owns the USB connections:
+ros2 launch warrior_driver warrior_driver.launch.py
 
-# Full real-robot stack (controller_manager + bridge + manager):
+# Full real-robot stack (controller_manager + bridge) — driver in a 2nd terminal:
 ros2 launch warrior_control swerve_drive.real.launch.py
-# (in another terminal)
-ros2 launch warrior_motor_manager hardware_manager.launch.py
+ros2 launch warrior_driver warrior_driver.launch.py
+
+# One-shot Xbox teleop (controller + bridge + driver + joystick, all in one):
+ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
 ```
 
-For step-by-step bring-up + pass/fail criteria per phase, see
-[TEST_PLAN.md](TEST_PLAN.md).
+> The C++ driver package/node is named **`warrior_driver`** (executable
+> `warrior_driver_node`). Older notes calling it `warrior_motor_manager` /
+> `hardware_manager.launch.py` are stale — no such package exists.
+
+For the one-shot Xbox teleop entry point, see
+[warrior_bringup/README.md](../warrior_bringup/README.md) → *Real swerve
+teleop (Xbox)*.
+
+## Steer calibration
+
+Each swerve module's steering encoder reports a raw position that needs
+a per-module `steer_offset_rad` to read **0** when the wheel is pointing
+straight forward.  The `steer_calibration_node` automates this
+procedure.
+
+### Why warrior_driver must be OFF during calibration
+
+`warrior_driver` sends **enable + mode-bitmask + position setpoint**
+frames to every SPARK MAX at ~50 Hz from the moment it starts.  Once
+those frames arrive the controller enters closed-loop position hold and
+the wheel is locked — it can no longer be pushed by hand.
+
+`steer_calibration_node` solves this by talking directly to the
+SPARK MAXes over USB-SLCAN *without* `warrior_driver` running.  It
+sends only the **heartbeat frames** (mode-bitmask + enable) that are
+needed to keep the controllers streaming status — **no setpoint frames
+are ever sent**.  The SPARK MAX stays in "enabled-idle" state (0% output)
+and the wheel remains free.
+
+### Procedure
+
+```
+1.  Power OFF the robot completely.
+
+2.  Physically rotate ALL wheels until they point STRAIGHT FORWARD
+    (aligned with the robot's +X axis / front of the frame).
+
+3.  Power ON the SPARK MAXes (they boot in neutral — wheels stay free).
+    Do NOT start warrior_driver.
+
+4.  In a terminal, launch the calibration node:
+
+      source ~/ros2_ws/install/setup.bash
+      ros2 run warrior_driver steer_calibration_node \
+        --ros-args --params-file \
+          ~/ros2_ws/install/warrior_driver/share/warrior_driver/config/steer_calibration.yaml
+
+5.  Trigger calibration:
+
+      ros2 service call /steer_calibration/calibrate std_srvs/srv/Trigger {}
+
+    The node will:
+      a. Enumerate all SPARK MAX USB ports (VID:PID 0x0483:0xA30E).
+      b. Open each port, send broadcast heartbeats (no setpoints).
+      c. Once the controller's CAN ID is learned from Status 0, send a
+         one-time telemetry-enable frame to start Status 2 streaming.
+      d. Read the raw motor position (rotations) from Status 2.
+      e. Close all ports cleanly.
+
+6.  The node prints a ready-to-paste YAML block to the console AND
+    writes a timestamped file:
+
+      /tmp/warrior_calibration/steer_calibration_<YYYY-MM-DDTHH-MM-SS>.yaml
+
+    Example output:
+    ┌────────────────────────────────────────────────────────────┐
+    │ warrior_driver:                                            │
+    │   ros__parameters:                                         │
+    │     modules:                                               │
+    │       front:                                               │
+    │         steer_offset_rad: 1.2345   # was 0.0              │
+    │       left:                                                │
+    │         steer_offset_rad: -0.9876  # was 0.0              │
+    │       right:                                               │
+    │         steer_offset_rad: 0.4321   # was 0.0              │
+    └────────────────────────────────────────────────────────────┘
+
+7.  Copy the new steer_offset_rad values into:
+      warrior_driver/config/warrior_driver.yaml
+
+8.  Rebuild and re-source:
+
+      colcon build --packages-select warrior_driver
+      source install/setup.bash
+
+9.  Start warrior_driver normally — wheels will now home to straight
+    forward on first command.
+```
+
+> **Failure conditions** — calibration is refused or returns an error if:
+> - No SPARK MAX USB ports are found (power/USB problem)
+> - A configured CAN ID is never seen in inbound frames within
+>   `read_timeout_s` (default 5 s) — check that `warrior_driver` is not
+>   already running on another terminal, or that the SLCAN port isn't
+>   held open by another process
+
+### How the offset is computed
+
+The driver decodes steering position as:
+
+$$\theta_{steer} = \frac{\theta_{motor} / G \cdot 2\pi - \delta}{s}$$
+
+where $G$ is the gear ratio (`steer_motor_rot_per_module_rot`), $\delta$
+is `steer_offset_rad`, and $s$ is `steer_sign`.
+
+The calibration node reads raw motor rotations $\theta_{motor}$ directly
+from the SPARK MAX Status 2 frame.  The new offset that makes
+$\theta_{steer} = 0$ (straight forward) is:
+
+$$\delta_{new} = \frac{\theta_{motor,current}}{G} \cdot 2\pi$$
+
+### Relevant files
+
+| File | Purpose |
+|---|---|
+| `warrior_driver/include/warrior_driver/swerve/steer_calibration_node.hpp` | Node class declaration |
+| `warrior_driver/src/swerve/steer_calibration_node.cpp` | Direct SLCAN I/O + calibration service |
+| `warrior_driver/src/steer_calibration_main.cpp` | `main()` entry point |
+| `warrior_driver/config/steer_calibration.yaml` | Launch parameters |
+| `warrior_driver/config/warrior_driver.yaml` | **Authoritative** config — paste final offsets here |
+
+---
 
 ## SPARK MAX troubleshooting
 

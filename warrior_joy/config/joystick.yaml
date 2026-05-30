@@ -21,8 +21,8 @@ teleop_node:
       yaw: 0.5
 
 
-    enable_button: 6
-    enable_turbo_button: 7
+    enable_button: 5          # RB (right bumper) — hold to drive (deadman)
+    enable_turbo_button: 4    # LB (left bumper) — hold with RB for turbo
     publish_stamped_twist: true
 
     require_enable_button: true

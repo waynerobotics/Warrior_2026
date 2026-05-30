@@ -24,7 +24,9 @@ def launch_setup(context, *args, **kwargs):
     warrior_description_pkg = FindPackageShare("warrior_description")
     
     warrior_control_pkg = FindPackageShare("warrior_control")
-    
+
+    warrior_driver_pkg = FindPackageShare("warrior_driver")
+
     world_name = LaunchConfiguration("world_name").perform(context)
 
     xacro_file = PathJoinSubstitution([warrior_description_pkg, "urdf", "gzsim.urdf.xacro"])
@@ -45,6 +47,13 @@ def launch_setup(context, *args, **kwargs):
             "robot_description": robot_description,
             "world_name": world_name,
         }.items()
+    )
+
+    # Hardware driver (owns USB serial to drive Arduinos + SPARK MAXes)
+    warrior_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([warrior_driver_pkg, "launch", "warrior_driver.launch.py"])
+        ),
     )
 
     # Joy node
@@ -76,6 +85,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     return [
+        # warrior_driver_launch,
         controller_launch,
         joy_node,
         teleop,

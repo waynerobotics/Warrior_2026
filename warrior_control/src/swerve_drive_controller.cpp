@@ -40,7 +40,7 @@ SwerveDriveController::state_interface_configuration() const
         // state_config.names.push_back(name + "/effort");
     }
     for (const auto & name : drive_joint_names_) {
-        // state_config.names.push_back(name + "/position");
+        state_config.names.push_back(name + "/position");
         state_config.names.push_back(name + "/velocity");
         // state_config.names.push_back(name + "/effort");
     }

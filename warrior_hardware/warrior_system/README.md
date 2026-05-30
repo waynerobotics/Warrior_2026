@@ -44,7 +44,7 @@ flowchart LR
     subgraph HWLAYER["Hardware Layer"]
         direction TB
 
-        HW["Warrior Hardware Manager"]
+        HW["Warrior Driver"]
     end
 
 

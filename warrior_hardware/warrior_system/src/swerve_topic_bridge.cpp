@@ -36,10 +36,10 @@ CallbackReturn SwerveTopicBridge::on_init(const hardware_interface::HardwareInfo
         "swerve_state_topic",   "/warrior_swerve_state");
 
     cmd_pub_ = bridge_node_->create_publisher<warrior_msgs::msg::SwerveCmd>(
-        command_topic, rclcpp::QoS(1));
+        command_topic, rclcpp::QoS(10));
 
     state_sub_ = bridge_node_->create_subscription<warrior_msgs::msg::SwerveState>(
-        state_topic, rclcpp::SensorDataQoS(),
+        state_topic, rclcpp::QoS(10),
         [this](const warrior_msgs::msg::SwerveState::SharedPtr msg) {
             auto it = modules_.find(msg->swerve_id);
             if (it == modules_.end()) return;
@@ -48,7 +48,24 @@ CallbackReturn SwerveTopicBridge::on_init(const hardware_interface::HardwareInfo
             it->second.state_drive_velocity_rad_s = msg->drive_velocity_rad_s;
         });
 
+    // Spin the bridge node on a dedicated thread so all three module messages
+    // are processed immediately as they arrive, without blocking the
+    // ros2_control update loop.
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    executor_->add_node(bridge_node_);
+    spin_thread_ = std::thread([this]() { executor_->spin(); });
+
     return CallbackReturn::SUCCESS;
+}
+
+SwerveTopicBridge::~SwerveTopicBridge()
+{
+    if (executor_) {
+        executor_->cancel();
+    }
+    if (spin_thread_.joinable()) {
+        spin_thread_.join();
+    }
 }
 
 // Identify which module + interface a joint name refers to.
@@ -67,7 +84,7 @@ static void identify_joint(const std::string& joint_name,
     }
 
     const bool is_drive = joint_name.find("drive") != std::string::npos;
-    is_steer            = joint_name.find("steer") != std::string::npos;
+               is_steer = joint_name.find("steer") != std::string::npos;
 
     if (static_cast<int>(is_steer) + static_cast<int>(is_drive) != 1) {
         throw std::runtime_error("Cannot identify type for joint: " + joint_name);
@@ -136,11 +153,8 @@ std::vector<hardware_interface::CommandInterface> SwerveTopicBridge::export_comm
 hardware_interface::return_type SwerveTopicBridge::read(const rclcpp::Time& /*time*/,
                                                         const rclcpp::Duration& /*period*/)
 {
-    if (rclcpp::ok()) {
-        rclcpp::spin_some(bridge_node_);
-    }
     // State is written directly into modules_[*].state_* by the subscriber
-    // callback, and export_state_interfaces() already points to those fields.
+    // callback running on spin_thread_. Nothing to do here.
     return hardware_interface::return_type::OK;
 }
 

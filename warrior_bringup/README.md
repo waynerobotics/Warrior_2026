@@ -51,6 +51,28 @@ flowchart LR
 | `use_sim_time` | `true` | `true`, `false` |
 | `namespace` | (empty) | any string — namespaces all topics, for multi-robot |
 
+## Real swerve teleop (Xbox)
+
+```bash
+ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
+```
+
+All-in-one driver for the **real** robot from an Xbox pad. Brings up the full
+new pipeline in one shot:
+
+```
+joy_node → teleop_twist_joy → /cmd_vel (TwistStamped)
+  → swerve_drive_controller → warrior_system/SwerveTopicBridge
+  → /warrior_swerve_command → warrior_driver → USB
+```
+
+This launch **owns `warrior_driver`** — do not start it (or
+`steer_calibration_node`) separately. Prerequisites: 12 V on, all USB
+connected (~7 `/dev/ttyACM*`), steering calibrated (see
+[warrior_hardware/README.md](../warrior_hardware/README.md)), and the Xbox pad
+paired *before* launch (`joy_node` blocks waiting for it). Pad mapping +
+deadman/turbo buttons live in `warrior_joy/config/joystick.yaml`.
+
 ## Joysticks & add-ons
 
 Joystick, localization, and navigation are launched **separately** so you
@@ -106,4 +128,5 @@ journalctl -u warrior-2026.service -f
 | `Resource not found: warrior_control` | `source install/setup.bash` |
 | `Cannot find file […]/worlds/<name>.world` | Check it exists in [warrior_gazebo/worlds/](../warrior_simulation/warrior_gazebo/) |
 | Gazebo crashes with `OGRE … UnimplementedException` on WSL2 | Already patched: launchers pass `--render-engine ogre` |
-| Teleop sends no commands | Check `ros2 node list \| grep teleop` and confirm `cmd_vel` remap matches your controller (`/swerve_drive_controller/cmd_vel`, `/diff_drive_controller/cmd_vel`, or `/cmd_vel`) |
+| Teleop sends no commands | Check `ros2 node list \| grep teleop`. The real `swerve_drive_controller` subscribes to **`/cmd_vel` as `TwistStamped`** — confirm your source publishes there with the right type (`teleop_twist_joy` needs `publish_stamped_twist: true`). The diff-drive controller uses `/diff_drive_controller/cmd_vel`. |
+| Xbox teleop does nothing | Hold the **deadman/enable** button (set in `warrior_joy/config/joystick.yaml`); `require_enable_button: true` gates all motion. |

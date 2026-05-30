@@ -1,0 +1,69 @@
+warrior_driver:
+  ros__parameters:
+    state_topic:   "/warrior_swerve_state"
+    command_topic: "/warrior_swerve_command"
+
+    update_rate_hz:      50.0
+    discovery_period_s:   1.0
+    command_timeout_s:    0.5
+
+    # Module list. Each name below must have a matching modules.<name> block.
+    # (Structured as a flat list + nested keys because rclcpp doesn't expand
+    #  YAML list-of-dicts into typed sub-parameters.)
+    module_names: ["front", "left", "right"]
+
+    modules:
+      front:
+        drive_device_name: "04_swerve"
+        steer_device_name: "04_spark"
+        spark_can_id: 4
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 3.408735  # 0.267142 + π. Front module was calibrated 180° off (wheel pointed
+                                    # backward when "forward"); the +π makes command-0 point truly forward.
+        steer_sign: 1.0    # flipped from -1.0: front steer encoder rotates opposite the other modules,
+                           # so its turn direction was reversed; this makes it steer the same way as L/R.
+        drive_sign:  1.0   # flipped from -1.0 per bring-up test: front drive needed reversing again.
+        max_drive_rad_s: 10.0   # wheel rad/s mapped to 100% duty. ~= vx_limit 1.0 m/s / 0.1015 m wheel.
+                                # 60.0 was far too high: teleop speeds (~2.5 rad/s) gave only ~4% duty,
+                                # below the Flipsky startup deadband, so the wheels never spun. Tune to taste.
+
+      left:
+        drive_device_name: "02_swerve"
+        steer_device_name: "02_spark"
+        spark_can_id: 2
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 0.730188  # calibrated 2026-05-30 (motor_rot=4.88095; was -2.9)
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 10.0   # wheel rad/s mapped to 100% duty. ~= vx_limit 1.0 m/s / 0.1015 m wheel.
+                                # 60.0 was far too high: teleop speeds (~2.5 rad/s) gave only ~4% duty,
+                                # below the Flipsky startup deadband, so the wheels never spun. Tune to taste.
+
+      right:
+        drive_device_name: "03_swerve"
+        steer_device_name: "03_spark"
+        spark_can_id: 3
+        steer_motor_rot_per_module_rot: 42.0
+        steer_offset_rad: 1.98042  # calibrated 2026-05-30 (motor_rot=13.2381; was -2.0)
+        steer_sign: -1.0
+        drive_sign:  1.0
+        max_drive_rad_s: 10.0   # wheel rad/s mapped to 100% duty. ~= vx_limit 1.0 m/s / 0.1015 m wheel.
+                                # 60.0 was far too high: teleop speeds (~2.5 rad/s) gave only ~4% duty,
+                                # below the Flipsky startup deadband, so the wheels never spun. Tune to taste.
+
+    # Used by milestone 2+ (Arduino discovery / SLCAN). Declared early so the
+    # YAML is the single source of truth for configuration.
+    arduino:
+      baud_rate: 115200
+      read_timeout_ms: 20
+      handshake_request: "<WHO>"
+      expected_name_prefixes:
+        - "02_swerve"
+        - "03_swerve"
+        - "04_swerve"
+
+    sparkmax:
+      slcan_interface: "auto"     # "auto" to scan, or "/dev/ttyACM0" to pin
+      bitrate_code:    "8"        # 0=10k 1=20k 2=50k 3=100k 4=125k 5=250k 6=500k 7=800k 8=1M
+      position_pid_slot: 0
+      enable_closed_loop_position: true

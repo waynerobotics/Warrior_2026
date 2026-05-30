@@ -15,7 +15,7 @@
   <depend>rclcpp_lifecycle</depend>
   <depend>controller_interface</depend>
   <depend>warrior_msgs</depend>
-  <depend>warrior_motor_manager</depend>
+  <depend>warrior_driver</depend>
   
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

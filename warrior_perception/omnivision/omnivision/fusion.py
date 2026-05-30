@@ -19,6 +19,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs_py import point_cloud2 as pc2
@@ -31,9 +32,9 @@ class Fusion(Node):
         super().__init__('fuser')
 
         self.declare_parameter('transformation_matrix', [
-            1., 0., 0., 0.,
-            0., 1., 0., 0.,
-            0., 0., 1., 0.,
+            1., 0., 0., 0.285,
+            0., -1., 0., 0.0,
+            0., 0., -1., 0.,
             0., 0., 0., 1.
             ])
 
@@ -44,11 +45,15 @@ class Fusion(Node):
         self.declare_parameter('texturized_depth_map', 'texturized_depth_map')
         self.declare_parameter('image_overlay', 'image_overlay')
 
+        image_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.BEST_EFFORT)
+
         self.subscriber_ = self.create_subscription(
             Image,
             self.get_parameter('image_topic').value,
             self.image_callback,
-            1)
+            image_qos)
 
         self.lidar_sub_ = self.create_subscription(
             PointCloud2,

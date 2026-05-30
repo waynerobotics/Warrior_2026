@@ -3,6 +3,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 #include <hardware_interface/handle.hpp>
@@ -10,6 +11,7 @@
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/types/hardware_interface_return_values.hpp>
 #include <hardware_interface/types/hardware_interface_type_values.hpp>
+#include <rclcpp/executors.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
@@ -24,6 +26,7 @@ class SwerveTopicBridge final : public hardware_interface::SystemInterface
 {
 public:
     CallbackReturn on_init(const hardware_interface::HardwareInfo& info) override;
+    ~SwerveTopicBridge();
 
     std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
     std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
@@ -50,6 +53,11 @@ private:
     rclcpp::Node::SharedPtr bridge_node_;
     rclcpp::Subscription<warrior_msgs::msg::SwerveState>::SharedPtr state_sub_;
     rclcpp::Publisher<warrior_msgs::msg::SwerveCmd>::SharedPtr cmd_pub_;
+
+    // Dedicated executor + thread so all three module messages are processed
+    // immediately as they arrive, independent of the ros2_control update loop.
+    std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> executor_;
+    std::thread spin_thread_;
 
     std::unordered_map<std::string, ModuleScratch> modules_;
 };
