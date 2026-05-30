@@ -12,7 +12,7 @@ import os
 """
 Practice launch: 
 ros2 launch warrior_navigation nav2_gps_waypoint_follower.launch.py
-map_origin_latitude:=42.400556255 map_origin_longitude:=-83.130645144
+map_origin_latitude:=42.66791 map_origin_longitude:=-83.21958
 
 
 
@@ -29,8 +29,8 @@ def generate_launch_description():
     utm_hemisphere = LaunchConfiguration('utm_hemisphere')
 
     # Practice map origin
-    #  - latitude: 42.400556255
-    #   longitude: -83.130645144
+    #  - latitude: 42.66791
+    #   longitude: -83.21958
     #
     # get_package_share_directory('warrior_navigation'),
     # 'config',
@@ -50,13 +50,13 @@ def generate_launch_description():
 
     declare_map_origin_latitude = DeclareLaunchArgument(
         'map_origin_latitude',
-        default_value='42.400556255',
+        default_value='42.66791',
         description='Latitude of map origin (where robot starts)'
     )
 
     declare_map_origin_longitude = DeclareLaunchArgument(
         'map_origin_longitude',
-        default_value='-83.130645144',
+        default_value='-83.21958',
         description='Longitude of map origin (where robot starts)'
     )
 
