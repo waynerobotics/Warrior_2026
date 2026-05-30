@@ -22,6 +22,7 @@
   <depend>warrior_serial</depend>
   <depend>warrior_msgs</depend>
   <depend>joy</depend>
+  <exec_depend>teleop_twist_joy</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

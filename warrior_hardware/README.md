@@ -5,8 +5,8 @@ single C++ node that owns every USB connection. Steering position goes
 to REV SPARK MAX motor controllers over USB-SLCAN; drive velocity goes
 to swerve Arduinos as ASCII frames over USB-serial.
 
-See [TEST_PLAN.md](TEST_PLAN.md) for the bring-up walkthrough and
-[../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules & known issues.
+See [../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules & known issues,
+and the **Build & run** section below for bring-up commands.
 
 ## Architecture
 
@@ -115,20 +115,27 @@ silently misbehaves.
 
 ```bash
 cd ~/ros2_ws
-colcon build --packages-up-to warrior_motor_manager warrior_system --symlink-install
+colcon build --packages-up-to warrior_driver warrior_system --symlink-install
 source install/setup.bash
 
-# Manager alone (no controller):
-ros2 launch warrior_motor_manager hardware_manager.launch.py
+# Driver alone (no controller) — owns the USB connections:
+ros2 launch warrior_driver warrior_driver.launch.py
 
-# Full real-robot stack (controller_manager + bridge + manager):
+# Full real-robot stack (controller_manager + bridge) — driver in a 2nd terminal:
 ros2 launch warrior_control swerve_drive.real.launch.py
-# (in another terminal)
-ros2 launch warrior_motor_manager hardware_manager.launch.py
+ros2 launch warrior_driver warrior_driver.launch.py
+
+# One-shot Xbox teleop (controller + bridge + driver + joystick, all in one):
+ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
 ```
 
-For step-by-step bring-up + pass/fail criteria per phase, see
-[TEST_PLAN.md](TEST_PLAN.md).
+> The C++ driver package/node is named **`warrior_driver`** (executable
+> `warrior_driver_node`). Older notes calling it `warrior_motor_manager` /
+> `hardware_manager.launch.py` are stale — no such package exists.
+
+For the one-shot Xbox teleop entry point, see
+[warrior_bringup/README.md](../warrior_bringup/README.md) → *Real swerve
+teleop (Xbox)*.
 
 ## Steer calibration
 
