@@ -1,19 +1,19 @@
 unitree_lidar_ros2_node:
   ros__parameters:
-    initialize_type: 2          # 1 = serial, 2 = UDP
-    work_mode: 0                # 0 = std FOV + 3D + IMU + Ethernet + auto-start
+    use_udp: true
+    initialize_type: 2
+    work_mode: 0
     use_system_timestamp: true
     range_min: 0.0
     range_max: 100.0
     cloud_scan_num: 18
 
-    # Ethernet (default). Host must have 192.168.1.2/24 on the LiDAR-side NIC.
-    lidar_ip: "192.168.1.62"
+    # Ethernet. This LiDAR was reconfigured to 192.168.123.110.
+    lidar_ip: "192.168.123.110"
     lidar_port: 6101
-    local_ip: "192.168.1.2"
+    local_ip: "192.168.123.200"
     local_port: 6201
 
-    # Serial fallback (only used when initialize_type=1 and work_mode bit3=1).
     serial_port: "/dev/ttyACM0"
     baudrate: 4000000
 
