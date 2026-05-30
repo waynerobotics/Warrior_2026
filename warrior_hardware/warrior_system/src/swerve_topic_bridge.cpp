@@ -84,7 +84,7 @@ static void identify_joint(const std::string& joint_name,
     }
 
     const bool is_drive = joint_name.find("drive") != std::string::npos;
-    is_steer            = joint_name.find("steer") != std::string::npos;
+               is_steer = joint_name.find("steer") != std::string::npos;
 
     if (static_cast<int>(is_steer) + static_cast<int>(is_drive) != 1) {
         throw std::runtime_error("Cannot identify type for joint: " + joint_name);
