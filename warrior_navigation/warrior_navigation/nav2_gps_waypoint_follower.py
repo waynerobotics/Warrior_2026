@@ -10,11 +10,19 @@ from nav2_msgs.action import NavigateToPose
 from pyproj import Proj
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from visualization_msgs.msg import Marker, MarkerArray
+from nav_msgs.msg import Path
+
+
+from rclpy.qos import QoSProfile
+from rclpy.qos import DurabilityPolicy
 
 
 class Nav2GpsWaypointFollower(Node):
     def __init__(self):
         super().__init__('nav2_gps_waypoint_follower')
+        qos = QoSProfile(depth=1)
+        qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
         self.declare_parameter('action_name', 'navigate_to_pose')
         self.declare_parameter('waypoint_file', '')
@@ -49,6 +57,12 @@ class Nav2GpsWaypointFollower(Node):
 
         self.waypoints_map = self._convert_gps_to_map_frame(self.waypoints_gps)
         self.get_logger().info(f'Loaded {len(self.waypoints_map)} GPS waypoints in map frame.')
+
+        self._current_waypoint_index = 0
+        self.waypoint_markers_pub = self.create_publisher(MarkerArray, '/gps_waypoints', 10)
+        self.trajectory_pub = self.create_publisher(Path, '/gps_waypoint_trajectory', 10)
+        self._publish_waypoint_markers()
+        self._publish_trajectory()
 
         self._action_client = ActionClient(self, NavigateToPose, self.action_name)
         self._startup_timer = self.create_timer(1.0, self._startup_callback)
@@ -120,6 +134,87 @@ class Nav2GpsWaypointFollower(Node):
         pose.pose.orientation.y = 0.0
         pose.pose.orientation.z = math.sin(yaw * 0.5)
         return pose
+
+    def _publish_waypoint_markers(self):
+        marker_array = MarkerArray()
+        for i, wp in enumerate(self.waypoints_map):
+            marker = Marker()
+            marker.header.frame_id = 'map'
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.pose.position.x = wp['x']
+            marker.pose.position.y = wp['y']
+            marker.pose.position.z = 0.0
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0
+            marker.scale.x = 0.3
+            marker.scale.y = 0.3
+            marker.scale.z = 0.3
+
+            if i < self._current_waypoint_index:
+                marker.color.r = 0.0
+                marker.color.g = 1.0
+                marker.color.b = 0.0
+                marker.color.a = 0.7
+            elif i == self._current_waypoint_index:
+                marker.color.r = 0.0
+                marker.color.g = 0.0
+                marker.color.b = 1.0
+                marker.color.a = 1.0
+            else:
+                marker.color.r = 1.0
+                marker.color.g = 1.0
+                marker.color.b = 0.0
+                marker.color.a = 0.7
+
+            marker.lifetime.sec = 0
+            marker_array.markers.append(marker)
+
+            text_marker = Marker()
+            text_marker.header.frame_id = 'map'
+            text_marker.header.stamp = self.get_clock().now().to_msg()
+            text_marker.id = 1000 + i
+            text_marker.type = Marker.TEXT_VIEW_FACING
+            text_marker.action = Marker.ADD
+            text_marker.pose.position.x = wp['x']
+            text_marker.pose.position.y = wp['y']
+            text_marker.pose.position.z = 0.3
+            text_marker.pose.orientation.w = 1.0
+            text_marker.scale.z = 0.2
+            text_marker.text = f'WP{i+1}'
+            text_marker.color.r = 1.0
+            text_marker.color.g = 1.0
+            text_marker.color.b = 1.0
+            text_marker.color.a = 1.0
+            text_marker.lifetime.sec = 0
+            marker_array.markers.append(text_marker)
+
+        self.waypoint_markers_pub.publish(marker_array)
+
+    def _publish_trajectory(self):
+        path = Path()
+        path.header.frame_id = 'map'
+        path.header.stamp = self.get_clock().now().to_msg()
+
+        for wp in self.waypoints_map:
+            pose = PoseStamped()
+            pose.header.frame_id = 'map'
+            pose.header.stamp = self.get_clock().now().to_msg()
+            pose.pose.position.x = wp['x']
+            pose.pose.position.y = wp['y']
+            pose.pose.position.z = 0.0
+            yaw = wp['yaw']
+            pose.pose.orientation.w = math.cos(yaw * 0.5)
+            pose.pose.orientation.x = 0.0
+            pose.pose.orientation.y = 0.0
+            pose.pose.orientation.z = math.sin(yaw * 0.5)
+            path.poses.append(pose)
+
+        self.trajectory_pub.publish(path)
 
     def _startup_callback(self):
         if self._mission_started:
@@ -194,6 +289,7 @@ class Nav2GpsWaypointFollower(Node):
             )
 
         self._current_waypoint_index += 1
+        self._publish_waypoint_markers()
 
         self._send_next_waypoint()
 
