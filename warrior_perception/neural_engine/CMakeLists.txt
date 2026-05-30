@@ -123,7 +123,8 @@ install(DIRECTORY launch config
     DESTINATION share/${PROJECT_NAME})
 
 install(FILES inference/resnet_fp32.engine
-    RENAME resnet18.engine
     DESTINATION share/${PROJECT_NAME}/inference)
 
+install(FILES inference/resnet18.engine
+    DESTINATION share/${PROJECT_NAME}/inference)
 ament_package()
