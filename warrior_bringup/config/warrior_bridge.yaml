@@ -10,7 +10,7 @@
   gz_topic_name: "scan"
   ros_type_name: "sensor_msgs/msg/LaserScan"
   gz_type_name: "gz.msgs.LaserScan"
-  direction: GZ_TO_ROSs
+  direction: GZ_TO_ROS
 
 # gps
 - ros_topic_name: "gps/fix"
