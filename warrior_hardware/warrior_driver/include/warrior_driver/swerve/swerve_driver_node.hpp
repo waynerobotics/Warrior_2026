@@ -37,6 +37,7 @@ struct SwerveModule
 {
     SwerveModuleConfig   config;
     SwerveModuleState     state;
+    bool calib_done = false;        // Whether this module has been calibrated to 0 
 };
 
 class SwerveDriverNode : public rclcpp::Node
@@ -76,6 +77,10 @@ private:
     rclcpp::TimerBase::SharedPtr diag_timer_;
 
     std::unique_ptr<DeviceRegistry> registry_;
+
+    void calibrate();
+    bool calibration_done_  = false;
+    static constexpr double CALIB_THRESHOLD = 0.1;   // rad, close to 0 or 2π is considered in place.
 };
 
 }  // namespace warrior::driver

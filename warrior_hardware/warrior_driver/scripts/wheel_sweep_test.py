@@ -142,8 +142,8 @@ class WheelSweepTest(Node):
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--speed-percent", type=float, default=10.0,
-                   help="drive power percent (default 10)")
+    p.add_argument("--speed-percent", type=float, default=25.0,
+                   help="drive power percent (default 25)")
     p.add_argument("--hold-s", type=float, default=5.0,
                    help="seconds to drive at each angle (default 5)")
     p.add_argument("--settle-s", type=float, default=2.0,

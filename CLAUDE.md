@@ -3,11 +3,21 @@
 ROS 2 workspace for the Warrior swerve robot. Drive velocity is handled by
 three swerve Arduinos addressed by name over USB-serial; steering position
 is handled by three REV SPARK MAX motor controllers over USB-SLCAN. A
-`/cmd_vel` (Twist) → `swerve_drive_controller` → `SwerveTopicBridge` →
-`warrior_motor_manager` pipeline fans commands to both transports. See
+`/cmd_vel` (TwistStamped) → `swerve_drive_controller` → `SwerveTopicBridge` →
+`warrior_driver` pipeline fans commands to both transports. To drive the real
+robot from an Xbox pad, `ros2 launch warrior_bringup
+warrior_swerve_teleop.launch.py` brings up that whole pipeline (joy →
+teleop_twist_joy → controller → bridge → `warrior_driver`) in one shot; it
+owns `warrior_driver`, so don't also start the driver or
+`steer_calibration_node` separately. See
 [warrior_hardware/README.md](warrior_hardware/README.md) for the topic-level
-diagram and [warrior_hardware/TEST_PLAN.md](warrior_hardware/TEST_PLAN.md)
-for the bring-up walkthrough.
+diagram and bring-up walkthrough.
+
+> **Naming note:** the C++ driver package/node is `warrior_driver`
+> (executable `warrior_driver_node`). Some older notes below still call it
+> `warrior_motor_manager` and reference `warrior_hardware/warrior_motor_manager/…`
+> paths — that package was renamed; the live code is under
+> [warrior_hardware/warrior_driver/](warrior_hardware/warrior_driver/).
 
 ## USB auto-connect — known issues and rules
 

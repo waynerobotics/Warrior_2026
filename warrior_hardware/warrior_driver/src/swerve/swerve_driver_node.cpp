@@ -118,6 +118,85 @@ SwerveDriverNode::~SwerveDriverNode()
     }
 }
 
+
+void SwerveDriverNode::calibrate()
+{
+    const auto now = this->now();
+    const double two_pi = 2.0 * M_PI;
+
+    for (auto & module : modules_) {
+        auto & state = module.state;
+        const auto & cfg = module.config;
+
+        // ── Skip if already calibrated ──
+        if (module.calib_done) continue;
+
+        // ── Check if both drive and steer are connected for this module ──
+        const bool drive_ok = registry_ && registry_->is_arduino_connected(cfg.drive_device_name);
+        const bool steer_ok = registry_ && registry_->is_spark_connected(cfg.spark_can_id);
+
+        if (!drive_ok || !steer_ok) {
+            RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                "[calib] module '%s' waiting: drive=%s, steer=%s",
+                cfg.name.c_str(),
+                drive_ok ? "OK" : "NOT CONNECTED",
+                steer_ok ? "OK" : "NOT CONNECTED");
+            continue;  // ← Module not ready yet, wait for next tick
+        }
+
+        // ── Module is connected, start/continue calibration ────────────────
+        // Target is the configured offset from YAML
+        const double target_pos = cfg.steer_offset_rad;
+
+        // Normalize current position to [0, 2π)
+        double normalized = std::fmod(state.fb_steer_position_rad, two_pi);
+        if (normalized < 0) normalized += two_pi;
+
+        // Normalize target to [0, 2π)
+        double target_normalized = std::fmod(target_pos, two_pi);
+        if (target_normalized < 0) target_normalized += two_pi;
+
+        // Calculate shortest error path
+        double error = normalized - target_normalized;
+        if (error > M_PI) error -= two_pi;
+        else if (error < -M_PI) error += two_pi;
+
+        // Check if position is settled (close to target)
+        const bool settled = std::abs(error) < CALIB_THRESHOLD;
+
+        if (!settled) {
+            // Not settled yet, continue moving towards target
+            const double alpha = 0.05;  // Exponential decay interpolation factor
+            const double gentle_cmd = state.fb_steer_position_rad - alpha * error;
+
+            state.cmd_steer_position_rad = gentle_cmd;
+            state.have_command           = true;
+            state.last_command_time      = now;
+
+            const double motor_rot = steer_rad_to_motor_rotations(gentle_cmd, cfg);
+            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(motor_rot));
+
+            RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
+                "[calib] '%s' homing to offset: pos=%.4f rad, target=%.4f rad, error=%.4f rad",
+                cfg.name.c_str(), state.fb_steer_position_rad, target_pos, error);
+
+        } else {
+            // Settled at target offset
+            state.cmd_steer_position_rad = target_pos;
+            state.have_command           = true;
+            state.last_command_time      = now;
+
+            const double motor_rot = steer_rad_to_motor_rotations(target_pos, cfg);
+            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(motor_rot));
+
+            module.calib_done = true;  // ← Mark this module as calibrated
+            RCLCPP_INFO(get_logger(),
+                "[calib] '%s' settled at offset: pos=%.4f rad, target=%.4f rad ✅",
+                cfg.name.c_str(), state.fb_steer_position_rad, target_pos);
+        }
+    }
+}
+
 void SwerveDriverNode::send_safe_stop()
 {
     if (registry_) {
@@ -211,8 +290,21 @@ void SwerveDriverNode::drain_and_log_arduino_messages()
 void SwerveDriverNode::update()
 {
     const auto now = this->now();
-
     drain_and_log_arduino_messages();
+
+    // ── Keep calibrating until all modules are done ──
+    // bool all_calibrated = true;
+    // for (const auto & module : modules_) {
+    //     if (!module.calib_done) {
+    //         all_calibrated = false;
+    //         break;
+    //     }
+    // }
+
+    // if (!all_calibrated) {
+    //     calibrate();
+    //     return;
+    // }
 
     // std::cout << "The number of modules_: " << modules_.size() << std::endl;
     for (auto & module : modules_) {
