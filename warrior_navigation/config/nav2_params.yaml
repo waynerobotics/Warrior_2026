@@ -246,8 +246,10 @@ planner_server:
       tolerance: 0.5
       use_astar: true
       allow_unknown: true
+      unknown_cost_value: 10.0
       use_grid_path: true
       use_multi_level_graph: false
+      max_iterations: -1
 
 smoother_server:
   ros__parameters:
