@@ -156,27 +156,27 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
     );
 
     odom_pub_       = get_node()->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
-    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
+    /*tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());*/
 
     // Ground-truth odometry subscriber (simulation only)
     odom_gt_sub_ = get_node()->create_subscription<nav_msgs::msg::Odometry>(
         "/odom_gt", 10,
         [this](const nav_msgs::msg::Odometry::SharedPtr msg)
         {
-            std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
+            // std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
             nav_msgs::msg::Odometry compensated = *msg;
             compensated.pose.pose.position.z += base_link_height_offset_;
             base_link_height_ = compensated.pose.pose.position.z;
             odom_pub_->publish(compensated);
 
-            geometry_msgs::msg::TransformStamped tf_msg;
+            /*geometry_msgs::msg::TransformStamped tf_msg;
             tf_msg.header                   = compensated.header;
             tf_msg.child_frame_id           = compensated.child_frame_id;
             tf_msg.transform.translation.x  = compensated.pose.pose.position.x;
             tf_msg.transform.translation.y  = compensated.pose.pose.position.y;
             tf_msg.transform.translation.z  = compensated.pose.pose.position.z;
             tf_msg.transform.rotation       = compensated.pose.pose.orientation;
-            tf_broadcaster_->sendTransform(tf_msg);
+            tf_broadcaster_->sendTransform(tf_msg);*/
         });
 
     RCLCPP_INFO(logger, "SwerveDriveController configured.");
@@ -472,13 +472,13 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
     odom.twist.covariance[7]  = kf_cov_(4, 4);
     odom.twist.covariance[35] = kf_cov_(5, 5);
 
-    geometry_msgs::msg::TransformStamped tf_msg;
+    /*geometry_msgs::msg::TransformStamped tf_msg;
     tf_msg.header                   = odom.header;
     tf_msg.child_frame_id           = base_frame_;
     tf_msg.transform.translation.x  = x_;
     tf_msg.transform.translation.y  = y_;
     tf_msg.transform.rotation       = odom.pose.pose.orientation;
-    tf_broadcaster_->sendTransform(tf_msg);
+    tf_broadcaster_->sendTransform(tf_msg);*/
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -491,14 +491,14 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
 
     const auto cmds = swerve_ik_->computeSwerveCommand(vx, vy, wz, current_angles);
 
-    RCLCPP_INFO(get_node()->get_logger(),
-        "Steering (deg): Front=%.2f  Left=%.2f  Right=%.2f",
-        cmds[0].steering_angle * 180.0 / M_PI,
-        cmds[1].steering_angle * 180.0 / M_PI,
-        cmds[2].steering_angle * 180.0 / M_PI);
-    RCLCPP_INFO(get_node()->get_logger(),
-        "Drive (rad/s):  Front=%.2f  Left=%.2f  Right=%.2f",
-        cmds[0].driving_speed, cmds[1].driving_speed, cmds[2].driving_speed);
+    // RCLCPP_INFO(get_node()->get_logger(),
+    //     "Steering (deg): Front=%.2f  Left=%.2f  Right=%.2f",
+    //     cmds[0].steering_angle * 180.0 / M_PI,
+    //     cmds[1].steering_angle * 180.0 / M_PI,
+    //     cmds[2].steering_angle * 180.0 / M_PI);
+    // RCLCPP_INFO(get_node()->get_logger(),
+    //     "Drive (rad/s):  Front=%.2f  Left=%.2f  Right=%.2f",
+    //     cmds[0].driving_speed, cmds[1].driving_speed, cmds[2].driving_speed);
 
     for (size_t i = 0; i < drive_cmd_.size(); ++i) {
         for (int j = 0; j < 3; ++j) {

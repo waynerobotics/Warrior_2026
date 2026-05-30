@@ -54,11 +54,6 @@
       <pose>0 0 0 0 0 0</pose>
       <self_collide>false</self_collide>
     </model>
-    <include>
-      <uri>file:///home/alimyust/ros2_ws/install/warrior_gazebo/share/warrior_gazebo/models/turtlebot3_burger_gps</uri>
-      <name>burger</name>
-      <pose>-2.010062092559898 -0.49999999994075128 0.010008913455774156 -6.8152864383294209e-09 -0.012459841484239755 -1.7691772432019084e-08</pose>
-    </include>
     <model name='cylinder'>
       <pose>-2.0282120285848624 1.4124788713388898 0.49999942638036005 1.8623399311809851e-19 6.3776192434537365e-19 4.2965765576256456e-22</pose>
       <link name='cylinder_link'>

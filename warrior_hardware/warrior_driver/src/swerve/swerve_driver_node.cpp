@@ -173,8 +173,8 @@ void SwerveDriverNode::calibrate()
             state.have_command           = true;
             state.last_command_time      = now;
 
-            const double motor_rot = steer_rad_to_motor_rotations(gentle_cmd, cfg);
-            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(motor_rot));
+            const double encoder_pos = steer_rad_to_encoder_pos(gentle_cmd, cfg);
+            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(encoder_pos));
 
             RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
                 "[calib] '%s' homing to offset: pos=%.4f rad, target=%.4f rad, error=%.4f rad",
@@ -186,8 +186,8 @@ void SwerveDriverNode::calibrate()
             state.have_command           = true;
             state.last_command_time      = now;
 
-            const double motor_rot = steer_rad_to_motor_rotations(target_pos, cfg);
-            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(motor_rot));
+            const double encoder_pos = steer_rad_to_encoder_pos(target_pos, cfg);
+            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(encoder_pos));
 
             module.calib_done = true;  // ← Mark this module as calibrated
             RCLCPP_INFO(get_logger(),
@@ -225,6 +225,7 @@ void SwerveDriverNode::load_modules()
         cfg.spark_can_id                    = declare_parameter<int>(        "modules." + name + ".spark_can_id", 0);
         cfg.steer_motor_rot_per_module_rot  = declare_parameter<double>(     "modules." + name + ".steer_motor_rot_per_module_rot", 1.0);
         cfg.steer_offset_rad                = declare_parameter<double>(     "modules." + name + ".steer_offset_rad", 0.0);
+        cfg.encoder_pos_forward             = declare_parameter<double>(     "modules." + name + ".encoder_pos_forward", 0.0);
         cfg.steer_sign                      = declare_parameter<double>(     "modules." + name + ".steer_sign", 1.0);
         cfg.drive_sign                      = declare_parameter<double>(     "modules." + name + ".drive_sign", 1.0);
         cfg.max_drive_rad_s                 = declare_parameter<double>(     "modules." + name + ".max_drive_rad_s", 1.0);
@@ -238,9 +239,9 @@ void SwerveDriverNode::load_modules()
 
         RCLCPP_INFO(get_logger(),
             "module '%s': drive=%s, steer=%s (CAN %d), "
-            "gear=%.3f, offset=%.3f rad, signs=(s%+.0f,d%+.0f), max_drive=%.2f rad/s",
+            "gear=%.3f, offset=%.3f rad, encoder_pos_forward=%.3f rad, signs=(s%+.0f,d%+.0f), max_drive=%.2f rad/s",
             cfg.name.c_str(), cfg.drive_device_name.c_str(), cfg.steer_device_name.c_str(),
-            cfg.spark_can_id, cfg.steer_motor_rot_per_module_rot, cfg.steer_offset_rad,
+            cfg.spark_can_id, cfg.steer_motor_rot_per_module_rot, cfg.steer_offset_rad, cfg.encoder_pos_forward, 
             cfg.steer_sign, cfg.drive_sign, cfg.max_drive_rad_s);
     }
 }
@@ -318,8 +319,11 @@ void SwerveDriverNode::update()
         const double steer_cmd = state.cmd_steer_position_rad;  // steer command keeps its last value even if timed out
         const double drive_cmd = (state.have_command && !timed_out) ? state.cmd_drive_velocity_rad_s : 0.0;
 
-        const double motor_rotations = steer_rad_to_motor_rotations(steer_cmd, cfg);
+        const double encoder_position = steer_rad_to_encoder_pos(steer_cmd, cfg);
         const int    drive_percent   = drive_rad_s_to_percent(drive_cmd, cfg);
+        // if (module.config.name == "right") {
+        //     RCLCPP_WARN(get_logger(), "module %s encoder_position: %f", cfg.name.c_str(), encoder_position);
+        // }
 
         // ── Drive path (Arduino) ─────────────────────────────────────────
         const bool drive_connected =
@@ -353,7 +357,7 @@ void SwerveDriverNode::update()
                 && pos_age < steer_stale_after_s_)
             {
                 state.fb_steer_position_rad =
-                    motor_rotations_to_steer_rad(static_cast<double>(*pos_rot), cfg);
+                    encoder_pos_to_steer_rad(static_cast<double>(*pos_rot), cfg);
                 state.last_steer_pos_time = now - rclcpp::Duration::from_seconds(pos_age);
             }
         }
@@ -368,7 +372,7 @@ void SwerveDriverNode::update()
             steer_status = "scanning";
         } else if (state.have_command && !timed_out) {
             const bool ok = registry_->send_steer_position(
-                cfg.spark_can_id, static_cast<float>(motor_rotations));
+                cfg.spark_can_id, static_cast<float>(encoder_position));
             steer_connected_now = ok && steer_pos_fresh;
             if (!ok) {
                 steer_status = "write_failed";
