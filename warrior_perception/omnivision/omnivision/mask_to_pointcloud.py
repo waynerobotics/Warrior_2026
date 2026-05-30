@@ -22,6 +22,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs_py import point_cloud2 as pc2
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
@@ -48,6 +49,9 @@ class MaskToPointCloud(Node):
         self.declare_parameter('dynamic_transformation_updates', True)
         self.declare_parameter('yaw_angle', 0.0)
 
+        image_qos = QoSProfile(
+            depth=1,
+            reliability=ReliabilityPolicy.BEST_EFFORT)
         # Subscribers
         self.mask_sub = self.create_subscription(
             Image,
@@ -65,7 +69,7 @@ class MaskToPointCloud(Node):
             Image,
             self.get_parameter('rgb_image_topic').value,
             self.image_callback,
-            1)
+            image_qos)
 
         # Publishers
         self.obstacle_pointcloud_pub = self.create_publisher(

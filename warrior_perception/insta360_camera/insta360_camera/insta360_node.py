@@ -11,13 +11,15 @@ from cv_bridge import CvBridge
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from sensor_msgs.msg import Image
+from rclpy.qos import QoSProfile, ReliabilityPolicy
+
 
 
 class Insta360Node(Node):
     def __init__(self) -> None:
         super().__init__('insta360_node')
 
-        self.declare_parameter('device', '/dev/video0')
+        self.declare_parameter('device', '/dev/video2')
         self.declare_parameter('frame_id', 'insta360_optical_frame')
         self.declare_parameter('width', 2880)
         self.declare_parameter('height', 1440)

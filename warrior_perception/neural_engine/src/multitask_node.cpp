@@ -10,6 +10,8 @@
 #include <vision_msgs/msg/object_hypothesis_with_pose.hpp>
 #include <cv_bridge/cv_bridge.h>
 
+#include <cuda_runtime.h>
+
 #include "multitask_engine.hpp"
 
 class MultitaskNode : public rclcpp::Node
@@ -50,6 +52,8 @@ public:
         pub_seg_ = create_publisher<sensor_msgs::msg::Image>(seg_topic, 10);
         pub_det_ = create_publisher<vision_msgs::msg::Detection2DArray>(detections_topic, 10);
 
+        cudaFree(0);  // force CUDA context init before first inference
+
         RCLCPP_INFO(get_logger(),
             "multitask_node ready (engine=%s, img=%s, seg=%s, det=%s)",
             engine_path.c_str(), image_topic.c_str(),
@@ -66,10 +70,10 @@ private:
             RCLCPP_WARN(get_logger(), "cv_bridge: %s", e.what());
             return;
         }
-
         multitask::InferResult result;
         try {
             result = engine_->infer(cv_img->image);
+        result.seg_mask.convertTo(result.seg_mask, CV_8UC1, 255.0);
         } catch (const std::exception& e) {
             RCLCPP_ERROR(get_logger(), "inference: %s", e.what());
             return;
