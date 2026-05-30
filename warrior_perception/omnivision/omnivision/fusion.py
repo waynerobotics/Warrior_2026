@@ -38,8 +38,8 @@ class Fusion(Node):
             0., 0., 0., 1.
             ])
 
-        self.declare_parameter('pointcloud_topic', 'velodyne_points')
-        self.declare_parameter('image_topic', 'camera/image')
+        self.declare_parameter('pointcloud_topic', 'unilidar/cloud')
+        self.declare_parameter('image_topic', 'camera/image_raw')
         self.declare_parameter('depth_map', 'camera/image/depth')
         self.declare_parameter('texturized_pointcloud', 'textured_pointcloud')
         self.declare_parameter('texturized_depth_map', 'texturized_depth_map')

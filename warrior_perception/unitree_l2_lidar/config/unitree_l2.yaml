@@ -9,9 +9,9 @@ unitree_lidar_ros2_node:
     cloud_scan_num: 18
 
     # Ethernet. This LiDAR was reconfigured to 192.168.123.110.
-    lidar_ip: "192.168.123.110"
+    lidar_ip: "192.168.1.62"
     lidar_port: 6101
-    local_ip: "192.168.123.200"
+    local_ip: "192.168.1.2"
     local_port: 6201
 
     serial_port: "/dev/ttyACM0"

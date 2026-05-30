@@ -40,7 +40,7 @@ class MaskToPointCloud(Node):
             0., 0., 0., 1.
             ])
         self.declare_parameter('pointcloud_topic', '/unilidar/cloud')
-        self.declare_parameter('mask_topic', '/perception/lane_obstacle_mask')
+        self.declare_parameter('mask_topic', 'ai/seg_mask')
         self.declare_parameter('obstacle_pointcloud', 'obstacle_pointcloud')
         self.declare_parameter('debug_overlay', 'debug/mask_overlay')
         self.declare_parameter('rgb_image_topic', '/camera/image_raw')
