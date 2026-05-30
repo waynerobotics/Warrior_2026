@@ -163,7 +163,7 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
         "/odom_gt", 10,
         [this](const nav_msgs::msg::Odometry::SharedPtr msg)
         {
-            std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
+            // std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
             nav_msgs::msg::Odometry compensated = *msg;
             compensated.pose.pose.position.z += base_link_height_offset_;
             base_link_height_ = compensated.pose.pose.position.z;
