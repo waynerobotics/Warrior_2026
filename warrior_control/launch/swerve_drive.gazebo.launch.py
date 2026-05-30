@@ -107,7 +107,7 @@ def generate_launch_description():
             "-topic", "robot_description",
             "-name", "warrior",
             "-allow_renaming", "true",
-            '-x', '0.', '-y', '0.', '-z', '0.1'
+            '-x', '-9.11', '-y', '35.92', '-z', '0.1'
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],

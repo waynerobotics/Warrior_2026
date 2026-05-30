@@ -169,14 +169,14 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
             base_link_height_ = compensated.pose.pose.position.z;
             odom_pub_->publish(compensated);
 
-            geometry_msgs::msg::TransformStamped tf_msg;
+            /*geometry_msgs::msg::TransformStamped tf_msg;
             tf_msg.header                   = compensated.header;
             tf_msg.child_frame_id           = compensated.child_frame_id;
             tf_msg.transform.translation.x  = compensated.pose.pose.position.x;
             tf_msg.transform.translation.y  = compensated.pose.pose.position.y;
             tf_msg.transform.translation.z  = compensated.pose.pose.position.z;
             tf_msg.transform.rotation       = compensated.pose.pose.orientation;
-            tf_broadcaster_->sendTransform(tf_msg);
+            tf_broadcaster_->sendTransform(tf_msg);*/
         });
 
     RCLCPP_INFO(logger, "SwerveDriveController configured.");
