@@ -73,14 +73,14 @@ class WaypointNavigator(Node):
         super().__init__('waypoint_navigator')
         
         # Robot identification
-        self.declare_parameter('robot_name', 'mini_shanti')
+        self.declare_parameter('robot_name', 'warrior_1')
         self.robot_name = self.get_parameter('robot_name').value
         
         # UTM Zone
         self.declare_parameter('utm_zone', 17)
         self.utm_zone = self.get_parameter('utm_zone').value
         
-        # Waypoint tolerance (meters) - robot must be within this distance to complete waypoint
+        # Waypoint tolerance (meters) - robot must be within this distance to complete waypoßint
         self.declare_parameter('waypoint_tolerance', 0.3)
         self.waypoint_tolerance = self.get_parameter('waypoint_tolerance').value
         

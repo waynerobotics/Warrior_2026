@@ -15,7 +15,7 @@ class WorldGPSNode(Node):
         super().__init__('world_gps_node')
         
         # Mode selection
-        self.declare_parameter('use_hardware_gps', False)  # Set to True when GPS is connected
+        self.declare_parameter('use_hardware_gps', True)  # Set to True when GPS is connected
         self.use_hardware_gps = self.get_parameter('use_hardware_gps').value
         
         # Fixed GPS reference (used when no hardware GPS)
@@ -37,7 +37,7 @@ class WorldGPSNode(Node):
         # Publishers
         self.gps_publisher = self.create_publisher(
             NavSatFix,
-            '/mini_shanti/gps_position',
+            '/warrior_1/gps_position',
             10
         )
         
@@ -50,7 +50,7 @@ class WorldGPSNode(Node):
         # Subscribe to robot position from AprilTag
         self.create_subscription(
             PoseStamped,
-            '/mini_shanti/apriltag_pose',
+            '/warrior_1/apriltag_pose',
             self.convert_to_gps,
             10
         )

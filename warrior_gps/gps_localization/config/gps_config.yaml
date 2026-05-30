@@ -2,7 +2,7 @@
 gps_localization:
   apriltag_gps_bridge:
     ros__parameters:
-      robot_name: mini_shanti
+      robot_name: warrior_1
       camera_parameters: [514.8914923, 515.01073552, 320.13602236,]
       
   world_gps_node:
@@ -14,12 +14,11 @@ gps_localization:
       
   waypoint_navigator:
     ros__parameters:
-      robot_name: mini_shanti
+      robot_name: warrior_1
       utm_zone: 17
       waypoint_tolerance: 0.3
 
-      
-      # CARES LAB WAYPOINTS
+
       waypoint_1_lat: 42.3558186
       waypoint_1_lon: -83.0707180
       waypoint_2_lat: 42.35581677
@@ -32,7 +31,7 @@ gps_localization:
       
   robot_frame_node:
     ros__parameters:
-      robot_name: mini_shanti
+      robot_name: warrior_1
       initial_x: 0.0
       initial_y: 0.0
       initial_z: 0.0
