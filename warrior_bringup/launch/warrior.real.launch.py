@@ -85,7 +85,7 @@ def launch_setup(context, *args, **kwargs):
     )
 
     return [
-        warrior_driver_launch,
+        # warrior_driver_launch,
         controller_launch,
         joy_node,
         teleop,

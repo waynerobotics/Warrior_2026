@@ -26,8 +26,11 @@ struct SwerveModuleState
     // Latest feedback from SPARK MAX (over SLCAN)
     double fb_steer_position_rad     = 0.0;
     double fb_steer_velocity_rad_s   = 0.0;
+    double fb_drive_position_rad     = 0.0;  // integrated from commanded velocity
     rclcpp::Time last_steer_pos_time;  // zero if never received
     rclcpp::Time last_steer_vel_time;
+    
+    rclcpp::Time last_update_time;
 };
 
 struct SwerveModule
