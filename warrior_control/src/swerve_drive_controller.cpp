@@ -491,14 +491,14 @@ void SwerveDriveController::computeJointCommand(double vx, double vy, double wz)
 
     const auto cmds = swerve_ik_->computeSwerveCommand(vx, vy, wz, current_angles);
 
-    RCLCPP_INFO(get_node()->get_logger(),
-        "Steering (deg): Front=%.2f  Left=%.2f  Right=%.2f",
-        cmds[0].steering_angle * 180.0 / M_PI,
-        cmds[1].steering_angle * 180.0 / M_PI,
-        cmds[2].steering_angle * 180.0 / M_PI);
-    RCLCPP_INFO(get_node()->get_logger(),
-        "Drive (rad/s):  Front=%.2f  Left=%.2f  Right=%.2f",
-        cmds[0].driving_speed, cmds[1].driving_speed, cmds[2].driving_speed);
+    // RCLCPP_INFO(get_node()->get_logger(),
+    //     "Steering (deg): Front=%.2f  Left=%.2f  Right=%.2f",
+    //     cmds[0].steering_angle * 180.0 / M_PI,
+    //     cmds[1].steering_angle * 180.0 / M_PI,
+    //     cmds[2].steering_angle * 180.0 / M_PI);
+    // RCLCPP_INFO(get_node()->get_logger(),
+    //     "Drive (rad/s):  Front=%.2f  Left=%.2f  Right=%.2f",
+    //     cmds[0].driving_speed, cmds[1].driving_speed, cmds[2].driving_speed);
 
     for (size_t i = 0; i < drive_cmd_.size(); ++i) {
         for (int j = 0; j < 3; ++j) {
