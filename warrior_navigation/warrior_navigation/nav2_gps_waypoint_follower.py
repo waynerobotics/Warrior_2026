@@ -17,43 +17,38 @@ from nav_msgs.msg import Path
 from rclpy.qos import QoSProfile
 from rclpy.qos import DurabilityPolicy
 
-
 class Nav2GpsWaypointFollower(Node):
     def __init__(self):
         super().__init__('nav2_gps_waypoint_follower')
-        qos = QoSProfile(depth=1)
-        qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
 
         self.declare_parameter('action_name', 'navigate_to_pose')
         self.declare_parameter('waypoint_file', '')
-        self.declare_parameter('map_origin_latitude', 0.0)
-        self.declare_parameter('map_origin_longitude', 0.0)
-        self.declare_parameter('map_origin_yaw', 0.0)
-        self.declare_parameter('utm_zone', 10)
+
+        self.declare_parameter('utm_zone', 17)
         self.declare_parameter('utm_hemisphere', 'N')
         self.declare_parameter('wait_for_action_timeout', 30.0)
 
         self.action_name = self.get_parameter('action_name').get_parameter_value().string_value
         waypoint_file = self.get_parameter('waypoint_file').get_parameter_value().string_value
-        self.map_origin_lat = self.get_parameter('map_origin_latitude').get_parameter_value().double_value
-        self.map_origin_lon = self.get_parameter('map_origin_longitude').get_parameter_value().double_value
-        self.map_origin_yaw = self.get_parameter('map_origin_yaw').get_parameter_value().double_value
+
         self.utm_zone = self.get_parameter('utm_zone').get_parameter_value().integer_value
         self.utm_hemisphere = self.get_parameter('utm_hemisphere').get_parameter_value().string_value.upper()
         self.wait_for_action_timeout = self.get_parameter('wait_for_action_timeout').get_parameter_value().double_value
 
         if not waypoint_file:
-            waypoint_file = os.path.join(
-                get_package_share_directory('warrior_navigation'),
-                'config',
-                'turtlebot_sim_waypoints.yaml'
-            )
-            self.get_logger().info(f'No waypoint file provided, using default: {waypoint_file}')
+            self.get_logger().info(f'No waypoint file provided, shutting down.')
+            return
 
         self.waypoints_gps = self._load_waypoints(waypoint_file)
         if not self.waypoints_gps:
             self.get_logger().error('No waypoints found. Shutting down.')
             return
+        
+        # definde map origin as first waypoint from first loaded file in yaml
+        origin = self.waypoints_gps[0]
+        self.map_origin_lat = origin.get('latitude', 0.0)
+        self.map_origin_lon = origin.get('longitude', 0.0)
+        self.map_origin_yaw = origin.get('yaw', 0.0)
 
         self.waypoints_map = self._convert_gps_to_map_frame(self.waypoints_gps)
         self.get_logger().info(f'Loaded {len(self.waypoints_map)} GPS waypoints in map frame.')
