@@ -38,6 +38,25 @@ sudo apt install \
 
 ---
 
+## Step 0 — Unitree L2 LiDAR network
+
+The L2 streams over Ethernet and expects a host NIC on `192.168.1.0/24`.
+One-time NetworkManager setup:
+
+```bash
+sudo nmcli con modify "<your-eth-conn>" \
+    connection.id unitree-l2 \
+    ipv4.method manual \
+    ipv4.addresses 192.168.1.2/24 \
+    ipv4.gateway "" ipv4.never-default yes \
+    ipv6.method ignore connection.autoconnect yes
+sudo nmcli con up unitree-l2
+```
+
+Not needed if you are only bringing up the camera + inference path.
+
+---
+
 ## Step 1 — Put the Insta360 into webcam mode
 
 1. Power on the camera.
@@ -105,7 +124,7 @@ cd ~/Warrior_2026
 
 colcon build --packages-select \
   insta360_camera \
-  ai_perception \
+  neural_engine \
   --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 source install/setup.bash
@@ -121,15 +140,16 @@ Verify both nodes are installed:
 ros2 pkg executables insta360_camera
 # insta360_camera insta360_node
 
-ros2 pkg executables ai_perception
-# ai_perception multitask_node
+ros2 pkg executables neural_engine
+# neural_engine multitask_node
+# neural_engine seg_viz_node
 ```
 
 ---
 
 ## Step 4 — Configure
 
-Edit `warrior_perception/ai_perception/config/multitask.yaml`:
+Edit `warrior_perception/neural_engine/config/multitask.yaml`:
 ```yaml
 multitask_node:
   ros__parameters:
@@ -174,7 +194,7 @@ Expected output:
 ### Terminal 2 — inference
 ```bash
 source ~/Warrior_2026/install/setup.bash
-ros2 launch ai_perception multitask.launch.py \
+ros2 launch neural_engine multitask.launch.py \
   engine_path:=/opt/warrior/models/resnet18_fp16.engine
 ```
 
@@ -246,7 +266,7 @@ depth 1, so it always processes the latest image.
 
 ### Optional: improve preprocessing throughput
 The resize + normalize runs on CPU. If you need lower latency, replace the
-`preprocess()` function in `ai_perception/src/multitask_engine.cpp` with a
+`preprocess()` function in `neural_engine/src/multitask_node.cpp` with a
 CUDA kernel or Jetson VPI pipeline. This is not needed unless the wall time
 above consistently exceeds 33 ms.
 

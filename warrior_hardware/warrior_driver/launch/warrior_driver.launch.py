@@ -16,9 +16,22 @@ def generate_launch_description():
     #   - Written back to the src tree so `colcon build` keeps it in sync and
     #     so we don't depend on the (possibly read-only) install dir.
     calib_load_path = os.path.join(pkg_share, "config", "steer_calibration.yaml")
-    calib_write_path = os.path.expanduser(
-        "~/warrior_ws/src/Warrior_2026/warrior_hardware/warrior_driver/config/steer_calibration.yaml"
-    )  # adjust to your actual src path
+
+    # The src path differs per machine. Try known workspace roots in order and
+    # use the first whose warrior_driver/config dir actually exists.
+    #   - ~/warrior_ws/src is the PRIMARY (robot PC) and stays the default even
+    #     if it's absent on this machine — it must keep working there.
+    #   - ~/ros2_ws/src is the dev-PC fallback.
+    _calib_rel = "Warrior_2026/warrior_hardware/warrior_driver/config/steer_calibration.yaml"
+    _src_roots = [
+        os.path.expanduser("~/warrior_ws/src"),   # robot PC (primary)
+        os.path.expanduser("~/ros2_ws/src"),      # dev PC fallback
+    ]
+    calib_write_path = next(
+        (os.path.join(r, _calib_rel) for r in _src_roots
+         if os.path.isdir(os.path.dirname(os.path.join(r, _calib_rel)))),
+        os.path.join(_src_roots[0], _calib_rel),   # default: primary robot path
+    )
 
     # Parameter layering: base config first, calibration overrides on top.
     params = [warrior_driver_config]

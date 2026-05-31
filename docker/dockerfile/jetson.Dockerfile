@@ -134,7 +134,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
         unitree_lidar_ros2 \
         unitree_l2_lidar \
         insta360_camera \
-        ai_perception \
+        neural_engine \
         omnivision \
       --symlink-install || true
 

@@ -30,12 +30,15 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'direct_path_generator = warrior_navigation.direct_path_generator:main',
-            'map_robot_pose = warrior_navigation.map_robot_pose:main',
-            'linear_path_controller = warrior_navigation.linear_path_controller:main',
+            # --- STUBS for the planned custom nav solution: no source file yet. ---
+            # Re-enable each once warrior_navigation/<module>.py exists.
+            # 'direct_path_generator = warrior_navigation.direct_path_generator:main',
+            # 'map_robot_pose = warrior_navigation.map_robot_pose:main',
+            # 'linear_path_controller = warrior_navigation.linear_path_controller:main',
+            # 'astar_planner = warrior_navigation.astar_planner:main',
+            # --- live entry points ---
             'path_to_pose_server = warrior_navigation.compute_path_to_pose:main',
             'recovery_manager = warrior_navigation.recovery_manager:main',
-            'astar_planner = warrior_navigation.astar_planner:main',
             'follow_path = warrior_navigation.follow_path:main',
             'waypoint_follower = warrior_navigation.logged_waypoint_follower:main',
             'gps_waypoint_manager = warrior_navigation.gps_waypoint_manager:main',

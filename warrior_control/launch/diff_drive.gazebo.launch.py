@@ -32,7 +32,10 @@ def generate_launch_description():
 
     world_file = PathJoinSubstitution([pkg_warrior_description, "worlds", gazebo_world])
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "gzsim.urdf.xacro"])
-    controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
+    # DEPRECATED: warrior_controllers.yaml no longer exists — split into
+    # warrior_controllers_sim.yaml / warrior_controllers_real.yaml. This var was
+    # unused here (controllers are spawned by name above), so it stays commented out.
+    # controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
 
     rviz2_config_file = PathJoinSubstitution(

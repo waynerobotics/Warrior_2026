@@ -14,7 +14,10 @@ def generate_launch_description():
     pkg_warrior_control = FindPackageShare("warrior_control")
 
     xacro_file = PathJoinSubstitution([pkg_warrior_description, "urdf", "warrior.urdf.xacro"])
-    controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
+    # DEPRECATED: warrior_controllers.yaml no longer exists — split into
+    # warrior_controllers_sim.yaml / warrior_controllers_real.yaml. Pick the right
+    # one before re-enabling the ros2_control_node parameter below.
+    # controller_yaml = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers.yaml"])
 
     rviz2_config_file = PathJoinSubstitution(
         [pkg_warrior_description, "rviz", "warrior.rviz"]
@@ -46,7 +49,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {"robot_description": robot_description},
-            controller_yaml  # ← This line actually loads the YAML file
+            # controller_yaml  # DEPRECATED: warrior_controllers.yaml missing — see above
         ],
     )
 
