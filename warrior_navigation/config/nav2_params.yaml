@@ -173,7 +173,7 @@ local_costmap:
         z_voxels: 32
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: pointcloud
+        observation_sources: pointcloud lanes
         pointcloud:
           topic: /unilidar/cloud
           max_obstacle_height: 2.0
@@ -184,6 +184,17 @@ local_costmap:
           raytrace_max_range: 15.0
           raytrace_min_range: 0.05
           obstacle_max_range: 14.0
+          obstacle_min_range: 0.1
+          inf_is_valid: True
+
+        lanes:
+          topic: /obstacle_laserscan
+          mclearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 7.0
+          raytrace_min_range: 0.05
+          obstacle_max_range: 6.5
           obstacle_min_range: 0.1
           inf_is_valid: True
 
@@ -210,7 +221,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: pointcloud
+        observation_sources: pointcloud lanes
         pointcloud:
           topic: /unilidar/cloud
           max_obstacle_height: 2.0
@@ -221,6 +232,17 @@ global_costmap:
           raytrace_max_range: 15.0
           raytrace_min_range: 0.05
           obstacle_max_range: 14.0
+          obstacle_min_range: 0.1
+          inf_is_valid: True
+
+        lanes:
+          topic: /obstacle_laserscan
+          mclearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 7.0
+          raytrace_min_range: 0.05
+          obstacle_max_range: 6.5
           obstacle_min_range: 0.1
           inf_is_valid: True
 

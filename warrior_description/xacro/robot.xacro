@@ -153,7 +153,8 @@
                       xyz="${camera_offset}" rpy="${pi} 0 0" mass="0.5"/>
 
   <!-- ========== GPS =========== -->
-  <xacro:gps_macro parent="pole_link" xyz="0 0 0"/>
+  <xacro:gps_macro parent="pole_link" name="navsat1" xyz="0.27 0 0"/>
+  <xacro:gps_macro parent="base_link" name="navsat2" xyz="0.76 0 0"/>
 
   <!-- ========== Beacon Light ========== -->
   <link name="beacon_light_link">
