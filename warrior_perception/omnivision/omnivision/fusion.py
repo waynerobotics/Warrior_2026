@@ -44,6 +44,8 @@ class Fusion(Node):
         self.declare_parameter('texturized_pointcloud', 'textured_pointcloud')
         self.declare_parameter('texturized_depth_map', 'texturized_depth_map')
         self.declare_parameter('image_overlay', 'image_overlay')
+        self.declare_parameter('lanes_pointcloud', 'lanes_pointcloud')
+        self.declare_parameter('white_threshold', 0.6)
 
         image_qos = QoSProfile(
             depth=1,
@@ -79,6 +81,11 @@ class Fusion(Node):
         self.image_overlay_publisher_ = self.create_publisher(
             Image,
             self.get_parameter('image_overlay').value,
+            1)
+
+        self.lanes_pointcloud_publisher_ = self.create_publisher(
+            PointCloud2,
+            self.get_parameter('lanes_pointcloud').value,
             1)
 
         self.get_logger().info(str(self.get_parameter('transformation_matrix').value))
@@ -190,6 +197,47 @@ class Fusion(Node):
             self.texturized_pointcloud_publisher_.publish(textured_pointcloud)
             self.texturized_pointcloud_publisher_.publish(textured_pointcloud)
             self.get_logger().info('Published textured point cloud')
+
+        if self.lanes_pointcloud_publisher_.get_subscription_count() > 0:
+            thresh = self.get_parameter('white_threshold').value * 255.0
+            white = (
+                (colors[:, 0].astype(np.float32) >= thresh) &
+                (colors[:, 1].astype(np.float32) >= thresh) &
+                (colors[:, 2].astype(np.float32) >= thresh)
+            )
+            lx = x[white]
+            ly = y[white]
+            lz = z[white]
+            lc = colors[white]
+            m = len(lx)
+            buf = np.empty(m, dtype=np.dtype([
+                ('x', np.float32), ('y', np.float32), ('z', np.float32),
+                ('r', np.float32), ('g', np.float32), ('b', np.float32),
+            ]))
+            buf['x'] = lx
+            buf['y'] = ly
+            buf['z'] = lz
+            buf['r'] = lc[:, 2].astype(np.float32) / 255.0
+            buf['g'] = lc[:, 1].astype(np.float32) / 255.0
+            buf['b'] = lc[:, 0].astype(np.float32) / 255.0
+            lanes_cloud = PointCloud2()
+            lanes_cloud.header = self.latest_pointcloud.header
+            lanes_cloud.height = 1
+            lanes_cloud.width = m
+            lanes_cloud.fields = [
+                pc2.PointField(name='x', offset=0,  datatype=pc2.PointField.FLOAT32, count=1),
+                pc2.PointField(name='y', offset=4,  datatype=pc2.PointField.FLOAT32, count=1),
+                pc2.PointField(name='z', offset=8,  datatype=pc2.PointField.FLOAT32, count=1),
+                pc2.PointField(name='r', offset=12, datatype=pc2.PointField.FLOAT32, count=1),
+                pc2.PointField(name='g', offset=16, datatype=pc2.PointField.FLOAT32, count=1),
+                pc2.PointField(name='b', offset=20, datatype=pc2.PointField.FLOAT32, count=1),
+            ]
+            lanes_cloud.is_bigendian = False
+            lanes_cloud.point_step = 24
+            lanes_cloud.row_step = 24 * m
+            lanes_cloud.is_dense = True
+            lanes_cloud.data = buf.tobytes()
+            self.lanes_pointcloud_publisher_.publish(lanes_cloud)
 
         if self.depth_map_publisher_.get_subscription_count() > 0:
             # Create a depth map from the transformed points

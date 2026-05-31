@@ -48,6 +48,7 @@ class MaskToLaserScan(Node):
         self.declare_parameter('angle_increment', math.pi / 180.0)  # 1 deg
         self.declare_parameter('range_min', 0.1)
         self.declare_parameter('range_max', 100.0)
+        self.declare_parameter('z_min', -1.0)
 
         # Full 360° — fixed by the spherical projection, not configurable
         self.ANGLE_MIN = -math.pi
@@ -179,12 +180,20 @@ class MaskToLaserScan(Node):
         v_valid = v[in_bounds]
         x_valid = x[in_bounds]
         y_valid = y[in_bounds]
+        z_valid = z[in_bounds]
         intensity_valid = intensity[in_bounds]
 
         obstacle_mask = binary_mask[v_valid, u_valid] == 255
         obs_x = x_valid[obstacle_mask]
         obs_y = y_valid[obstacle_mask]
+        obs_z = z_valid[obstacle_mask]
         obs_int = intensity_valid[obstacle_mask]
+
+        z_min = self.get_parameter('z_min').value
+        height_mask = obs_z >= z_min
+        obs_x = obs_x[height_mask]
+        obs_y = obs_y[height_mask]
+        obs_int = obs_int[height_mask]
 
         # Build LaserScan from obstacle points
         angle_min = self.ANGLE_MIN
