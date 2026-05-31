@@ -1,9 +1,13 @@
 #include <chrono>
+#include <cmath>
+#include <ctime>
+#include <fstream>
+#include <iomanip>
 
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 #include <diagnostic_msgs/msg/key_value.hpp>
 
-#include "warrior_driver/arduino/arduino_serial_device.hpp"     
+#include "warrior_driver/arduino/arduino_serial_device.hpp"
 #include "warrior_driver/sparkmax/sparkmax_frame.hpp"
 #include "warrior_driver/swerve/unit_conversions.hpp"
 #include "warrior_driver/swerve/swerve_driver_node.hpp"
@@ -13,6 +17,7 @@ namespace warrior::driver {
 
 namespace {
 
+// ── Small helpers to build diagnostic KeyValue pairs of various types ──
 diagnostic_msgs::msg::KeyValue kv(const std::string & key, std::string value)
 {
     diagnostic_msgs::msg::KeyValue out;
@@ -37,8 +42,12 @@ diagnostic_msgs::msg::KeyValue kv(const std::string & key, int value)
 
 }  // namespace
 
+// ════════════════════════════════════════════════════════════════════════
+//  Construction
+// ════════════════════════════════════════════════════════════════════════
 SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
 {
+    // ── Core topic / timing parameters ──
     command_topic_       = declare_parameter<std::string>("command_topic", "/warrior_swerve_command");
     state_topic_         = declare_parameter<std::string>("state_topic",   "/warrior_swerve_state");
     update_rate_hz_      = declare_parameter<double>("update_rate_hz", 50.0);
@@ -48,13 +57,22 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
     diagnostics_rate_hz_ = declare_parameter<double>("diagnostics_rate_hz", 1.0);
     baud_rate_           = declare_parameter<int>("arduino.baud_rate", 115200);
 
+    // ── Auto-calibration parameters ──
+    calib_timeout_s_  = declare_parameter<double>("calib.timeout_s", 60.0);
+    calib_samples_    = declare_parameter<int>("calib.samples", 100);
+    calib_write_path_ = declare_parameter<std::string>("calib.write_path", "");
+
     // Declared but unused — kept so existing YAML configs don't generate
     // "parameter not declared" warnings while folks migrate.
     (void) declare_parameter<std::string>("sparkmax.slcan_interface", "auto");
     (void) declare_parameter<std::string>("sparkmax.bitrate_code", "8");
 
-    load_modules();     // populates modules_ and module_index_ from parameters
+    load_modules();   // populate modules_ and module_index_ from parameters
 
+    // Mark the start of the calibration window (used for the connect timeout).
+    calib_start_time_ = this->now();
+
+    // ── Build the Arduino discovery config from module drive device names ──
     DeviceRegistry::ArduinoConfig arduino_cfg;
     arduino_cfg.baud_rate = baud_rate_;
     arduino_cfg.wanted_names.reserve(modules_.size());
@@ -64,6 +82,7 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
         }
     }
 
+    // ── Build the SPARK MAX discovery config from module CAN IDs ──
     DeviceRegistry::SparkConfig spark_cfg;
     spark_cfg.wanted_can_ids.reserve(modules_.size());
     for (const auto & m : modules_) {
@@ -72,32 +91,32 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
         }
     }
 
-    // Start the device registry 
+    // ── Start the device registry (spawns the background discovery thread) ──
     registry_ = std::make_unique<DeviceRegistry>(
         get_logger(), std::move(arduino_cfg), std::move(spark_cfg),
         std::chrono::duration<double>(discovery_period_s_));
     registry_->start();
 
-    // Subscribe to command topic
+    // ── Subscribe to incoming commands ──
     cmd_sub_ = create_subscription<warrior_msgs::msg::SwerveCmd>(
         command_topic_, rclcpp::QoS(10),
         std::bind(&SwerveDriverNode::on_command, this, std::placeholders::_1));
 
-    // Publish state updates
+    // ── Publisher for per-module state ──
     state_pub_ = create_publisher<warrior_msgs::msg::SwerveState>(
         state_topic_, rclcpp::QoS(10));
-    
-    // Diagnostics publisher
+
+    // ── Publisher for diagnostics ──
     diag_pub_ = create_publisher<diagnostic_msgs::msg::DiagnosticArray>(
         "/diagnostics", rclcpp::QoS(10));
 
-    // Set up update timer
+    // ── Main update timer ──
     const auto update_period = std::chrono::duration<double>(1.0 / update_rate_hz_);
     update_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(update_period),
         std::bind(&SwerveDriverNode::update, this));
 
-    // Set up diagnostics timer
+    // ── Diagnostics timer ──
     const auto diag_period = std::chrono::duration<double>(1.0 / diagnostics_rate_hz_);
     diag_timer_ = create_wall_timer(
         std::chrono::duration_cast<std::chrono::nanoseconds>(diag_period),
@@ -105,10 +124,12 @@ SwerveDriverNode::SwerveDriverNode() : rclcpp::Node("warrior_swerve_driver")
 
     RCLCPP_INFO(get_logger(),
         "warrior_swerve_driver up: %zu modules, sub=%s, pub=%s, rate=%.1f Hz, "
-        "timeout=%.2fs, steer_stale=%.2fs, baud=%d, scan=%.1fs, diag=%.1f Hz",
+        "timeout=%.2fs, steer_stale=%.2fs, baud=%d, scan=%.1fs, diag=%.1f Hz | "
+        "calib: samples=%d, timeout=%.0fs, write_path='%s'",
         modules_.size(), command_topic_.c_str(), state_topic_.c_str(),
         update_rate_hz_, command_timeout_s_, steer_stale_after_s_, baud_rate_,
-        discovery_period_s_, diagnostics_rate_hz_);
+        discovery_period_s_, diagnostics_rate_hz_,
+        calib_samples_, calib_timeout_s_, calib_write_path_.c_str());
 }
 
 SwerveDriverNode::~SwerveDriverNode()
@@ -118,85 +139,197 @@ SwerveDriverNode::~SwerveDriverNode()
     }
 }
 
-
-void SwerveDriverNode::calibrate()
+// ════════════════════════════════════════════════════════════════════════
+//  Auto-calibration
+//
+//  Runs once per update() tick until calib_done_ becomes true. For each
+//  module that has not yet recorded its forward offset:
+//    1. Wait for the SPARK MAX to be connected.
+//    2. Wait for fresh encoder data.
+//    3. Accumulate raw encoder readings into calib_buffer.
+//    4. Once calib_samples_ readings are gathered, average them, store the
+//       result in config.encoder_pos_forward, and mark the module recorded.
+//  When every module is recorded, write the YAML and set calib_done_.
+//  If calib_timeout_s_ elapses before all modules connect, this logs FATAL
+//  and shuts the node down.
+// ════════════════════════════════════════════════════════════════════════
+void SwerveDriverNode::auto_calibrate()
 {
     const auto now = this->now();
-    const double two_pi = 2.0 * M_PI;
+
+    // ── Hard deadline ──
+    const double elapsed = (now - calib_start_time_).seconds();
+    if (elapsed > calib_timeout_s_) {
+        RCLCPP_FATAL(get_logger(),
+            "[calib] Timeout after %.0fs — not all modules calibrated. Shutting down.",
+            calib_timeout_s_);
+        for (const auto & module : modules_) {
+            if (!module.calib_recorded) {
+                RCLCPP_FATAL(get_logger(), "[calib]   module '%s' never completed calibration",
+                    module.config.name.c_str());
+            }
+        }
+        rclcpp::shutdown();
+        return;
+    }
+
+    bool all_recorded = true;
 
     for (auto & module : modules_) {
-        auto & state = module.state;
+        if (module.calib_recorded) continue;
+        all_recorded = false;
+
         const auto & cfg = module.config;
 
-        // ── Skip if already calibrated ──
-        if (module.calib_done) continue;
-
-        // ── Check if both drive and steer are connected for this module ──
-        const bool drive_ok = registry_ && registry_->is_arduino_connected(cfg.drive_device_name);
+        // ── 1. SPARK MAX connected? ──
         const bool steer_ok = registry_ && registry_->is_spark_connected(cfg.spark_can_id);
-
-        if (!drive_ok || !steer_ok) {
+        if (!steer_ok) {
             RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
-                "[calib] module '%s' waiting: drive=%s, steer=%s",
-                cfg.name.c_str(),
-                drive_ok ? "OK" : "NOT CONNECTED",
-                steer_ok ? "OK" : "NOT CONNECTED");
-            continue;  // ← Module not ready yet, wait for next tick
+                "[calib] '%s' waiting for SPARK MAX (CAN %d)... (%.0f/%.0fs)",
+                cfg.name.c_str(), cfg.spark_can_id, elapsed, calib_timeout_s_);
+            continue;
         }
 
-        // ── Module is connected, start/continue calibration ────────────────
-        // Target is the configured offset from YAML
-        const double target_pos = cfg.steer_offset_rad;
+        // ── 2. Fresh encoder data? ──
+        const auto pos_rot = registry_->spark_position_rot(cfg.spark_can_id);
+        const double pos_age = registry_->seconds_since_spark_position(cfg.spark_can_id, now);
 
-        // Normalize current position to [0, 2π)
-        double normalized = std::fmod(state.fb_steer_position_rad, two_pi);
-        if (normalized < 0) normalized += two_pi;
+        // ── DEBUG: log everything we see to a txt file, even rejected samples ──
+        {
+            std::ofstream dbg("/tmp/calib_debug.txt", std::ios::app);
+            if (dbg.is_open()) {
+                dbg << "[" << std::fixed << std::setprecision(3) << now.seconds() << "] "
+                    << cfg.name
+                    << " can=" << cfg.spark_can_id
+                    << " has_value=" << (pos_rot.has_value() ? "1" : "0")
+                    << " pos_rot=" << (pos_rot.has_value() ? std::to_string(*pos_rot) : "nan")
+                    << " pos_age=" << std::setprecision(4) << pos_age
+                    << " stale_thresh=" << steer_stale_after_s_
+                    << " buffer_size=" << module.calib_buffer.size()
+                    << "\n";
+            }
+        }
 
-        // Normalize target to [0, 2π)
-        double target_normalized = std::fmod(target_pos, two_pi);
-        if (target_normalized < 0) target_normalized += two_pi;
+        if (!pos_rot.has_value() || pos_age < 0.0 || pos_age >= steer_stale_after_s_) {
+            RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 2000,
+                "[calib] '%s' connected; waiting for fresh encoder data "
+                "(has_value=%d, age=%.4f, thresh=%.2f)...",
+                cfg.name.c_str(), pos_rot.has_value() ? 1 : 0, pos_age, steer_stale_after_s_);
+            continue;
+        }
 
-        // Calculate shortest error path
-        double error = normalized - target_normalized;
-        if (error > M_PI) error -= two_pi;
-        else if (error < -M_PI) error += two_pi;
+        // ── 3. Accumulate sample ──
+        module.calib_buffer.push_back(static_cast<double>(*pos_rot));
 
-        // Check if position is settled (close to target)
-        const bool settled = std::abs(error) < CALIB_THRESHOLD;
+        RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500,
+            "[calib] '%s' collecting: %zu/%d samples (latest=%.4f rot)",
+            cfg.name.c_str(), module.calib_buffer.size(), calib_samples_,
+            static_cast<double>(*pos_rot));
 
-        if (!settled) {
-            // Not settled yet, continue moving towards target
-            const double alpha = 0.05;  // Exponential decay interpolation factor
-            const double gentle_cmd = state.fb_steer_position_rad - alpha * error;
+        // ── 4. Window full → average and finalize ──
+        if (static_cast<int>(module.calib_buffer.size()) >= calib_samples_) {
+            double sum = 0.0;
+            for (double v : module.calib_buffer) sum += v;
+            const double avg = sum / static_cast<double>(module.calib_buffer.size());
 
-            state.cmd_steer_position_rad = gentle_cmd;
-            state.have_command           = true;
-            state.last_command_time      = now;
+            double var = 0.0;
+            for (double v : module.calib_buffer) var += (v - avg) * (v - avg);
+            var /= static_cast<double>(module.calib_buffer.size());
+            const double stddev = std::sqrt(var);
 
-            const double encoder_pos = steer_rad_to_encoder_pos(gentle_cmd, cfg);
-            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(encoder_pos));
+            // ── DEBUG: dump the full buffer for this module ──
+            {
+                std::ofstream dbg("/tmp/calib_debug.txt", std::ios::app);
+                if (dbg.is_open()) {
+                    dbg << "===== '" << cfg.name << "' FINAL: avg=" << std::setprecision(4) << avg
+                        << " stddev=" << stddev << " n=" << module.calib_buffer.size() << " =====\n";
+                    dbg << "  samples: ";
+                    for (double v : module.calib_buffer) dbg << v << " ";
+                    dbg << "\n";
+                }
+            }
 
-            RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
-                "[calib] '%s' homing to offset: pos=%.4f rad, target=%.4f rad, error=%.4f rad",
-                cfg.name.c_str(), state.fb_steer_position_rad, target_pos, error);
+            module.config.encoder_pos_forward = avg;
+            module.calib_recorded = true;
 
-        } else {
-            // Settled at target offset
-            state.cmd_steer_position_rad = target_pos;
-            state.have_command           = true;
-            state.last_command_time      = now;
-
-            const double encoder_pos = steer_rad_to_encoder_pos(target_pos, cfg);
-            registry_->send_steer_position(cfg.spark_can_id, static_cast<float>(encoder_pos));
-
-            module.calib_done = true;  // ← Mark this module as calibrated
             RCLCPP_INFO(get_logger(),
-                "[calib] '%s' settled at offset: pos=%.4f rad, target=%.4f rad ✅",
-                cfg.name.c_str(), state.fb_steer_position_rad, target_pos);
+                "[calib] '%s' DONE: encoder_pos_forward = %.4f rot (avg over %d, stddev=%.4f)",
+                cfg.name.c_str(), avg, calib_samples_, stddev);
+
+            if (stddev > 0.1) {
+                RCLCPP_WARN(get_logger(),
+                    "[calib] '%s' high stddev (%.4f) — wheel may have moved during calibration!",
+                    cfg.name.c_str(), stddev);
+            }
         }
+    }
+
+    if (all_recorded) {
+        calib_done_ = true;
+        RCLCPP_INFO(get_logger(), "[calib] ===== All modules calibrated =====");
+        for (const auto & module : modules_) {
+            RCLCPP_INFO(get_logger(), "[calib]   %-6s encoder_pos_forward = %.4f rot",
+                module.config.name.c_str(), module.config.encoder_pos_forward);
+        }
+        write_calibration_yaml();
+        RCLCPP_INFO(get_logger(), "[calib] ===== Entering normal operation =====");
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Write calibration results to YAML
+//
+//  Produces a small YAML file that, when loaded after warrior_driver.yaml,
+//  overrides each module's encoder_pos_forward. A timestamp comment records
+//  when the calibration was performed. This file is auto-generated and not
+//  meant to be hand-edited.
+// ════════════════════════════════════════════════════════════════════════
+void SwerveDriverNode::write_calibration_yaml()
+{
+    if (calib_write_path_.empty()) {
+        RCLCPP_WARN(get_logger(),
+            "[calib] calib.write_path is empty — skipping YAML write "
+            "(calibration values are kept in memory for this run only)");
+        return;
+    }
+
+    // Human-readable local timestamp for the comment header.
+    const std::time_t t = std::time(nullptr);
+    char timestamp[64];
+    std::strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", std::localtime(&t));
+
+    std::ofstream f(calib_write_path_);
+    if (!f.is_open()) {
+        RCLCPP_ERROR(get_logger(),
+            "[calib] Failed to open '%s' for writing — calibration not persisted!",
+            calib_write_path_.c_str());
+        return;
+    }
+
+    f << "# ============================================================\n";
+    f << "# Auto-generated steer calibration\n";
+    f << "# Calibrated: " << timestamp << "\n";
+    f << "# DO NOT EDIT BY HAND — regenerated on every launch with auto-calibration.\n";
+    f << "# Load this AFTER warrior_driver.yaml to override encoder_pos_forward.\n";
+    f << "# ============================================================\n";
+    f << "warrior_driver:\n";
+    f << "  ros__parameters:\n";
+    f << "    modules:\n";
+    for (const auto & module : modules_) {
+        f << "      " << module.config.name << ":\n";
+        f << "        encoder_pos_forward: "
+          << std::fixed << std::setprecision(4) << module.config.encoder_pos_forward
+          << "  # calibrated " << timestamp << "\n";
+    }
+    f.close();
+
+    RCLCPP_INFO(get_logger(),
+        "[calib] Wrote calibration to '%s'", calib_write_path_.c_str());
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  Safe stop (called on shutdown)
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::send_safe_stop()
 {
     if (registry_) {
@@ -205,6 +338,9 @@ void SwerveDriverNode::send_safe_stop()
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Load module configs from YAML parameters
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::load_modules()
 {
     const auto names = declare_parameter<std::vector<std::string>>(
@@ -233,19 +369,22 @@ void SwerveDriverNode::load_modules()
         module_index_[name] = modules_.size();
         SwerveModule m;
         m.config = cfg;
-        m.state.last_update_time = this->now();
+        m.state.last_update_time  = this->now();
         m.state.last_command_time = this->now();
         modules_.push_back(std::move(m));
 
         RCLCPP_INFO(get_logger(),
-            "module '%s': drive=%s, steer=%s (CAN %d), "
-            "gear=%.3f, offset=%.3f rad, encoder_pos_forward=%.3f rad, signs=(s%+.0f,d%+.0f), max_drive=%.2f rad/s",
+            "module '%s': drive=%s, steer=%s (CAN %d), gear=%.3f, offset=%.3f rad, "
+            "encoder_pos_forward=%.4f rot, signs=(s%+.0f,d%+.0f), max_drive=%.2f rad/s",
             cfg.name.c_str(), cfg.drive_device_name.c_str(), cfg.steer_device_name.c_str(),
-            cfg.spark_can_id, cfg.steer_motor_rot_per_module_rot, cfg.steer_offset_rad, cfg.encoder_pos_forward, 
-            cfg.steer_sign, cfg.drive_sign, cfg.max_drive_rad_s);
+            cfg.spark_can_id, cfg.steer_motor_rot_per_module_rot, cfg.steer_offset_rad,
+            cfg.encoder_pos_forward, cfg.steer_sign, cfg.drive_sign, cfg.max_drive_rad_s);
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Module lookup by name
+// ════════════════════════════════════════════════════════════════════════
 SwerveModule * SwerveDriverNode::find_module(const std::string & name)
 {
     auto it = module_index_.find(name);
@@ -253,6 +392,9 @@ SwerveModule * SwerveDriverNode::find_module(const std::string & name)
     return &modules_[it->second];
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Command callback: store the latest command for the addressed module
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr msg)
 {
     SwerveModule *module = find_module(msg->swerve_id);
@@ -267,6 +409,9 @@ void SwerveDriverNode::on_command(const warrior_msgs::msg::SwerveCmd::SharedPtr 
     module->state.last_command_time        = this->now();
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Drain and log pending Arduino lines (ACK / ERR / other)
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::drain_and_log_arduino_messages()
 {
     if (!registry_) return;
@@ -288,44 +433,49 @@ void SwerveDriverNode::drain_and_log_arduino_messages()
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Main periodic update
+//
+//  Calibration gate runs first: until every module's forward offset has been
+//  recorded, this loop only calibrates and returns — no commands are sent.
+//  After calibration, each module:
+//    - maps its steer command to an absolute encoder target and sends it,
+//    - maps its drive command to a percentage and sends it,
+//    - reads the latest encoder feedback (mapped back to algorithm coords),
+//    - integrates an open-loop drive position,
+//    - publishes its state.
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::update()
 {
     const auto now = this->now();
     drain_and_log_arduino_messages();
 
-    // ── Keep calibrating until all modules are done ──
-    // bool all_calibrated = true;
-    // for (const auto & module : modules_) {
-    //     if (!module.calib_done) {
-    //         all_calibrated = false;
-    //         break;
-    //     }
-    // }
+    // ── Calibration gate: don't accept/send commands until calibrated ──
+    if (!calib_done_) {
+        auto_calibrate();
+        return;
+    }
 
-    // if (!all_calibrated) {
-    //     calibrate();
-    //     return;
-    // }
-
-    // std::cout << "The number of modules_: " << modules_.size() << std::endl;
     for (auto & module : modules_) {
         const auto & cfg = module.config;
         auto & state = module.state;
-        // std::cout << "Processing module: " << cfg.name << std::endl;
 
+        // A command is "timed out" if it's older than command_timeout_s_.
         const bool timed_out = state.have_command &&
             (now - state.last_command_time).seconds() > command_timeout_s_;
 
-        const double steer_cmd = state.cmd_steer_position_rad;  // steer command keeps its last value even if timed out
+        // Steer keeps its last commanded position even when timed out (the
+        // wheel should hold its heading); drive is zeroed on timeout for safety.
+        const double steer_cmd = state.cmd_steer_position_rad;
         const double drive_cmd = (state.have_command && !timed_out) ? state.cmd_drive_velocity_rad_s : 0.0;
 
-        const double encoder_position = steer_rad_to_encoder_pos(steer_cmd, cfg);
-        const int    drive_percent   = drive_rad_s_to_percent(drive_cmd, cfg);
-        // if (module.config.name == "right") {
-        //     RCLCPP_WARN(get_logger(), "module %s encoder_position: %f", cfg.name.c_str(), encoder_position);
-        // }
+        // Read current encoder position as the reference for nearest-path snapping.
+        const auto cur = registry_->spark_position_rot(cfg.spark_can_id);
+        const double cur_pos = cur.has_value() ? static_cast<double>(*cur) : cfg.encoder_pos_forward;
+        const double encoder_position = steer_rad_to_encoder_pos(steer_cmd, cfg, cur_pos);
+        const int     drive_percent   = drive_rad_s_to_percent(drive_cmd, cfg);
 
-        // ── Drive path (Arduino) ─────────────────────────────────────────
+        // ── Drive path (Arduino) ──
         const bool drive_connected =
             registry_ && registry_->is_arduino_connected(cfg.drive_device_name);
 
@@ -343,12 +493,12 @@ void SwerveDriverNode::update()
             registry_->send_drive_percent(cfg.drive_device_name, 0);
         }
 
-        // ── Steer path (SPARK MAX over per-USB SLCAN) ────────────────────
+        // ── Steer path (SPARK MAX over per-USB SLCAN) ──
         const bool spark_connected =
             registry_ && registry_->is_spark_connected(cfg.spark_can_id);
 
-        // Pull latest position from the session — updates rt.fb_steer_*
-        // and rt.last_steer_pos_time from registry state.
+        // Pull the latest absolute encoder reading and map it back to algorithm
+        // coordinates, but only if the data is fresh.
         if (spark_connected) {
             const auto pos_rot = registry_->spark_position_rot(cfg.spark_can_id);
             const double pos_age =
@@ -382,8 +532,8 @@ void SwerveDriverNode::update()
                 steer_status = "active";
             }
         } else {
-            // No command (or command timed out) — stop driving setpoints but
-            // keep the session's heartbeat going so status frames flow.
+            // No command (or it timed out): stop driving setpoints but keep the
+            // session heartbeat going so status frames keep flowing.
             registry_->release_steer(cfg.spark_can_id);
             steer_status = steer_pos_fresh ? "idle" : "no_feedback";
             steer_connected_now = steer_pos_fresh;
@@ -395,36 +545,36 @@ void SwerveDriverNode::update()
             steer_cmd, state.fb_steer_position_rad, steer_status.c_str(),
             drive_cmd, drive_percent, drive_status.c_str());
 
-
-        // ── Drive position integration (open-loop, no encoder) ───────────────
+        // ── Drive position integration (open-loop, no encoder) ──
         const double dt = (now - state.last_update_time).seconds();
         state.last_update_time = now;
 
-        if (dt > 0.0 && dt < 1.0) {  // 1.0s protection against large jumps (e.g. from pausing in a debugger)
+        // Guard against large jumps (e.g. from pausing in a debugger).
+        if (dt > 0.0 && dt < 1.0) {
             state.fb_drive_position_rad += drive_cmd * dt;
-            // std::cout << "state_msg.swerve_id=" << cfg.name << ", dt=" << dt << "s, drive_cmd=" << drive_cmd
-            //           << " rad/s, new drive_position_rad=" << state.fb_drive_position_rad
-            //           << " rad" << std::endl;
         }
 
+        // ── Publish module state ──
         warrior_msgs::msg::SwerveState state_msg;
-        state_msg.swerve_id              = cfg.name;
-        state_msg.steer_position_rad     = state.fb_steer_position_rad;
-        state_msg.steer_velocity_rad_s   = state.fb_steer_velocity_rad_s;
-
-        // Drive velocity has no encoder feedback in this hardware path; echo the
-        // commanded value. Consumers should treat this as open-loop.
-        state_msg.drive_position_rad     = state.fb_drive_position_rad;
-        state_msg.drive_velocity_rad_s   = drive_cmd;
-        state_msg.steer_connected        = steer_connected_now;
-        state_msg.drive_connected        = drive_connected;
-        state_msg.steer_status           = steer_status;
-        state_msg.drive_status           = drive_status;
-        state_msg.stamp                  = now;
+        state_msg.swerve_id            = cfg.name;
+        state_msg.steer_position_rad   = state.fb_steer_position_rad;
+        state_msg.steer_velocity_rad_s = state.fb_steer_velocity_rad_s;
+        // Drive velocity has no encoder feedback here; echo the command so
+        // consumers can treat it as open-loop.
+        state_msg.drive_position_rad   = state.fb_drive_position_rad;
+        state_msg.drive_velocity_rad_s = drive_cmd;
+        state_msg.steer_connected      = steer_connected_now;
+        state_msg.drive_connected      = drive_connected;
+        state_msg.steer_status         = steer_status;
+        state_msg.drive_status         = drive_status;
+        state_msg.stamp                = now;
         state_pub_->publish(state_msg);
     }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+//  Diagnostics
+// ════════════════════════════════════════════════════════════════════════
 void SwerveDriverNode::publish_diagnostics()
 {
     if (!registry_) return;
@@ -433,9 +583,10 @@ void SwerveDriverNode::publish_diagnostics()
     diagnostic_msgs::msg::DiagnosticArray msg;
     msg.header.stamp = now;
 
+    // ── Per-module status ──
     for (const auto & module : modules_) {
         const auto & cfg = module.config;
-        const auto & state  = module.state;
+        const auto & state = module.state;
 
         diagnostic_msgs::msg::DiagnosticStatus st;
         st.name        = "warrior_swerve_driver: " + cfg.name;
@@ -462,20 +613,21 @@ void SwerveDriverNode::publish_diagnostics()
             st.message = "SPARK MAX feedback stale or absent";
         }
 
-        st.values.push_back(kv("drive_connected",          drive_ok));
-        st.values.push_back(kv("drive_open_loop",          true));
-        st.values.push_back(kv("steer_feedback_fresh",     steer_fresh));
-        st.values.push_back(kv("steer_feedback_age_s",     steer_pos_age));
-        st.values.push_back(kv("steer_position_rad",       state.fb_steer_position_rad));
-        st.values.push_back(kv("steer_velocity_rad_s",     state.fb_steer_velocity_rad_s));
-        st.values.push_back(kv("cmd_recent",               cmd_recent));
-        st.values.push_back(kv("cmd_steer_rad",            state.cmd_steer_position_rad));
-        st.values.push_back(kv("cmd_drive_rad_s",          state.cmd_drive_velocity_rad_s));
-        st.values.push_back(kv("spark_can_id",             cfg.spark_can_id));
+        st.values.push_back(kv("drive_connected",      drive_ok));
+        st.values.push_back(kv("drive_open_loop",      true));
+        st.values.push_back(kv("steer_feedback_fresh", steer_fresh));
+        st.values.push_back(kv("steer_feedback_age_s", steer_pos_age));
+        st.values.push_back(kv("steer_position_rad",   state.fb_steer_position_rad));
+        st.values.push_back(kv("steer_velocity_rad_s", state.fb_steer_velocity_rad_s));
+        st.values.push_back(kv("cmd_recent",           cmd_recent));
+        st.values.push_back(kv("cmd_steer_rad",        state.cmd_steer_position_rad));
+        st.values.push_back(kv("cmd_drive_rad_s",      state.cmd_drive_velocity_rad_s));
+        st.values.push_back(kv("spark_can_id",         cfg.spark_can_id));
 
         msg.status.push_back(st);
     }
 
+    // ── Per-SPARK-MAX status ──
     for (const auto & module : modules_) {
         const auto & cfg = module.config;
         diagnostic_msgs::msg::DiagnosticStatus st;

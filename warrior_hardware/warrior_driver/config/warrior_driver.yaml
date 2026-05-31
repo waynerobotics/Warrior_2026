@@ -22,7 +22,7 @@ warrior_driver:
                                     # ~90° CCW from the "standard" orientation of the other two, so its offset is near -π/2.
         # steer_offset_rad: 3.408735  # 0.267142 + π. Front module was calibrated 180° off (wheel pointed
                                     # backward when "forward"); the +π makes command-0 point truly forward.
-        encoder_pos_forward: 34.5546  # calibrated 2026-05-30 (motor_rot=0.0; was -2.9). This is added to the steer motor's encoder reading before applying the steer_offset_rad, so it can be used to "rotate" the encoder's zero point without changing the sign of the offset.                    
+        encoder_pos_forward: 37.7646  # calibrated 2026-05-30 (motor_rot=0.0; was -2.9). This is added to the steer motor's encoder reading before applying the steer_offset_rad, so it can be used to "rotate" the encoder's zero point without changing the sign of the offset.                    
         steer_sign: -1.0    # flipped from -1.0: front steer encoder rotates opposite the other modules,
                            # so its turn direction was reversed; this makes it steer the same way as L/R.
         drive_sign:  1.0   # flipped from -1.0 per bring-up test: front drive needed reversing again.
@@ -36,7 +36,7 @@ warrior_driver:
         spark_can_id: 2
         steer_motor_rot_per_module_rot: 42.0
         steer_offset_rad: 0.4  # calibrated 2026-05-30 (motor_rot=4.88095; was -2.9)
-        encoder_pos_forward: 2.48  # calibrated 2026-05-30 (motor_rot=0.0; was -2.9)
+        encoder_pos_forward: 17.023  # calibrated 2026-05-30 (motor_rot=0.0; was -2.9)
         steer_sign: -1.0
         drive_sign:  1.0
         max_drive_rad_s: 20.0   # wheel rad/s mapped to 100% duty. ~= vx_limit 1.0 m/s / 0.1015 m wheel.
@@ -49,7 +49,7 @@ warrior_driver:
         spark_can_id: 3
         steer_motor_rot_per_module_rot: 42.0
         steer_offset_rad: -2.5  # calibrated 2026-05-30 (motor_rot=13.2381; was -2.0)
-        encoder_pos_forward: 37.678  # calibrated 2026-05-30 (motor_rot=0.0; was -2.0)
+        encoder_pos_forward: 7.291  # calibrated 2026-05-30 (motor_rot=0.0; was -2.0)
         steer_sign: -1.0
         drive_sign:  1.0
         max_drive_rad_s: 20.0   # wheel rad/s mapped to 100% duty. ~= vx_limit 1.0 m/s / 0.1015 m wheel.
