@@ -54,10 +54,10 @@ def generate_launch_description():
         ],
     )
 
-    mask_to_pointcloud = Node(
+    mask_to_laserscan = Node(
         package='omnivision',
-        executable='mask_to_pointcloud',
-        name='mask_to_pointcloud',
+        executable='mask_to_laserscan',
+        name='mask_to_laserscan',
         output='screen',
         parameters=[{
             'mask_topic': 'ai/seg_mask',
@@ -71,5 +71,5 @@ def generate_launch_description():
         insta360,
         lidar,
         neural_engine,
-        mask_to_pointcloud,
+        mask_to_laserscan,
     ])

@@ -33,6 +33,7 @@ setup(
             'transformation_reconfigure = omnivision.transformation_reconfigure:main',
             'transformation_calibrator = omnivision.transformation_calibrator:main',
             'transformation_gui = omnivision.transformation_gui:main',
+            'mask_to_laserscan = omnivision.mask_to_laserscan:main',
         ],
     },
 )
