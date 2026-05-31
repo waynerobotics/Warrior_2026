@@ -4,12 +4,14 @@ waypoint_navigator:
     utm_zone: 17
     waypoint_tolerance: 0.3
     waypoints:
-      - latitude: 42.3558186
-        longitude: -83.0707180
+      - latitude: 42.668212 #Change these to the actual waypoints for the practice run
+        longitude: -83.218459 #Change these to the actual waypoints for the practice run
         yaw: 0.0
-      - latitude: 42.35581677
-        longitude: -83.070701
+
+      - latitude: 42.668086 #Change these to the actual waypoints for the practice run
+        longitude: -83.218446 #Change these to the actual waypoints for the practice run
         yaw: 0.0
-      - latitude: 42.3558071
-        longitude: -83.0707157
+
+      - latitude: 42.667959 #Change these to the actual waypoints for the practice run
+        longitude: -83.218433 #Change these to the actual waypoints for the practice run
         yaw: 0.0
