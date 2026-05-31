@@ -37,9 +37,15 @@ def generate_launch_description():
     world = os.path.join(
         get_package_share_directory('warrior_gazebo'),
         'worlds',
+<<<<<<< Updated upstream
         # 'turtlebot3_world_gps.world'
         'empty_test.world'
         # 'fullTrack.world'
+=======
+        'turtlebot3_world_gps.world'
+        #'empty_test.world'
+        #'fullTrack.world'
+>>>>>>> Stashed changes
     )
 
     gzserver_cmd = IncludeLaunchDescription(

@@ -48,7 +48,7 @@
   direction: GZ_TO_ROS
 
 # gz topic published by NavSat plugin
-- topic_name: "gps/fix"
+- topic_name: "shanti/gps/fix"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "gz.msgs.NavSat"
   direction: GZ_TO_ROS

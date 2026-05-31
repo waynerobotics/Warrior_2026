@@ -25,7 +25,16 @@ ekf_node_odom:
 
     # IMU
     imu0: /unilidar/imu
-    imu0_config: [ Covariance Matrix
+    imu0_config: [
+      false, false, false,
+      false, false, true,
+      false, false, false,
+      false, false, true,
+      false, false, false
+    ]
+    imu0_remove_gravitational_acceleration: true
+
+    # Process Noise Covariance Matrix
     # Tells the robot how much to "trust" each state estimation
     process_noise_covariance: [
       0.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  # X position
@@ -71,7 +80,7 @@ ekf_node_map:
     odom0_relative: false
 
     # GPS odometry
-    odom1: /odometry/gps
+    odom1: /odometry/gps1
     odom1_config: [
       true, true, false,     # x, y, z
       false, false, false,   # roll, pitch, yaw
@@ -80,7 +89,17 @@ ekf_node_map:
       false, false, false    # ax, ay, az
     ]
 
+    odom2: /odometry/gps2
+    odom2_config: [
+      true, true, false,     # x, y, z
+      false, false, false,   # roll, pitch, yaw
+      false, false, false,   # vx, vy, vz
+      false, false, false,   # vroll, vpitch, vyaw
+      false, false, false    # ax, ay, az
+    ]
+
     # IMU
+    imu0: /unilidar/imu
     imu0: /unilidar/imu
     imu0_config: [
       false, false, false,
@@ -111,7 +130,7 @@ ekf_node_map:
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1     # Z acceleration
     ]
 
-navsat_transform:
+navsat_transform1:
   ros__parameters:
     frequency: 30.0
     delay: 3.0
@@ -119,6 +138,18 @@ navsat_transform:
     yaw_offset: 0.0
     zero_altitude: true
     broadcast_cartesian_transform: true
+    publish_filtered_gps: true
+    use_odometry_yaw: true
+    wait_for_datum: false
+
+navsat_transform2:
+  ros__parameters:
+    frequency: 30.0
+    delay: 3.0
+    magnetic_declination_radians: 0.0
+    yaw_offset: 0.0
+    zero_altitude: true
+    broadcast_cartesian_transform: false
     publish_filtered_gps: true
     use_odometry_yaw: true
     wait_for_datum: false

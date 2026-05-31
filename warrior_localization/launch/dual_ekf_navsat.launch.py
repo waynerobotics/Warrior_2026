@@ -31,17 +31,32 @@ def generate_launch_description():
         ]
     )
 
-    navsat_transform = Node(
+    navsat_transform1 = Node(
         package='robot_localization',
         executable='navsat_transform_node',
-        name='navsat_transform',
+        name='navsat_transform1',
         output='screen',
         parameters=[config_file, {'use_sim_time': use_sim_time}],
         remappings=[
-            ('imu/data', '/unilidar/imu'),
-            ('gps/fix', 'gps/fix'),
-            ('gps/filtered', 'gps/filtered'),
-            ('odometry/gps', 'odometry/gps'),
+            ('imu/data', 'unilidar/imu'),
+            ('gps/fix', 'gps1/fix'),
+            ('gps/filtered', 'gps1/filtered'),
+            ('odometry/gps', 'odometry/gps1'),
+            ('odometry/filtered', 'odometry/global')
+        ]
+    )
+
+    navsat_transform2 = Node(
+        package='robot_localization',
+        executable='navsat_transform_node',
+        name='navsat_transform2',
+        output='screen',
+        parameters=[config_file, {'use_sim_time': use_sim_time}],
+        remappings=[
+            ('imu/data', 'unilidar/imu'),
+            ('gps/fix', 'gps2/fix'),
+            ('gps/filtered', 'gps2/filtered'),
+            ('odometry/gps', 'odometry/gps2'),
             ('odometry/filtered', 'odometry/global')
         ]
     )
@@ -49,5 +64,6 @@ def generate_launch_description():
     return LaunchDescription([
         ekf_node_odom,
         ekf_node_map,
-        navsat_transform
+        navsat_transform1,
+        navsat_transform2
     ])
