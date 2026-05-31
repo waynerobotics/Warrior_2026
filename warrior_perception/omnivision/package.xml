@@ -18,6 +18,9 @@
   <depend>std_msgs</depend>
   <depend>rcl_interfaces</depend>
   <depend>cv_bridge</depend>
+  <depend>neural_engine</depend>
+  <depend>insta360_camera</depend>
+  <depend>unitree_lidar_ros2</depend>
   <exec_depend>python3-opencv</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-yaml</exec_depend>

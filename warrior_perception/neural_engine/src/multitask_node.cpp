@@ -9,9 +9,7 @@
 #include <vision_msgs/msg/detection2_d.hpp>
 #include <vision_msgs/msg/object_hypothesis_with_pose.hpp>
 #include <cv_bridge/cv_bridge.h>
-
 #include <cuda_runtime.h>
-
 #include "multitask_engine.hpp"
 
 class MultitaskNode : public rclcpp::Node
@@ -19,7 +17,7 @@ class MultitaskNode : public rclcpp::Node
 public:
     MultitaskNode() : Node("multitask_node")
     {
-        declare_parameter("engine_path",         "");
+        declare_parameter("engine_path",         "models/resnet_fp32.engine");
         declare_parameter("image_topic",         "camera/image_raw");
         declare_parameter("seg_topic",           "ai/seg_mask");
         declare_parameter("detections_topic",    "ai/detections");

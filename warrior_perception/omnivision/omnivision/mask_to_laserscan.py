@@ -48,7 +48,7 @@ class MaskToLaserScan(Node):
         self.declare_parameter('angle_increment', math.pi / 180.0)  # 1 deg
         self.declare_parameter('range_min', 0.1)
         self.declare_parameter('range_max', 100.0)
-        self.declare_parameter('z_min', -1.0)
+        self.declare_parameter('z_min', 1.0)
 
         # Full 360° — fixed by the spherical projection, not configurable
         self.ANGLE_MIN = -math.pi
