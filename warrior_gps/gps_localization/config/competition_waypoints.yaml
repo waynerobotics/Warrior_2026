@@ -1,0 +1,18 @@
+waypoint_navigator:
+  ros__parameters:
+    robot_name: warrior_1
+    utm_zone: 17
+    waypoint_tolerance: 0.3
+    waypoints:
+      - latitude: 42.3558186 #Change these to the actual waypoints for the competition
+        longitude: -83.0707180 #Change these to the actual waypoints for the competition
+        yaw: 0.0
+      - latitude: 42.35581677 #Change these to the actual waypoints for the competition
+        longitude: -83.070701 #Change these to the actual waypoints for the competition
+        yaw: 0.0
+      - latitude: 42.3558071 #Change these to the actual waypoints for the competition
+        longitude: -83.0707157 #Change these to the actual waypoints for the competition
+        yaw: 0.0
+      - latitude: 42.3558072 #Change these to the actual waypoints for the competition
+        longitude: -83.070723 #Change these to the actual waypoints for the competition
+        yaw: 0.0

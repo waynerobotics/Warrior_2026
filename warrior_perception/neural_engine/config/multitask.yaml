@@ -1,5 +1,6 @@
 multitask_node:
   ros__parameters:
+    engine_path:       "models/resnet_fp32.engine"
     image_topic:       camera/image_raw
     seg_topic:         ai/seg_mask
     detections_topic:  ai/detections

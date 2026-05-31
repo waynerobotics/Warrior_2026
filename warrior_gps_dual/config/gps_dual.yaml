@@ -1,0 +1,12 @@
+gps_dual_node:
+  ros__parameters:
+    # Leave ports empty to auto-discover the u-blox receivers by USB VID.
+    # The robot has many /dev/ttyACM* devices, so do NOT pin a number here.
+    # Set a path (ideally /dev/serial/by-id/...) only to override discovery.
+    port1: ""                 # receiver 1 -> /gps1/fix
+    port2: ""                 # receiver 2 -> /gps2/fix
+    baud: 9600
+    frame_id1: gps1
+    frame_id2: gps2
+    publish_rate: 1.0         # Hz; receivers output 1 Hz NMEA
+    publish_nmea: true        # also republish raw GGA on /gpsN/nmea

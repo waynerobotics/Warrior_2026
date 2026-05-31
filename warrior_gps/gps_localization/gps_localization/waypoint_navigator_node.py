@@ -84,24 +84,15 @@ class WaypointNavigator(Node):
         self.declare_parameter('waypoint_tolerance', 0.3)
         self.waypoint_tolerance = self.get_parameter('waypoint_tolerance').value
         
-        # Waypoints as GPS coordinates (lat, lon)
-        # Competition provides 4 waypoints: 2 for entrance/exit, 2 for navigation
-        self.declare_parameter('waypoint_1_lat', 42.3558186)
-        self.declare_parameter('waypoint_1_lon', -83.0707180)
-        self.declare_parameter('waypoint_2_lat', 42.35581677)
-        self.declare_parameter('waypoint_2_lon', -83.070701)
-        self.declare_parameter('waypoint_3_lat', 42.3558071)
-        self.declare_parameter('waypoint_3_lon', -83.0707157)
-        self.declare_parameter('waypoint_4_lat', 42.3558072)
-        self.declare_parameter('waypoint_4_lon', -83.070723)
-        
-        # Load waypoints
+# Load waypoints from yaml file (practice or competition)
+        self.declare_parameter('waypoints', [{}])
+        raw_waypoints = self.get_parameter('waypoints').value
+
         self.waypoints_gps = [
-            (self.get_parameter('waypoint_1_lat').value, self.get_parameter('waypoint_1_lon').value),
-            (self.get_parameter('waypoint_2_lat').value, self.get_parameter('waypoint_2_lon').value),
-            (self.get_parameter('waypoint_3_lat').value, self.get_parameter('waypoint_3_lon').value),
-            (self.get_parameter('waypoint_4_lat').value, self.get_parameter('waypoint_4_lon').value),
+            (wp['latitude'], wp['longitude']) for wp in raw_waypoints
         ]
+
+        self.get_logger().info(f'Loaded {len(self.waypoints_gps)} waypoints')
         
         # Convert waypoints to UTM
         self.waypoints_utm = []
@@ -187,7 +178,7 @@ class WaypointNavigator(Node):
         self.waypoints_completed.append(self.current_waypoint_idx + 1)
         
         self.get_logger().info(f'✓ Waypoint {self.current_waypoint_idx + 1} COMPLETED!')
-        self.get_logger().info(f'  Waypoints cleared: {len(self.waypoints_completed)}/4')
+        self.get_logger().info(f'  Waypoints cleared: {len(self.waypoints_completed)}/{len(self.waypoints_utm)}')
         
         # Advance to next waypoint
         if self.current_waypoint_idx < len(self.waypoints_utm) - 1:
@@ -212,9 +203,9 @@ class WaypointNavigator(Node):
         if self.current_waypoint_idx < len(self.waypoints_utm):
             status_msg = String()
             status_msg.data = (
-                f'Waypoint {self.current_waypoint_idx + 1}/4 | '
+                f'Waypoint {self.current_waypoint_idx + 1}/{len(self.waypoints_utm)} | '
                 f'Distance: {self.distance_to_next_waypoint:.2f}m | '
-                f'Completed: {len(self.waypoints_completed)}/4'
+                f'Completed: {len(self.waypoints_completed)}/{len(self.waypoints_utm)}'
             )
             self.waypoint_status_pub.publish(status_msg)
     

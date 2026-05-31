@@ -1,0 +1,17 @@
+waypoint_navigator:
+  ros__parameters:
+    robot_name: warrior_1
+    utm_zone: 17
+    waypoint_tolerance: 0.3
+    waypoints:
+      - latitude: 42.668212 #Change these to the actual waypoints for the practice run
+        longitude: -83.218459 #Change these to the actual waypoints for the practice run
+        yaw: 0.0
+
+      - latitude: 42.668086 #Change these to the actual waypoints for the practice run
+        longitude: -83.218446 #Change these to the actual waypoints for the practice run
+        yaw: 0.0
+
+      - latitude: 42.667959 #Change these to the actual waypoints for the practice run
+        longitude: -83.218433 #Change these to the actual waypoints for the practice run
+        yaw: 0.0

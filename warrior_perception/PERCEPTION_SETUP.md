@@ -40,8 +40,12 @@ sudo apt install \
 
 ## Step 0 — Unitree L2 LiDAR network
 
-The L2 streams over Ethernet and expects a host NIC on `192.168.1.0/24`.
-One-time NetworkManager setup:
+| Unit | IP | Host address needed |
+|---|---|---|
+| **Main** | `192.168.1.62` | `192.168.1.2/24` on `enp2s0` |
+| **Backup** | `192.168.123.110` | `192.168.123.2/24` on `enp2s0` |
+
+One-time setup for the **main** LiDAR (persists across reboots):
 
 ```bash
 sudo nmcli con modify "<your-eth-conn>" \
@@ -51,6 +55,17 @@ sudo nmcli con modify "<your-eth-conn>" \
     ipv4.gateway "" ipv4.never-default yes \
     ipv6.method ignore connection.autoconnect yes
 sudo nmcli con up unitree-l2
+```
+
+Verify connectivity: `ping 192.168.1.62`
+
+To use the **backup** LiDAR instead, add `192.168.123.2/24` as a secondary
+address and update `lidar_ip`/`local_ip` in `unitree_l2.yaml`:
+
+```bash
+ETH_CON=$(nmcli -g NAME con show --active | grep enp2s0)
+sudo nmcli con modify "$ETH_CON" +ipv4.addresses 192.168.123.2/24
+sudo nmcli con up "$ETH_CON"
 ```
 
 Not needed if you are only bringing up the camera + inference path.
