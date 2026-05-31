@@ -47,20 +47,7 @@ target_include_directories(nudge_sparks_cli PUBLIC
 )
 target_compile_features(nudge_sparks_cli PUBLIC cxx_std_17)
 
-add_executable(steer_calibration_node
-  src/steer_calibration_main.cpp
-  src/swerve/steer_calibration_node.cpp
-  src/sparkmax/sparkmax_session.cpp
-)
-target_link_libraries(steer_calibration_node Threads::Threads)
-target_include_directories(steer_calibration_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_compile_features(steer_calibration_node PUBLIC cxx_std_17)
-ament_target_dependencies(steer_calibration_node ${THIS_PACKAGE_DEPS})
-
-install(TARGETS warrior_driver_node nudge_sparks_cli steer_calibration_node
+install(TARGETS warrior_driver_node nudge_sparks_cli
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,50 +1,15 @@
-steer_calibration:
+# ============================================================
+# Auto-generated steer calibration
+# Calibrated: 2026-05-30 21:42:02
+# DO NOT EDIT BY HAND — regenerated on every launch with auto-calibration.
+# Load this AFTER warrior_driver.yaml to override encoder_pos_forward.
+# ============================================================
+warrior_driver:
   ros__parameters:
-    # SLCAN bitrate code passed to the 'S' command (8 = 1 Mbit/s — matches
-    # warrior_driver defaults and the SPARK MAX factory setting).
-    bitrate_code: 8
-
-    # How long (seconds) to wait for Status 2 position frames from each
-    # SPARK MAX before giving up.  Increase if a cold-boot controller is slow
-    # to start emitting telemetry.
-    read_timeout_s: 5.0
-
-    # Directory where the timestamped YAML result file is saved.
-    # The result is also printed to the console.
-    output_dir: "/tmp/warrior_calibration"
-
-    # ── Module list ──────────────────────────────────────────────────────────
-    # Must match warrior_driver.yaml exactly.
-    module_names: ["front", "left", "right"]
-
     modules:
       front:
-        drive_device_name: "04_swerve"
-        steer_device_name: "04_spark"
-        spark_can_id: 4
-        steer_motor_rot_per_module_rot: 42.0
-        steer_offset_rad: -1.5   # <── paste updated value here after calibration
-        steer_sign: -1.0
-        drive_sign:  1.0
-        max_drive_rad_s: 60.0
-
+        encoder_pos_forward: 2.5238  # calibrated 2026-05-30 21:42:02
       left:
-        drive_device_name: "02_swerve"
-        steer_device_name: "02_spark"
-        spark_can_id: 2
-        steer_motor_rot_per_module_rot: 42.0
-        steer_offset_rad: -2.9
-        steer_sign: -1.0
-        drive_sign:  1.0
-        max_drive_rad_s: 60.0
-
+        encoder_pos_forward: 8.9762  # calibrated 2026-05-30 21:42:02
       right:
-        drive_device_name: "03_swerve"
-        steer_device_name: "03_spark"
-        spark_can_id: 3
-        steer_motor_rot_per_module_rot: 42.0
-        steer_offset_rad: -2.0
-        steer_sign: -1.0
-        drive_sign:  1.0
-        max_drive_rad_s: 60.0
-
+        encoder_pos_forward: -0.0000  # calibrated 2026-05-30 21:42:02
