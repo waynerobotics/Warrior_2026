@@ -1,91 +1,23 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    TimerAction,
+    OpaqueFunction,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
-from launch.conditions import IfCondition
 from ament_index_python.packages import get_package_share_directory
+
 import os
 
 
-"""
-Practice launch: 
-ros2 launch warrior_navigation nav2_gps_waypoint_follower.launch.py
-map_origin_latitude:=42.66791 map_origin_longitude:=-83.21958
+def launch_setup(context, *args, **kwargs):
 
-
-
-"""
-
-def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
-    waypoint_file = LaunchConfiguration('waypoint_file')
-    map_origin_latitude = LaunchConfiguration('map_origin_latitude')
-    map_origin_longitude = LaunchConfiguration('map_origin_longitude')
-    map_origin_yaw = LaunchConfiguration('map_origin_yaw')
-
-    utm_zone = LaunchConfiguration('utm_zone')
-    utm_hemisphere = LaunchConfiguration('utm_hemisphere')
-
-    # Practice map origin
-    #  - latitude: 42.66791
-    #   longitude: -83.21958
-    #
-    # get_package_share_directory('warrior_navigation'),
-    # 'config',
-    # 'turtlebot_sim_waypoints.yaml'
-    
-    declare_use_sim = DeclareLaunchArgument(
-        'use_sim',
-        default_value='true',
-        description='Run in simulation or on real robot'
-    )
-
-    declare_waypoint_file = DeclareLaunchArgument(
-        'waypoint_file',
-        default_value='',
-        description='Path to GPS waypoint YAML file. Leave empty to use the package default.'
-    )
-
-    declare_map_origin_latitude = DeclareLaunchArgument(
-        'map_origin_latitude',
-        default_value='42.66791',
-        description='Latitude of map origin (where robot starts)'
-    )
-
-    declare_map_origin_longitude = DeclareLaunchArgument(
-        'map_origin_longitude',
-        default_value='-83.21958',
-        description='Longitude of map origin (where robot starts)'
-    )
-
-    declare_map_origin_yaw = DeclareLaunchArgument(
-        'map_origin_yaw',
-        default_value='0.0',
-        description='Yaw angle of map frame at origin (radians)'
-    )
-
-    declare_utm_zone = DeclareLaunchArgument(
-        'utm_zone',
-        default_value='17',
-        description='UTM zone used for GPS to map conversion'
-    )
-
-    declare_utm_hemisphere = DeclareLaunchArgument(
-        'utm_hemisphere',
-        default_value='N',
-        description='UTM hemisphere for GPS conversion (N or S)'
-    )
-
-    warrior_nav = FindPackageShare('warrior_navigation')
-    nav2_bringup = FindPackageShare('nav2_bringup')
-
-    nav2_params_file = PathJoinSubstitution([
-        warrior_nav,
-        'config',
-        'nav2_params.yaml'
-    ])
+    waypoint_file = LaunchConfiguration('waypoint_file').perform(context)
 
     practice_waypoints_file = os.path.join(
         get_package_share_directory('warrior_navigation'),
@@ -98,7 +30,71 @@ def generate_launch_description():
         'config',
         'real_waypoints.yaml'
     )
-    
+
+    demo_waypoints_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'config',
+        'demo_waypoints.yaml'
+    )
+
+    waypoint_files = {
+        'practice': practice_waypoints_file,
+        'real': real_waypoints_file,
+        'demo': demo_waypoints_file,
+    }
+
+    if waypoint_file not in waypoint_files:
+        raise RuntimeError(
+            f"Unknown waypoint_file '{waypoint_file}'. "
+            f"Expected one of: {list(waypoint_files.keys())}"
+        )
+
+    selected_waypoint_file = waypoint_files[waypoint_file]
+
+    nav2_gps_waypoint_node = Node(
+        package='warrior_navigation',
+        executable='nav2_gps_waypoint_follower',
+        name='nav2_gps_waypoint_follower',
+        output='screen',
+        parameters=[{
+            'waypoint_file': selected_waypoint_file,
+            'action_name': 'navigate_to_pose',
+        }],
+    )
+
+    return [
+        TimerAction(
+            period=10.0,
+            actions=[nav2_gps_waypoint_node],
+        )
+    ]
+
+
+def generate_launch_description():
+
+    use_sim = LaunchConfiguration('use_sim')
+
+    declare_use_sim = DeclareLaunchArgument(
+        'use_sim',
+        default_value='true',
+        description='Run in simulation or on real robot'
+    )
+
+    declare_waypoint_file = DeclareLaunchArgument(
+        'waypoint_file',
+        default_value='practice',
+        description='Which waypoints to use: practice, real, or demo'
+    )
+
+    warrior_nav = FindPackageShare('warrior_navigation')
+    nav2_bringup = FindPackageShare('nav2_bringup')
+
+    nav2_params_file = PathJoinSubstitution([
+        warrior_nav,
+        'config',
+        'nav2_params.yaml'
+    ])
+
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -107,7 +103,9 @@ def generate_launch_description():
                 'dual_ekf_navsat.launch.py'
             ])
         ),
-        launch_arguments={'use_sim_time': use_sim}.items()
+        launch_arguments={
+            'use_sim_time': use_sim
+        }.items()
     )
 
     slam_launch = IncludeLaunchDescription(
@@ -118,7 +116,9 @@ def generate_launch_description():
                 'online_async_launch.py'
             ])
         ),
-        launch_arguments={'use_sim_time': use_sim}.items()
+        launch_arguments={
+            'use_sim_time': use_sim
+        }.items()
     )
 
     nav2_bringup_launch = IncludeLaunchDescription(
@@ -140,36 +140,13 @@ def generate_launch_description():
         }.items()
     )
 
-    nav2_gps_waypoint_node = Node(
-        package='warrior_navigation',
-        executable='nav2_gps_waypoint_follower',
-        name='nav2_gps_waypoint_follower',
-        output='screen',
-        parameters=[{
-            'waypoint_file': real_waypoints_file,
-            'map_origin_latitude': map_origin_latitude,
-            'map_origin_longitude': map_origin_longitude,
-            'map_origin_yaw': map_origin_yaw,
-            'utm_zone': utm_zone,
-            # 'utm_hemisphere': utm_hemisphere,
-            'action_name': 'navigate_to_pose',
-        }],
-    )
-
     return LaunchDescription([
         declare_use_sim,
         declare_waypoint_file,
-        declare_map_origin_latitude,
-        declare_map_origin_longitude,
-        declare_map_origin_yaw,
-        declare_utm_zone,
-        declare_utm_hemisphere,
-        
+
         ekf_launch,
         slam_launch,
         nav2_bringup_launch,
-        TimerAction(
-            period=10.0,
-            actions=[nav2_gps_waypoint_node],
-        ),
+
+        OpaqueFunction(function=launch_setup),
     ])
