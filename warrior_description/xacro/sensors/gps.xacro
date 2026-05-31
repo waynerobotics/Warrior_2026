@@ -5,18 +5,18 @@
     <joint name="${name}_link" type="fixed">
       <origin xyz="${xyz}" rpy="0 0 0" />
       <parent link="${parent}"/>
-      <child link="navsat_link" />
+      <child link="${name}_link" />
     </joint>
 
-    <link name="navsat_link">
+    <link name="${name}_link">
     </link>
 
-    <gazebo reference="navsat_link">
+    <gazebo reference="${name}_link">
       <sensor name="navsat" type="navsat">
         <always_on>1</always_on>
         <update_rate>1</update_rate>
         <topic>navsat</topic>
-        <gz_frame_id>navsat_link</gz_frame_id>
+        <gz_frame_id>${name}_link</gz_frame_id>
       </sensor>
     </gazebo>
   </xacro:macro>

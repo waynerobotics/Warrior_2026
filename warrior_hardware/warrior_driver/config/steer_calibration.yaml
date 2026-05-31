@@ -1,6 +1,6 @@
 # ============================================================
 # Auto-generated steer calibration
-# Calibrated: 2026-05-31 14:16:47
+# Calibrated: 2026-05-31 15:07:26
 # DO NOT EDIT BY HAND — regenerated on every launch with auto-calibration.
 # Load this AFTER warrior_driver.yaml to override encoder_pos_forward.
 # ============================================================
@@ -8,8 +8,8 @@ warrior_driver:
   ros__parameters:
     modules:
       front:
-        encoder_pos_forward: -35.6187  # calibrated 2026-05-31 14:16:47
+        encoder_pos_forward: -120.0716  # calibrated 2026-05-31 15:07:26
       left:
-        encoder_pos_forward: -71.9307  # calibrated 2026-05-31 14:16:47
+        encoder_pos_forward: -135.3791  # calibrated 2026-05-31 15:07:26
       right:
-        encoder_pos_forward: -78.5265  # calibrated 2026-05-31 14:16:47
+        encoder_pos_forward: -78.5980  # calibrated 2026-05-31 15:07:26

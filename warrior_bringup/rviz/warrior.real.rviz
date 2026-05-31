@@ -28,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
   - Class: slam_toolbox::SlamToolboxPlugin
     Name: SlamToolboxPlugin
 Visualization Manager:
@@ -129,6 +129,14 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        navsat1_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        navsat2_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         payload_link:
           Alpha: 1
           Show Axes: false
@@ -153,6 +161,18 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        unilidar_imu:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        unilidar_imu_initial:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        unilidar_lidar:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Mass Properties:
         Inertia: false
         Mass: false
@@ -176,10 +196,6 @@ Visualization Manager:
           Value: true
         camera_link:
           Value: true
-        caster_wheel:
-          Value: true
-        chassis:
-          Value: true
         front_drive_wheel_link:
           Value: true
         front_slewing_plate_link:
@@ -194,6 +210,10 @@ Visualization Manager:
           Value: true
         left_steer_assembly_link:
           Value: true
+        navsat1_link:
+          Value: true
+        navsat2_link:
+          Value: true
         payload_link:
           Value: true
         pole_link:
@@ -204,6 +224,12 @@ Visualization Manager:
           Value: true
         right_steer_assembly_link:
           Value: true
+        unilidar_imu:
+          Value: true
+        unilidar_imu_initial:
+          Value: true
+        unilidar_lidar:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -212,10 +238,6 @@ Visualization Manager:
       Tree:
         base_footprint:
           base_link:
-            caster_wheel:
-              {}
-            chassis:
-              {}
             front_slewing_plate_link:
               front_steer_assembly_link:
                 front_drive_wheel_link:
@@ -226,14 +248,21 @@ Visualization Manager:
               left_steer_assembly_link:
                 left_drive_wheel_link:
                   {}
+            navsat2_link:
+              {}
             payload_link:
               {}
             pole_link:
               L1_lidar_link:
-                {}
+                unilidar_imu_initial:
+                  unilidar_imu:
+                    unilidar_lidar:
+                      {}
               beacon_light_link:
                 {}
               camera_link:
+                {}
+              navsat1_link:
                 {}
             right_slewing_plate_link:
               right_steer_assembly_link:
@@ -262,7 +291,7 @@ Visualization Manager:
         Min Value: -10
         Value: true
       Axis: Z
-      Channel Name: ring
+      Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
@@ -270,9 +299,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 39
+      Max Intensity: 255
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 28
       Name: PointCloud2
       Position Transformer: XYZ
       Selectable: true
@@ -285,7 +314,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /scan/points
+        Value: /unilidar/cloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -411,25 +440,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 20.77491569519043
+      Distance: 34.08395004272461
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 9.607056617736816
-        Y: -5.076596260070801
-        Z: -7.025492191314697
+        X: 9.697704315185547
+        Y: -4.137147903442383
+        Z: -6.92893123626709
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.5647964477539062
+      Pitch: 0.7047964334487915
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 2.662364959716797
+      Yaw: 2.6073646545410156
     Saved: ~
 Window Geometry:
   Displays:

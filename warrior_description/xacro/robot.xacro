@@ -145,8 +145,25 @@
   
   <!-- ========== LiDAR Sensor ========== -->
   <xacro:lidar_macro parent="pole_link" lidar_name="L1_lidar" 
-                     xyz="${lidar_offset}" rpy="0 0 3.1415" mass="0.5"/>
+                     xyz="${lidar_offset}" rpy="0 0 0" mass="0.5"/>
 
+  <joint name="unilidar_imu_joint" type="fixed">
+    <parent link="L1_lidar_link"/>
+    <child link="unilidar_imu"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="unilidar_lidar_joint" type="fixed">
+    <parent link="unilidar_imu"/>
+    <child link="unilidar_lidar"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="unilidar_imu">
+  </link>
+
+  <link name="unilidar_lidar">
+  </link>
 
   <!-- ========== Camera Sensor ========== -->
   <xacro:camera_macro parent="pole_link" camera_name="insta360_camera" 
