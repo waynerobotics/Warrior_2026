@@ -266,7 +266,7 @@ planner_server:
     costmap_update_timeout: 1.0
 
     GridBased:
-      plugin: "nav2_smac_planner::SmacPlannerHybrid"
+      plugin: "nav2_smac_planner/SmacPlannerHybrid"
       tolerance: 0.5
       use_astar: true
       allow_unknown: true

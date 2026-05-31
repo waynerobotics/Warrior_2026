@@ -150,6 +150,7 @@ def generate_launch_description():
         ),
         launch_arguments={
             'slam': 'False',
+            'map': '',
             'use_localization': 'False',
             'use_sim_time': use_sim,
             'params_file': nav2_params_file,
