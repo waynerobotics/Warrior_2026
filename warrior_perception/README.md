@@ -73,5 +73,6 @@ ros2 run omnivision transformation_gui          # PyQt5 slider UI
 
 ## Unitree L2 network
 
-L2 needs a host NIC on `192.168.1.0/24`. Full one-time `nmcli` setup is in
-[PERCEPTION_SETUP.md](PERCEPTION_SETUP.md).
+Main L2 is at `192.168.1.62`; backup is at `192.168.123.110`.
+Host NIC (`enp2s0`) needs `192.168.1.2/24` for the main unit.
+Full `nmcli` setup and backup-swap instructions are in [PERCEPTION_SETUP.md](PERCEPTION_SETUP.md).
