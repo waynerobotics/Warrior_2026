@@ -33,8 +33,8 @@
   gz_type_name: "gz.msgs.Odometry"
   direction: GZ_TO_ROS
 
-# imu
-- ros_topic_name: "imu"
+# imu — matches /unilidar/imu used by real hardware and EKF
+- ros_topic_name: "unilidar/imu"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
