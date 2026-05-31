@@ -19,28 +19,45 @@ def launch_setup(context, *args, **kwargs):
     use_sim = LaunchConfiguration('use_sim')
     waypoint_file = LaunchConfiguration('waypoint_file').perform(context)
 
+    warrior_nav_pkg = get_package_share_directory('warrior_navigation')
+    gps_localization_pkg = get_package_share_directory('gps_localization')
+
     practice_waypoints_file = os.path.join(
-        get_package_share_directory('warrior_navigation'),
+        warrior_nav_pkg,
         'config',
         'practice_waypoints.yaml'
     )
 
     real_waypoints_file = os.path.join(
-        get_package_share_directory('warrior_navigation'),
+        warrior_nav_pkg,
         'config',
         'real_waypoints.yaml'
     )
 
     demo_waypoints_file = os.path.join(
-        get_package_share_directory('warrior_navigation'),
+        warrior_nav_pkg,
         'config',
         'demo_waypoints.yaml'
     )
 
+    competition_waypoints_real_file = os.path.join(
+        gps_localization_pkg,
+        'config',
+        'competition_waypoints.yaml'
+    )
+
+    practice_waypoints_real_file = os.path.join(
+        gps_localization_pkg,
+        'config',
+        'practice_waypoints.yaml'
+    )
+
     waypoint_files = {
-        'practice': practice_waypoints_file,
-        'real': real_waypoints_file,
-        'demo': demo_waypoints_file,
+        'practice_nav': practice_waypoints_file,
+        'real_nav': real_waypoints_file,
+        'demo_nav': demo_waypoints_file,
+        'competition_gps': competition_waypoints_real_file,
+        'practice_gps': practice_waypoints_real_file,
     }
 
     if waypoint_file not in waypoint_files:
@@ -83,8 +100,9 @@ def generate_launch_description():
 
     declare_waypoint_file = DeclareLaunchArgument(
         'waypoint_file',
-        default_value='practice',
-        description='Which waypoints to use: practice, real, or demo'
+        default_value='practice_nav',
+        description='Warrior_nav waypoint: practice_nav, real_nav, demo_nav,' \
+        'gps_localizatoin waypoints: competition_gps, practice_gps'
     )
 
     warrior_nav = FindPackageShare('warrior_navigation')
