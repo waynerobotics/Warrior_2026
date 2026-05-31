@@ -55,7 +55,7 @@ The image's colcon step builds:
 - `unitree_lidar_ros2` — upstream Unitree L2 driver (vendored under `warrior_perception/unilidar_sdk2/`)
 - `unitree_l2_lidar` — thin launch+config wrapper around `unitree_lidar_ros2_node` with our preferred params
 - `insta360_camera` — Python USB/UVC driver for the Insta360 X4 / X5
-- `ai_perception` — YOLO stub; consumes images, publishes mask + 2D detections
+- `neural_engine` — TensorRT multitask net; consumes images, publishes seg mask + 2D detections
 - `omnivision` — 360° camera + LiDAR fusion; yaw calibration GUIs
 
 To launch from inside the container:

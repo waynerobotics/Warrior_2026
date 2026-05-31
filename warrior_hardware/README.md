@@ -1,115 +1,105 @@
 # warrior_hardware
 
-The real-robot hardware stack: ros2_control SystemInterface plugin +
-single C++ node that owns every USB connection. Steering position goes
-to REV SPARK MAX motor controllers over USB-SLCAN; drive velocity goes
-to swerve Arduinos as ASCII frames over USB-serial.
+Real-robot hardware stack: a ros2_control `SystemInterface` plugin + a single
+C++ node that owns every USB connection.
 
-See [../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules & known issues,
-and the **Build & run** section below for bring-up commands.
+- Steer position → REV SPARK MAX controllers over **USB-SLCAN**.
+- Drive velocity → swerve Arduinos as ASCII **`<DRV,…>`** frames over USB-serial.
+
+See [../CLAUDE.md](../CLAUDE.md) for USB auto-connect rules, and
+[../CHANGES.md](../CHANGES.md) for the byte-level SLCAN war stories.
 
 ## Architecture
 
-```
-                                                        ┌────────────────────┐
- /cmd_vel ─▶ swerve_drive_controller ─▶ ros2_control ─▶ │ SwerveTopicBridge  │
-                                                        │ (warrior_system    │
-                                                        │  SystemInterface)  │
-                                                        └─────────┬──────────┘
-                                                                  │
-                                            /warrior_swerve_command (3× SwerveCmd / tick)
-                                                                  │
-                                                                  ▼
-                                                  ┌──────────────────────────────┐
-                                                  │ warrior_motor_manager     │
-                                                  │ owns every USB connection    │
-                                                  └──┬──────────────────────┬────┘
-                                                     │                      │
-                                       <DRV,name,pct>│                      │SPARK MAX SLCAN setpoints
-                                       USB-serial    │                      │USB-CDC, one port per controller
-                                                     ▼                      ▼
-                                          02/03/04_swerve              02/03/04_spark
-                                          (Arduino Nano ESP32,         (REV SPARK MAX,
-                                           PWM to Flipsky ESC)          position closed-loop)
-                                                     │                      │
-                                                     │                      │ Status 0 / 2 frames
-                                                     ▼                      ▼
-                                                  ┌──────────────────────────────┐
-                                                  │ warrior_motor_manager     │
-                                                  │ publishes /warrior_swerve_state │
-                                                  └──────────────────────────────┘
+```mermaid
+flowchart TB
+    CMDVEL["/cmd_vel"] --> CTRL[swerve_drive_controller]
+    CTRL --> R2C[ros2_control]
+    R2C --> BR["SwerveTopicBridge<br/>(warrior_system plugin)"]
+
+    BR -->|"/warrior_swerve_command<br/>(3× SwerveCmd / tick)"| DRV
+
+    subgraph DRV_NODE["warrior_driver (warrior_driver_node) — owns every USB port"]
+        DRV[command fan-out]
+    end
+
+    DRV -->|"&lt;DRV,name,pct&gt;<br/>USB-serial"| ARD["02/03/04_swerve<br/>Arduino Nano ESP32 → Flipsky ESC"]
+    DRV -->|"SLCAN setpoints<br/>USB-CDC, 1 port / controller"| SPK["02/03/04_spark<br/>REV SPARK MAX, position closed-loop"]
+
+    ARD -.->|open-loop echo| DRV
+    SPK -.->|"Status 0 / 2 frames"| DRV
+
+    DRV -->|"/warrior_swerve_state"| BR
 ```
 
 ## Packages
 
-| Package | Language | Role |
+| Package | Lang | Role |
 |---|---|---|
-| [warrior_motor_manager](warrior_motor_manager/) | C++ | One node, one process. Owns USB discovery + reconnect, fans `SwerveCmd` to drive Arduinos and SPARK MAXes, drains feedback. |
-| [warrior_system](warrior_system/) | C++ | ros2_control `SystemInterface` plugin (`warrior::system::SwerveTopicBridge`). Translates joint-level command/state interfaces to/from `/warrior_swerve_command` & `/warrior_swerve_state`. |
-| [warrior_serial](warrior_serial/) | Python | Legacy + reference. The drive bridge is dead, but `nudge_sparks.py` and `sniff_usb.py` are the authoritative SPARK MAX SLCAN reference until the C++ port lands. |
+| [warrior_driver/](warrior_driver/) | C++ | One node (`warrior_driver_node`), one process. Owns USB discovery + reconnect, fans `SwerveCmd` to drive Arduinos and SPARK MAXes, drains feedback, auto-calibrates steer on startup. |
+| [warrior_system/](warrior_system/) | C++ | ros2_control `SystemInterface` plugin (`warrior_system/SwerveTopicBridge`). Bridges joint command/state interfaces ↔ `/warrior_swerve_command` & `/warrior_swerve_state`. See its [README](warrior_system/README.md). |
+
+> Dev/debug Python helpers (SLCAN reference) live in
+> [warrior_driver/scripts/](warrior_driver/scripts/) — they are run directly
+> with `python3`, not installed as ROS executables.
 
 ## Topics
 
 | Topic | Type | Direction | Notes |
 |---|---|---|---|
-| `/warrior_swerve_command` | `warrior_msgs/SwerveCmd` | bridge → manager | One message per module per controller tick. `swerve_id ∈ {front,left,right}`, `steer_position_rad`, `drive_velocity_rad_s`. |
-| `/warrior_swerve_state` | `warrior_msgs/SwerveState` | manager → bridge | One per module at controller rate. Drive velocity is the **commanded** value echoed back (open-loop, no encoder); steer position/velocity come from SPARK MAX Status 2 / Status 1. |
-| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | manager → ✶ | Per-module status + per-transport (Arduino, SLCAN) up/down. |
+| `/warrior_swerve_command` | `warrior_msgs/SwerveCmd` | bridge → driver | One per module per tick. `swerve_id ∈ {front,left,right}`, `steer_position_rad`, `drive_velocity_rad_s`. |
+| `/warrior_swerve_state` | `warrior_msgs/SwerveState` | driver → bridge | One per module at update rate. Drive velocity is the **commanded** value echoed back (open-loop, no drive encoder); steer position/velocity come from SPARK MAX Status 2 / Status 1. |
+| `/diagnostics` | `diagnostic_msgs/DiagnosticArray` | driver → * | Per-module + per-transport up/down, at `diagnostics_rate_hz` (default 1 Hz). |
+
+Topic names are params (`command_topic` / `state_topic`); see
+[warrior_driver.yaml](warrior_driver/config/warrior_driver.yaml).
 
 ## Devices
 
 | Logical name | Transport | Discovered by |
 |---|---|---|
 | `02_swerve`, `03_swerve`, `04_swerve` | USB-serial ASCII | `<WHO>` → `<NAME,…>` handshake |
-| `02_spark`, `03_spark`, `04_spark` | USB-SLCAN, **one port per controller** | VID:PID `0x0483:0xa30e` filter, then passive scan of the low 6 bits of any incoming CAN ID |
+| `02_spark`, `03_spark`, `04_spark` | USB-SLCAN, **one port per controller** | VID:PID `0x0483:0xa30e` filter, then passive read of low 6 bits of any inbound CAN ID |
 
-Each SPARK MAX is its own SLCAN-over-USB endpoint — there is no shared
-CAN bus / external adapter. Logical-name ↔ `device_id` mapping lives in
-[warrior_motor_manager/config/motor_manager.yaml](warrior_motor_manager/config/motor_manager.yaml).
+Each SPARK MAX is its own SLCAN-over-USB endpoint — no shared CAN bus / external
+adapter. Logical-name ↔ CAN-id ↔ Arduino-name mapping lives under
+`modules.<name>` (`drive_device_name`, `steer_device_name`, `spark_can_id`) in
+[warrior_driver.yaml](warrior_driver/config/warrior_driver.yaml).
 
 ## Wire protocol
 
 ### Drive Arduinos
 
-ASCII, `\n`-terminated, `<TYPE,...>` framing:
+ASCII, `\n`-terminated, `<TYPE,...>` framing
+([serial_protocol.hpp](warrior_driver/include/warrior_driver/arduino/serial_protocol.hpp)):
 
-| Direction | Message | Meaning |
+| Direction | Frame | Meaning |
 |---|---|---|
-| host → arduino | `<WHO>` | Identify yourself. Reply: `<NAME,XX_swerve>`. |
-| host → arduino | `<DRV,XX_swerve,pct>` | Drive command, `pct` ∈ −100..100. Per-device filter by `name`. Ack: `<ACK,DRV,XX_swerve>`. |
+| host → arduino | `<WHO>` | Identify. Reply `<NAME,XX_swerve>`. |
+| host → arduino | `<DRV,XX_swerve,pct>` | Drive cmd, `pct ∈ −100..100`, filtered per `name`. Ack `<ACK,DRV,XX_swerve>`. |
 | arduino → host | `<ERR,reason>` | Bad / unsupported frame. |
 
-Watchdog: if a swerve receives no matching `<DRV,…>` for 500 ms it
-returns to 0 % (neutral PWM). This means any node producing drive
-commands must send to each active target at ≥ 2 Hz.
+Watchdog: a swerve with no matching `<DRV,…>` for 500 ms returns to 0 %
+(neutral PWM) → drive commands must be sent at ≥ 2 Hz.
 
 ### SPARK MAX (SLCAN over USB-CDC)
 
-Per-controller USB port speaking standard CANable-style SLCAN ASCII
-(`T<8-hex-id><1-hex-dlc><N*2-hex-bytes>\r`). The CRITICAL details
-discovered the hard way (see [../CLAUDE.md](../CLAUDE.md) for the full
-history):
+Per-controller USB port speaking CANable-style SLCAN ASCII
+(`T<8-hex-id><1-hex-dlc><N*2-hex-bytes>\r`). Byte-exact helpers in
+[sparkmax_frame.hpp](warrior_driver/include/warrior_driver/sparkmax/sparkmax_frame.hpp);
+see [../CHANGES.md](../CHANGES.md) for the history behind each.
 
-- **Setpoint frame** — `T<setpoint_id:08X>8<float32_le_rot><float32_le_aux>\r`,
-  where `setpoint_id = 0x02050100 | device_id`. (api_class = 0,
-  api_index = 4 for set-position.)
-- **Mode-bitmask frame** — `T02052C80 80 <(1 << device_id):02X> 00 00 00 00 00 00 00 \r`
-  enables that controller to follow setpoints. Byte 0 is a **bitmask**,
-  not a control-mode enum.
-- **Enable frame** — `T000502C0101\r`.
-- **All three must be sent on every tx tick** (~50 Hz). Drop the enable
-  + mode and the controller silently stays at 0 % output even with
-  setpoints arriving.
-- **Status 0** (api_cls `0x2E`, api_idx `0`): applied output (int16
-  signed scaled by 32768) + faults (uint16) at payload offsets 0..3.
-- **Status 2** (api_cls `0x2E`, api_idx `2`): position float32 at
-  payload offset **4** (not 0).
+| Frame | Bytes | Purpose |
+|---|---|---|
+| **Channel open** | `S8\rO\r` | Adapter cmd (not a CAN frame). Cold SPARK MAX boots with CAN channel CLOSED — every `T…` is dropped until this is sent once at port open. `SLCAN_OPEN_SEQUENCE`. |
+| **Mode bitmask** | `T02052C808<bitmask>00000000000000\r` | Enables controllers to follow setpoints. Byte 0 is a **device-id bitmask** `(1 << device_id)`, OR-able — **not** a control-mode enum. `make_mode_frame()`. |
+| **Enable** | `T000502C0101\r` | FRC-style enable heartbeat (broadcast). `ENABLE_FRAME`. |
+| **Telemetry enable** | id `0x02050400 \| can_id`, dlc 4, `7C 00 FF FF` | One-time: turns on Status 2-6 (position) on a cold controller. `make_enable_telemetry_frame()`. |
+| **Position setpoint** | id `0x02050100 \| can_id`, `float32_le(rot) + float32_le(0)` | api_class 0, api_index 4. `encode_arbitration_id()` + `encode_position_payload()`. |
 
-The byte-exact authoritative implementation is
-[warrior_serial/warrior_serial/nudge_sparks.py](warrior_serial/warrior_serial/nudge_sparks.py).
-When porting, follow that file literally; the values came from
-`sniff_usb.py` recordings of REV Hardware Client and any deviation
-silently misbehaves.
+Mode + enable are sent every tx tick (~50 Hz). Status frames decoded as
+api_class `0x2E`: **Status 0** = applied output + faults (offset 0..3),
+**Status 1** = velocity, **Status 2** = position float32 at payload offset **4**.
 
 ## Build & run
 
@@ -118,151 +108,82 @@ cd ~/ros2_ws
 colcon build --packages-up-to warrior_driver warrior_system --symlink-install
 source install/setup.bash
 
-# Driver alone (no controller) — owns the USB connections:
+# Driver alone (owns USB connections; auto-calibrates steer on startup):
 ros2 launch warrior_driver warrior_driver.launch.py
 
-# Full real-robot stack (controller_manager + bridge) — driver in a 2nd terminal:
+# Full real-robot stack — driver + controller_manager + bridge in 2 terminals:
 ros2 launch warrior_control swerve_drive.real.launch.py
 ros2 launch warrior_driver warrior_driver.launch.py
 
-# One-shot Xbox teleop (controller + bridge + driver + joystick, all in one):
+# One-shot Xbox teleop (controller + bridge + driver + joystick):
 ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
 ```
 
-> The C++ driver package/node is named **`warrior_driver`** (executable
-> `warrior_driver_node`). Older notes calling it `warrior_motor_manager` /
-> `hardware_manager.launch.py` are stale — no such package exists.
+> The one-shot teleop launch **owns** `warrior_driver` — don't also start the
+> driver separately. See
+> [warrior_bringup/README.md](../warrior_bringup/README.md).
 
-For the one-shot Xbox teleop entry point, see
-[warrior_bringup/README.md](../warrior_bringup/README.md) → *Real swerve
-teleop (Xbox)*.
+## Steer calibration (automatic on startup)
 
-## Steer calibration
+There is **no** separate calibration node — `warrior_driver_node` self-calibrates
+each launch. On startup it gates normal operation until every module's forward
+encoder offset is recorded
+([swerve_driver_node.cpp](warrior_driver/src/swerve/swerve_driver_node.cpp) →
+`auto_calibrate()`).
 
-Each swerve module's steering encoder reports a raw position that needs
-a per-module `steer_offset_rad` to read **0** when the wheel is pointing
-straight forward.  The `steer_calibration_node` automates this
-procedure.
+Per module, the node:
 
-### Why warrior_driver must be OFF during calibration
+1. Waits for the SPARK MAX (`spark_can_id`) to connect and stream fresh Status 2.
+2. Averages `calib.samples` raw encoder readings (default 100).
+3. Stores the mean as `encoder_pos_forward` (warns if stddev > 0.1 rot — wheel moved).
 
-`warrior_driver` sends **enable + mode-bitmask + position setpoint**
-frames to every SPARK MAX at ~50 Hz from the moment it starts.  Once
-those frames arrive the controller enters closed-loop position hold and
-the wheel is locked — it can no longer be pushed by hand.
+When all modules are recorded it writes
+[steer_calibration.yaml](warrior_driver/config/steer_calibration.yaml) (path =
+`calib.write_path`) and enters normal operation. If a module never connects
+within `calib.timeout_s` (default 60 s) it logs FATAL and shuts down.
 
-`steer_calibration_node` solves this by talking directly to the
-SPARK MAXes over USB-SLCAN *without* `warrior_driver` running.  It
-sends only the **heartbeat frames** (mode-bitmask + enable) that are
-needed to keep the controllers streaming status — **no setpoint frames
-are ever sent**.  The SPARK MAX stays in "enabled-idle" state (0% output)
-and the wheel remains free.
+| Param | Default | Meaning |
+|---|---|---|
+| `calib.samples` | 100 | Encoder readings averaged per module |
+| `calib.timeout_s` | 60 | Hard deadline for all modules to connect |
+| `calib.write_path` | (set by launch) | Where the calibration YAML is written |
 
-### Procedure
+### Calibration procedure
 
-```
-1.  Power OFF the robot completely.
+1. Power OFF the robot.
+2. Physically point ALL wheels STRAIGHT FORWARD (robot +X).
+3. Power ON. Launch `warrior_driver` — it calibrates automatically and writes
+   `steer_calibration.yaml`, then keeps running.
 
-2.  Physically rotate ALL wheels until they point STRAIGHT FORWARD
-    (aligned with the robot's +X axis / front of the frame).
+`steer_calibration.yaml` is auto-loaded after `warrior_driver.yaml` on the next
+launch (overriding `encoder_pos_forward`) — **do not hand-edit it**.
 
-3.  Power ON the SPARK MAXes (they boot in neutral — wheels stay free).
-    Do NOT start warrior_driver.
+### How the offset is used
 
-4.  In a terminal, launch the calibration node:
+The driver decodes steering position from raw motor rotations $\theta_{motor}$ as:
 
-      source ~/ros2_ws/install/setup.bash
-      ros2 run warrior_driver steer_calibration_node \
-        --ros-args --params-file \
-          ~/ros2_ws/install/warrior_driver/share/warrior_driver/config/steer_calibration.yaml
+$$\theta_{steer} = \frac{(\theta_{motor} + e_{fwd}) / G \cdot 2\pi - \delta}{s}$$
 
-5.  Trigger calibration:
-
-      ros2 service call /steer_calibration/calibrate std_srvs/srv/Trigger {}
-
-    The node will:
-      a. Enumerate all SPARK MAX USB ports (VID:PID 0x0483:0xA30E).
-      b. Open each port, send broadcast heartbeats (no setpoints).
-      c. Once the controller's CAN ID is learned from Status 0, send a
-         one-time telemetry-enable frame to start Status 2 streaming.
-      d. Read the raw motor position (rotations) from Status 2.
-      e. Close all ports cleanly.
-
-6.  The node prints a ready-to-paste YAML block to the console AND
-    writes a timestamped file:
-
-      /tmp/warrior_calibration/steer_calibration_<YYYY-MM-DDTHH-MM-SS>.yaml
-
-    Example output:
-    ┌────────────────────────────────────────────────────────────┐
-    │ warrior_driver:                                            │
-    │   ros__parameters:                                         │
-    │     modules:                                               │
-    │       front:                                               │
-    │         steer_offset_rad: 1.2345   # was 0.0              │
-    │       left:                                                │
-    │         steer_offset_rad: -0.9876  # was 0.0              │
-    │       right:                                               │
-    │         steer_offset_rad: 0.4321   # was 0.0              │
-    └────────────────────────────────────────────────────────────┘
-
-7.  Copy the new steer_offset_rad values into:
-      warrior_driver/config/warrior_driver.yaml
-
-8.  Rebuild and re-source:
-
-      colcon build --packages-select warrior_driver
-      source install/setup.bash
-
-9.  Start warrior_driver normally — wheels will now home to straight
-    forward on first command.
-```
-
-> **Failure conditions** — calibration is refused or returns an error if:
-> - No SPARK MAX USB ports are found (power/USB problem)
-> - A configured CAN ID is never seen in inbound frames within
->   `read_timeout_s` (default 5 s) — check that `warrior_driver` is not
->   already running on another terminal, or that the SLCAN port isn't
->   held open by another process
-
-### How the offset is computed
-
-The driver decodes steering position as:
-
-$$\theta_{steer} = \frac{\theta_{motor} / G \cdot 2\pi - \delta}{s}$$
-
-where $G$ is the gear ratio (`steer_motor_rot_per_module_rot`), $\delta$
-is `steer_offset_rad`, and $s$ is `steer_sign`.
-
-The calibration node reads raw motor rotations $\theta_{motor}$ directly
-from the SPARK MAX Status 2 frame.  The new offset that makes
-$\theta_{steer} = 0$ (straight forward) is:
-
-$$\delta_{new} = \frac{\theta_{motor,current}}{G} \cdot 2\pi$$
-
-### Relevant files
-
-| File | Purpose |
-|---|---|
-| `warrior_driver/include/warrior_driver/swerve/steer_calibration_node.hpp` | Node class declaration |
-| `warrior_driver/src/swerve/steer_calibration_node.cpp` | Direct SLCAN I/O + calibration service |
-| `warrior_driver/src/steer_calibration_main.cpp` | `main()` entry point |
-| `warrior_driver/config/steer_calibration.yaml` | Launch parameters |
-| `warrior_driver/config/warrior_driver.yaml` | **Authoritative** config — paste final offsets here |
-
----
+where $G$ = `steer_motor_rot_per_module_rot` (gear ratio), $e_{fwd}$ =
+auto-calibrated `encoder_pos_forward`, $\delta$ = `steer_offset_rad`, $s$ =
+`steer_sign`. Calibration measures $e_{fwd}$ so the wheel reads 0 when pointing
+forward; the remaining per-module trims live in
+[warrior_driver.yaml](warrior_driver/config/warrior_driver.yaml).
 
 ## SPARK MAX troubleshooting
 
-Quick poke-tools in `warrior_serial/warrior_serial/`:
+Dev tools in [warrior_driver/scripts/](warrior_driver/scripts/) (run with
+`python3`):
 
 | Tool | What it does |
 |---|---|
-| `nudge_sparks.py` | Open every detected SPARK MAX, nudge each by +5 motor rotations, print live position / applied output / faults. Confirms wiring + REV config end-to-end. |
-| `sniff_usb.py` | Kernel-level usbmon decoder. Shows every SLCAN byte the host sends and the controller emits. Use to compare your traffic against REV Hardware Client when something doesn't move. |
+| `nudge_sparks.py` | Open every detected SPARK MAX, nudge each +5 rot, print live position / applied output / faults. End-to-end wiring + REV-config check. |
+| `sniff_usb.py` | usbmon decoder: every SLCAN byte host↔controller. Compare your traffic against REV Hardware Client. |
+| `probe_status2.py` | Replay REV's telemetry-enable bytes; verify Status 2 turns on. |
+| `wheel_sweep_test.py` | Bench sweep, all modules through 0–360° at 10 % drive — see [WHEEL_SWEEP_TESTPLAN.md](warrior_driver/WHEEL_SWEEP_TESTPLAN.md). |
 
-If a SPARK MAX sends **zero** bytes back even with enable frames being
-blasted at it, the most common causes are (in order): 12 V not powered;
-Status 0 + Status 2 both set to 0 ms in REV (controller is alive but
-silent); USB cable iffy. See [../CLAUDE.md](../CLAUDE.md) §5 for the
-Status-2-specific failure mode.
+A C++ equivalent of `nudge_sparks` ships as the `nudge_sparks_cli` executable.
+
+If a SPARK MAX sends **zero** bytes back even with enable frames blasting at it:
+12 V not powered; CAN channel closed (missing `S8\rO\r`); Status 0/2 disabled in
+REV; or a bad USB cable. See [../CLAUDE.md](../CLAUDE.md) rules 5, 11, 12.

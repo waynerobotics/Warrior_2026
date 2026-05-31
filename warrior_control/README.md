@@ -1,10 +1,17 @@
 # Warrior Control
 
-A ROS 2 control package implementing swerve drive kinematics for a three-wheel omnidirectional warrior robot.
+A ROS 2 control package implementing swerve drive kinematics for a three-wheel
+omnidirectional warrior robot. See the [workspace README](../README.md) for how
+this fits the whole pipeline.
 
 ## Overview
 
-This module provides inverse and forward kinematics solutions for a three-wheel swerve drive system, enabling omnidirectional movement with independent wheel steering and velocity control.
+This module provides inverse and forward kinematics solutions for a three-wheel
+swerve drive system, enabling omnidirectional movement with independent wheel
+steering and velocity control. It ships as a `ros2_control` controller plugin
+(`swerve_drive_controller/SwerveDriveController`,
+[src/swerve_drive_controller.cpp](src/swerve_drive_controller.cpp)) plus a
+header-only IK library ([include/warrior_control/swerve_ik.hpp](include/warrior_control/swerve_ik.hpp)).
 
 ### Features
 - ✅ Inverse kinematics: Convert body velocity ($v_x$, $v_y$, $\omega_z$) to wheel commands
@@ -121,6 +128,48 @@ graph LR
     D -->|PWM| F["Driving Motor"]
 ```
 
+## Implementation
+
+The controller's per-tick data flow inside `update()`:
+
+```mermaid
+flowchart LR
+    CV[/cmd_vel\nTwistStamped/] --> CL[clamp to cmd_vel_limit]
+    CL --> SM[smoother\naccel/decel limits]
+    SM --> IK[SwerveIK]
+    IK -->|steer θ/position| SCMD[steer cmd ifaces]
+    IK -->|drive ω/velocity| DCMD[drive cmd ifaces]
+    STATE[steer position\nstate ifaces] --> IK
+    DCMD --> KF[Kalman EKF] --> ODOM[/odom/]
+```
+
+The [swerve_ik.hpp](include/warrior_control/swerve_ik.hpp) library adds two
+practical refinements on top of the textbook IK above:
+
+```mermaid
+graph LR
+    A[Base twist vx,vy,wz] -->|IK| B[per-wheel vᵢ]
+    B -->|atan2| C[θᵢ steer]
+    B -->|‖vᵢ‖/R| D[ωᵢ drive]
+    C --> E[flip + slip guard]
+```
+
+- **Flip optimization** — if the steering delta exceeds 90°, add π and negate the
+  drive speed (shortest reorientation).
+- **Slip guard** — drive speed scaled by `cos(angle_error)`; zeroed if the error
+  exceeds 90°. Below `0.01` m/s & rad/s the module holds its current angle at zero speed.
+
+### ros2_control interfaces
+
+| | Steer joints | Drive joints |
+|---|---|---|
+| **command** | `position` | `velocity` |
+| **state** | `position` | `position`, `velocity` |
+
+Joints (from config): `{front,left,right}_steer_joint`, `{front,left,right}_drive_joint`
+— must match the HW plugin in
+[warrior_description/.../robot.ros2_control.xacro](../warrior_description/xacro/ros2_control/robot.ros2_control.xacro).
+
 ## Usage
 
 ### Dependencies
@@ -135,24 +184,35 @@ source install/setup.bash
 ```
 
 ### Launch
+
+Normally invoked via `warrior_bringup` (`main.launch.py` / swerve teleop), not
+directly. To run the controller stack on its own:
+
 ```bash
-ros2 launch warrior_control warrior_control.launch.py
+# Real robot — controller_manager + swerve_drive_controller + rviz:
+ros2 launch warrior_control swerve_drive.real.launch.py
+
+# Simulation — Gazebo + bridge + swerve_drive_controller:
+ros2 launch warrior_control swerve_drive.gazebo.launch.py
 ```
 
 ### Configuration
 
-Edit `config/warrior_params.yaml` to configure:
-- Wheel positions relative to robot center
-- Maximum wheel velocities and accelerations
-- Control loop frequency
+Edit [config/warrior_controllers_real.yaml](config/warrior_controllers_real.yaml)
+(real) or [config/warrior_controllers_sim.yaml](config/warrior_controllers_sim.yaml)
+(sim) to configure:
+- Wheel radius (`wheel_radius`), module positions (`wheel_to_center`) and bearings (`alpha`, 0/120/240°)
+- Velocity limits (`cmd_vel_limit`) and the accel/decel `smoother`
+- Odometry EKF process/measurement noise (`kf.*`)
 
 ### API
 
 **Subscribed Topics:**
-- `/cmd_vel` (geometry_msgs/Twist): Desired robot velocity
+- `/cmd_vel` (`geometry_msgs/TwistStamped`): desired base twist (hardcoded topic name)
+- `/odom_gt` (`nav_msgs/Odometry`): simulation ground truth (republished as `/odom` with a z offset)
 
 **Published Topics:**
-- `/odom` (nav_msgs/Odometry): Robot odometry
+- `/odom` (`nav_msgs/Odometry`): EKF-fused odometry (topic set by the `odom_topic` param)
 
 ## 📝 References
 
@@ -161,3 +221,4 @@ Edit `config/warrior_params.yaml` to configure:
 [2] Using Inverse Kinematics to become a Master-Swerver. Available at: https://abhinavwastaken.medium.com/using-inverse-kinematics-to-become-a-master-swerver-1026759d81b0
 
 [3] Lynch, K. M. and Park, F. C. (2017). *Modern Robotics: Mechanics, Planning, and Control*. Cambridge University Press.
+</content>

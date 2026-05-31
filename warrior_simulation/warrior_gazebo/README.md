@@ -1,8 +1,9 @@
 # warrior_gazebo
 
-Sim worlds + SDF models for the Warrior 2026 robot. See the
-[workspace README](../../README.md) for context, and
-[warrior_bringup](../../warrior_bringup/README.md) for launching the sim.
+Sim worlds + SDF models for the Warrior 2026 robot (`ament_cmake`, install
+of `worlds/` + `models/` only — no nodes, no launch files here). See the
+[warrior_simulation README](../README.md) for the package overview and how
+worlds get launched.
 
 ## Target stack
 
@@ -16,22 +17,31 @@ Sim worlds + SDF models for the Warrior 2026 robot. See the
 
 ## Worlds
 
-| File | Purpose |
-|---|---|
-| `competition.world` | Full IGVC course — default for `swerve_sim` |
-| `competition_no_barrels.world` | Competition layout minus obstacle barrels |
-| `empty.world` | Bare ground plane + sun. Gate G2 / controller smoke tests |
-| `empty_test.world` | Variant of empty for plugin debugging |
-| `fullTrack.world` | Long-form practice track |
-| `map1.world`, `map1ramp.world` | Practice map variants (with ramp) |
+`worlds/` — loaded by the bringup sim launches via the `world_name:=` arg
+(see [warrior_simulation README](../README.md)).
 
-`turtlebot3_world_gps.world` lives in
-[warrior_description/worlds/](../../warrior_description/worlds/), not here.
+| File | What it is |
+| --- | --- |
+| `competition.world` | Full IGVC course (barrels, track) — default for swerve_sim |
+| `competition_no_barrels.world` | Competition layout minus obstacle barrels |
+| `fullTrack.world` | Long-form practice track |
+| `map1.world` | Practice map |
+| `map1ramp.world` | Practice map with a ramp |
+| `empty.world` | Bare ground + sun — controller / gate smoke tests |
+| `empty_test.world` | Empty variant for plugin debugging |
+| `turtlebot3_world_gps.world` | TurtleBot3 world + GPS — default for `turtlebot_sim` |
 
 ## Models
 
-`models/` holds SDF assets used by the worlds — barrels, cones, IGVC track
-elements, trees, ramps, waypoint flags, and the `turtlebot3_burger_gps`
-model. Fortress auto-discovers them when `IGN_GAZEBO_RESOURCE_PATH` includes
-`<install>/share/warrior_gazebo/models` — set by this package's `hook/`
-exports after build.
+`models/` — SDF assets auto-discovered by Fortress:
+
+- obstacles: `construction_barrel`, `construction_cone`, `falling_rock3`,
+  `first_2015_trash_can`, `stop_sign`
+- track / scene: `igvc_track`, `sonoma_raceway`, `ramp`, `waypoint_flag`,
+  `oak_tree`, `pine_tree`, `ground_plane`, `sun`
+- robot: `turtlebot3_burger_gps`
+
+Discovery: the sim launch
+([warrior_control/launch/swerve_drive.gazebo.launch.py](../../warrior_control/launch/swerve_drive.gazebo.launch.py))
+appends `<share>/warrior_gazebo/models` to `IGN_GAZEBO_RESOURCE_PATH` and
+`GZ_SIM_RESOURCE_PATH` before starting `ros_gz_sim`.

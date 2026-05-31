@@ -1,132 +1,115 @@
 # warrior_bringup
 
-Top-level launchers for the Warrior 2026 robot. Pick a robot type, get a
-running stack. See the [workspace README](../README.md) for how this package
-fits into the rest of the repo.
+Top-level launchers. Pick a robot type, get a running stack.
+See the [workspace README](../README.md) for the whole-system picture.
 
-## Quick start
+## Quick Start
 
-```bash
-ros2 launch warrior_bringup swerve_sim.launch.py        # sim, swerve, IGVC world
-ros2 launch warrior_bringup diff_sim.launch.py          # sim, diff drive, empty world
-ros2 launch warrior_bringup warrior_real.launch.py      # real Warrior hardware
-ros2 launch warrior_bringup turtlebot_sim.launch.py     # sim TurtleBot3 + GPS
-ros2 launch warrior_bringup turtlebot_real.launch.py    # real TurtleBot3
-```
+| Goal | Command |
+|---|---|
+| **Drive real swerve (Xbox)** | `ros2 launch warrior_bringup warrior_swerve_teleop.launch.py` |
+| Swerve sim | `ros2 launch warrior_bringup swerve_sim.launch.py` |
+| Diff-drive sim | `ros2 launch warrior_bringup diff_sim.launch.py` |
+| Real Warrior (ros2_control only) | `ros2 launch warrior_bringup warrior_real.launch.py` |
 
-Each of the above is a thin wrapper around `main.launch.py` that pre-sets
-`robot_type`. Use `main.launch.py` directly if you want full control:
+## Launch files
 
-```bash
-ros2 launch warrior_bringup main.launch.py \
-    robot_type:=swerve_sim \
-    world_name:=competition.world \
-    use_sim_time:=true
-```
+All `*_sim` / `*_real` wrappers just pre-set `robot_type` on `main.launch.py`.
 
-## Launch matrix
+| File | Starts | Sim/Real |
+|---|---|---|
+| [warrior_swerve_teleop.launch.py](launch/warrior_swerve_teleop.launch.py) | **one-shot real teleop** — RSP, `ros2_control_node` (SwerveTopicBridge HW), joint_state_broadcaster → swerve_drive_controller, `warrior_driver`, joy + teleop_twist_joy | real |
+| [main.launch.py](launch/main.launch.py) | dispatcher — branches on `robot_type` (see matrix) | both |
+| [swerve_sim.launch.py](launch/swerve_sim.launch.py) | `main` w/ `robot_type:=swerve_sim` | sim |
+| [diff_sim.launch.py](launch/diff_sim.launch.py) | `main` w/ `robot_type:=diff_sim` | sim |
+| [warrior_real.launch.py](launch/warrior_real.launch.py) | `main` w/ `robot_type:=warrior_real` | real |
+| [turtlebot_sim.launch.py](launch/turtlebot_sim.launch.py) | `main` w/ `robot_type:=turtlebot_sim` | sim |
+| [turtlebot_real.launch.py](launch/turtlebot_real.launch.py) | `main` w/ `robot_type:=turtlebot_real` | real |
+| [warrior.launch.py](launch/warrior.launch.py) | standalone: RSP + `ros2_control_node` + **diff_drive_controller** + rviz + keyboard teleop (loads `warrior_controllers.yaml` — see staleness note) | real |
+| [warrior.gazebo.launch.py](launch/warrior.gazebo.launch.py) | DEPRECATED — controller launch + joy + teleop_twist_joy | sim |
+| [warrior.real.launch.py](launch/warrior.real.launch.py) | unused variant of teleop (driver include commented out) | real |
+
+> `warrior_real` (via `main`) calls `warrior.launch.py` — **not** the teleop
+> file. For Xbox swerve driving use `warrior_swerve_teleop.launch.py` directly.
+
+### main.launch.py dispatch
 
 ```mermaid
 flowchart LR
-    M[main.launch.py]
-    M -->|swerve_sim| A[warrior_control/swerve_drive.gazebo.launch.py]
+    M[main.launch.py] -->|swerve_sim| A[warrior_control/swerve_drive.gazebo.launch.py]
     M -->|diff_sim| B[warrior_control/diff_drive.gazebo.launch.py]
-    M -->|warrior_real| C[warrior_bringup/warrior.launch.py]
+    M -->|warrior_real| C[warrior.launch.py]
     M -->|turtlebot_sim| D[warrior_navigation/turtlebot3_world_gps.launch.py]
     M -->|turtlebot_real| E[turtlebot3_bringup/robot.launch.py]
-
-    SS[swerve_sim.launch.py] -.->|wraps| M
-    DS[diff_sim.launch.py] -.->|wraps| M
-    WR[warrior_real.launch.py] -.->|wraps| M
-    TS[turtlebot_sim.launch.py] -.->|wraps| M
-    TR[turtlebot_real.launch.py] -.->|wraps| M
 ```
 
-## `main.launch.py` arguments
+### main.launch.py arguments
 
-| Arg | Default | Options |
+| Arg | Default | Choices |
 |---|---|---|
 | `robot_type` | `swerve_sim` | `swerve_sim`, `diff_sim`, `warrior_real`, `turtlebot_sim`, `turtlebot_real` |
-| `world_name` | `competition.world` | any `.world` in [warrior_gazebo/worlds/](../warrior_simulation/warrior_gazebo/) or [warrior_description/worlds/](../warrior_description/worlds/) |
+| `world_name` | `competition.world` | any `.world` (swerve world dir = warrior_gazebo) |
 | `use_sim_time` | `true` | `true`, `false` |
-| `namespace` | (empty) | any string — namespaces all topics, for multi-robot |
+| `namespace` | (empty) | string (multi-robot) |
 
-## Real swerve teleop (Xbox)
+## Real swerve teleop pipeline
 
-```bash
-ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
+```mermaid
+flowchart LR
+    JOY[joy_node] --> TEL[teleop_twist_joy]
+    TEL -->|/cmd_vel TwistStamped| CTRL[swerve_drive_controller]
+    CTRL -->|joint cmds| BR[warrior_system/SwerveTopicBridge]
+    BR -->|/warrior_swerve_command| DRV[warrior_driver]
+    DRV -->|USB| HW[(drive Arduinos + SPARK MAX)]
 ```
 
-All-in-one driver for the **real** robot from an Xbox pad. Brings up the full
-new pipeline in one shot:
+- OWNS `warrior_driver` — do **not** start the driver / `steer_calibration_node` separately.
+- Prereqs: 12 V on, ~7 `/dev/ttyACM*` connected, steering calibrated, **Xbox pad paired before launch** (joy_node blocks).
+- Pad mapping + deadman/turbo: `warrior_joy/config/joystick.yaml`.
+- Description: `warrior.urdf.xacro` (real SwerveTopicBridge HW); controllers: `warrior_control/config/warrior_controllers_real.yaml`.
 
-```
-joy_node → teleop_twist_joy → /cmd_vel (TwistStamped)
-  → swerve_drive_controller → warrior_system/SwerveTopicBridge
-  → /warrior_swerve_command → warrior_driver → USB
-```
+## Config
 
-This launch **owns `warrior_driver`** — do not start it (or
-`steer_calibration_node`) separately. Prerequisites: 12 V on, all USB
-connected (~7 `/dev/ttyACM*`), steering calibrated (see
-[warrior_hardware/README.md](../warrior_hardware/README.md)), and the Xbox pad
-paired *before* launch (`joy_node` blocks waiting for it). Pad mapping +
-deadman/turbo buttons live in `warrior_joy/config/joystick.yaml`.
+| File | Used by |
+|---|---|
+| [config/warrior_bridge.yaml](config/warrior_bridge.yaml) | swerve gazebo gz↔ros bridge (clock, lidar, gps, camera, imu, odom) |
+| [config/diff_gz_bridge.yaml](config/diff_gz_bridge.yaml) | diff-drive gz bridge |
+| [config/swerve_gz_bridge.yaml](config/swerve_gz_bridge.yaml) / [swerve_rosgz_bridge.yaml](config/swerve_rosgz_bridge.yaml) | per-joint gz cmd_vel bridges (legacy) |
 
-## Joysticks & add-ons
+rviz configs in [rviz/](rviz/): `warrior.gazebo.rviz`, `warrior.real.rviz`, `turtle_nav.rviz`.
 
-Joystick, localization, and navigation are launched **separately** so you
-can mix and match with any robot type. Examples:
+## Launch on boot (systemd)
 
-```bash
-ros2 launch warrior_joy joy_swerve.launch.py            # swerve joystick
-ros2 launch warrior_joy joy_2stick.launch.py            # diff drive joystick
-ros2 launch warrior_joy joy_turtle.launch.py            # turtlebot joystick
+Helper scripts live in [scipts/](scipts/) (**dir name is misspelled** — `scipts`, not `scripts`):
 
-ros2 launch warrior_localization ekf.launch.py use_sim_time:=true
-ros2 launch warrior_navigation costmap.launch.py
-ros2 launch warrior_navigation nav2_complex_path.launch.py use_sim:=true
-```
+- [scipts/on_start.sh](scipts/on_start.sh) — sources ROS + ws, sets `ROS_DOMAIN_ID=30`, `exec ros2 launch … warrior_swerve_teleop.launch.py`.
+- [scipts/launch_gazebo.sh](scipts/launch_gazebo.sh) — software-GL Gazebo launch (`world_name` arg).
 
-## Launch on boot (real hardware)
-
-Systemd unit at `/etc/systemd/system/warrior-2026.service`:
+Example unit (`/etc/systemd/system/warrior-2026.service`):
 
 ```ini
-[Unit]
-Description=Warrior 2026 ROS 2 Launch
-After=network.target bluetooth.service
-
 [Service]
 Type=simple
 User=fire
 Environment=ROS_DOMAIN_ID=30
-ExecStart=/home/fire/ros2_ws/src/Warrior_2026/warrior_bringup/scripts/on_start.sh
+ExecStart=/home/fire/ros2_ws/src/Warrior_2026/warrior_bringup/scipts/on_start.sh
 Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl daemon-reload
 sudo systemctl enable --now warrior-2026.service
 journalctl -u warrior-2026.service -f
 ```
 
-> The Xbox controller must be paired before the service starts, or `joy_node`
-> blocks waiting for it. The motor manager retries USB discovery, so swerve
-> Arduinos can be plugged in after boot.
+> **Gotchas:**
+> - The `scipts/` dir is **not installed** by [CMakeLists.txt](CMakeLists.txt) (only `launch`, `config`, `rviz` are). Point the unit at the source path as above.
+> - Xbox pad must be paired before the service starts (joy_node blocks).
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
 | `Resource not found: warrior_control` | `source install/setup.bash` |
-| `Cannot find file […]/worlds/<name>.world` | Check it exists in [warrior_gazebo/worlds/](../warrior_simulation/warrior_gazebo/) |
-| Gazebo crashes with `OGRE … UnimplementedException` on WSL2 | Already patched: launchers pass `--render-engine ogre` |
-| Teleop sends no commands | Check `ros2 node list \| grep teleop`. The real `swerve_drive_controller` subscribes to **`/cmd_vel` as `TwistStamped`** — confirm your source publishes there with the right type (`teleop_twist_joy` needs `publish_stamped_twist: true`). The diff-drive controller uses `/diff_drive_controller/cmd_vel`. |
-| Xbox teleop does nothing | Hold the **deadman/enable** button (set in `warrior_joy/config/joystick.yaml`); `require_enable_button: true` gates all motion. |
+| Teleop sends nothing | controller subscribes `/cmd_vel` as **TwistStamped** — confirm `publish_stamped_twist: true` |
+| Xbox does nothing | hold the deadman/enable button (`warrior_joy/config/joystick.yaml`) |
+| Gazebo OGRE crash on WSL2 | already patched (`--render-engine ogre`) |
