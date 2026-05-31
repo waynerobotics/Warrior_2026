@@ -57,6 +57,7 @@ def launch_setup(context, *args, **kwargs):
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
+            'use_sim_time': use_sim.perform(context),
             'waypoint_file': selected_waypoint_file,
             'action_name': 'navigate_to_pose',
         }],
