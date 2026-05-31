@@ -38,7 +38,7 @@ def generate_launch_description():
         output='screen',
         parameters=[config_file, {'use_sim_time': use_sim_time}],
         remappings=[
-            ('imu/data', 'imu'),
+            ('imu/data', '/unilidar/imu'),
             ('gps/fix', 'gps/fix'),
             ('gps/filtered', 'gps/filtered'),
             ('odometry/gps', 'odometry/gps'),
