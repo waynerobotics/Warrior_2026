@@ -42,16 +42,17 @@ global_costmap:
     obstacle_layer:
       plugin: "nav2_costmap_2d::ObstacleLayer"
       observation_sources: scan
-      scan:
-        topic: /scan
+      pointcloud:
+        topic: /unilidar/cloud
         max_obstacle_height: 2.0
+        min_obstacle_height: 0.5
         clearing: true
         marking: true
-        data_type: "LaserScan"
-        raytrace_max_range: 3.5
-        raytrace_min_range: 0.0
-        obstacle_max_range: 3.0
-        obstacle_min_range: 0.0
+        data_type: "PointCloud2"
+        raytrace_max_range: 14.9
+        raytrace_min_range: 0.05
+        obstacle_max_range: 13.0
+        obstacle_min_range: 0.05
         inf_is_valid: True
 
     inflation_layer:
@@ -81,17 +82,18 @@ local_costmap:
 
     obstacle_layer:
       plugin: "nav2_costmap_2d::ObstacleLayer"
-      observation_sources: scan
-      scan:
-        topic: /scan
+      observation_sources: pointcloud
+      pointcloud:
+        topic: /unilidar/cloud
         max_obstacle_height: 2.0
+        min_obstacle_height: 0.5
         clearing: true
         marking: true
-        data_type: "LaserScan"
-        raytrace_max_range: 3.5
-        raytrace_min_range: 0.0
-        obstacle_max_range: 3.0
-        obstacle_min_range: 0.0
+        data_type: "PointCloud2"
+        raytrace_max_range: 14.9
+        raytrace_min_range: 0.05
+        obstacle_max_range: 13.0
+        obstacle_min_range: 0.05
         inf_is_valid: True
 
     inflation_layer:
