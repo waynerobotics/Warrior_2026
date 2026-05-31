@@ -469,9 +469,11 @@ void SwerveDriverNode::update()
         const double steer_cmd = state.cmd_steer_position_rad;
         const double drive_cmd = (state.have_command && !timed_out) ? state.cmd_drive_velocity_rad_s : 0.0;
 
-        // ── Map algorithm-coordinate commands to hardware units ──
-        const double encoder_position = steer_rad_to_encoder_pos(steer_cmd, cfg);
-        const int    drive_percent    = drive_rad_s_to_percent(drive_cmd, cfg);
+        // Read current encoder position as the reference for nearest-path snapping.
+        const auto cur = registry_->spark_position_rot(cfg.spark_can_id);
+        const double cur_pos = cur.has_value() ? static_cast<double>(*cur) : cfg.encoder_pos_forward;
+        const double encoder_position = steer_rad_to_encoder_pos(steer_cmd, cfg, cur_pos);
+        const int     drive_percent   = drive_rad_s_to_percent(drive_cmd, cfg);
 
         // ── Drive path (Arduino) ──
         const bool drive_connected =
