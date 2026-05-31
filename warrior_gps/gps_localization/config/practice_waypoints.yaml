@@ -1,0 +1,15 @@
+waypoint_navigator:
+  ros__parameters:
+    robot_name: warrior_1
+    utm_zone: 17
+    waypoint_tolerance: 0.3
+    waypoints:
+      - latitude: 42.3558186
+        longitude: -83.0707180
+        yaw: 0.0
+      - latitude: 42.35581677
+        longitude: -83.070701
+        yaw: 0.0
+      - latitude: 42.3558071
+        longitude: -83.0707157
+        yaw: 0.0

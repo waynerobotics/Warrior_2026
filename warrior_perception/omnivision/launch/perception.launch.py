@@ -18,7 +18,7 @@ def generate_launch_description():
     engine_path_arg = DeclareLaunchArgument(
         'engine_path',
         default_value=PathJoinSubstitution(
-            [FindPackageShare('neural_engine'), 'inference', 'resnet18.engine']
+            [FindPackageShare('neural_engine'), 'models', 'resnet_fp32.engine']
         ),
         description='Path to TensorRT engine file',
     )

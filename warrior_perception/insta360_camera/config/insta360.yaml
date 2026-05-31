@@ -1,6 +1,6 @@
 insta360_node:
   ros__parameters:
-    device: /dev/video2
+    device: /dev/video0
     frame_id: insta360_optical_frame
     width: 2880
     height: 1440
