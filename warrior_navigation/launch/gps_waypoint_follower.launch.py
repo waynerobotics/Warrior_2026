@@ -159,6 +159,18 @@ def generate_launch_description():
         }],
     )
 
+    rviz2_config_file = PathJoinSubstitution(
+        [warrior_nav, "rviz2", "complex_path.rviz"]
+    )
+
+    rviz2 = Node(
+        package="rviz2",
+        executable="rviz2",
+        output="screen",
+        arguments=["-d", rviz2_config_file],
+        parameters=[{"use_sim_time": use_sim}],
+    )
+
     return LaunchDescription([
         declare_use_sim,
         declare_waypoint_file,
@@ -172,6 +184,7 @@ def generate_launch_description():
         path_to_pose_server_node,
         recovery_manager_node,
         follow_path_node,
+        rviz2,
         # Give all nodes time to initialize before starting GPS waypoint manager
         # Costmap lifecycle manager times out after 4s, so wait 10s total
         TimerAction(
