@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-  <xacro:macro name="gps_macro" params = "parent xyz">
-    <joint name="navsat_joint" type="fixed">
+  <xacro:macro name="gps_macro" params = "parent name xyz">
+    <joint name="${name}_link" type="fixed">
       <origin xyz="${xyz}" rpy="0 0 0" />
       <parent link="${parent}"/>
       <child link="navsat_link" />
