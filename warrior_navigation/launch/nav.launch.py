@@ -100,7 +100,7 @@ def generate_launch_description():
 
     declare_waypoint_file = DeclareLaunchArgument(
         'waypoint_file',
-        default_value='practice_nav',
+        default_value='real_nav',
         description='Warrior_nav waypoint: practice_nav, real_nav, demo_nav,' \
         'gps_localizatoin waypoints: competition_gps, practice_gps'
     )
