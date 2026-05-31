@@ -181,10 +181,10 @@ local_costmap:
           clearing: true
           marking: true
           data_type: "PointCloud2"
-          raytrace_max_range: 14.9
+          raytrace_max_range: 15.0
           raytrace_min_range: 0.05
-          obstacle_max_range: 13.0
-          obstacle_min_range: 0.05
+          obstacle_max_range: 14.0
+          obstacle_min_range: 0.1
           inf_is_valid: True
 
       always_send_full_costmap: True
@@ -218,10 +218,10 @@ global_costmap:
           clearing: true
           marking: true
           data_type: "PointCloud2"
-          raytrace_max_range: 14.9
+          raytrace_max_range: 15.0
           raytrace_min_range: 0.05
-          obstacle_max_range: 13.0
-          obstacle_min_range: 0.05
+          obstacle_max_range: 14.0
+          obstacle_min_range: 0.1
           inf_is_valid: True
 
       inflation_layer:
