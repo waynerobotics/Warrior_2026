@@ -1,22 +1,22 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
 
-  <xacro:macro name="gps_macro" params = "parent name xyz">
-    <joint name="${name}_link" type="fixed">
+  <xacro:macro name="gps_macro" params = "parent gps_name xyz">
+    <joint name="${gps_name}_joint" type="fixed">
       <origin xyz="${xyz}" rpy="0 0 0" />
       <parent link="${parent}"/>
-      <child link="${name}_link" />
+      <child link="${gps_name}_link" />
     </joint>
 
-    <link name="${name}_link">
+    <link name="${gps_name}_link">
     </link>
 
-    <gazebo reference="${name}_link">
-      <sensor name="navsat" type="navsat">
+    <gazebo reference="${gps_name}_link">
+      <sensor name="${gps_name}" type="navsat">
         <always_on>1</always_on>
         <update_rate>1</update_rate>
-        <topic>navsat</topic>
-        <gz_frame_id>${name}_link</gz_frame_id>
+        <topic>${gps_name}</topic>
+        <gz_frame_id>${gps_name}_link</gz_frame_id>
       </sensor>
     </gazebo>
   </xacro:macro>

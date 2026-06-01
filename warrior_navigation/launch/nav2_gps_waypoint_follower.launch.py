@@ -125,7 +125,6 @@ def generate_launch_description():
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim,
             'waypoint_file': waypoint_file,
             'map_origin_latitude': map_origin_latitude,
             'map_origin_longitude': map_origin_longitude,

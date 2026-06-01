@@ -12,14 +12,18 @@ class PointCloud2Parser(Node):
             'unilidar/cloud',
             self.listener_callback,
             10)
-        
-        self.publisher_ = self.create_publisher(msg.PointCloud2, 'unilidar/cloud', 10)
 
     def listener_callback(self, msg):
         pc2_data = point_cloud2.read_points_list(msg, field_names=["x", "y", "z"], skip_nans=False)
         arr = np.array(pc2_data)
-        self.get_logger().info('xyz: ' %arr)
+        self.get_logger().info(pc2_data)
 
 def main(args=None):
     rclpy.init(args=args)
+    pc2_echo = PointCloud2Parser()
+    rclpy.spin(pc2_echo)
+    pc2_echo.destroy_node()
+    rclpy.shutdown()
 
+if __name__ == '__main__':
+    main()

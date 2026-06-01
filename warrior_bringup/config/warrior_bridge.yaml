@@ -20,8 +20,14 @@
   direction: GZ_TO_ROS
 
 # gps
-- ros_topic_name: "gps/fix"
-  gz_topic_name: "navsat"
+- ros_topic_name: "gps1/fix"
+  gz_topic_name: "navsat1"
+  ros_type_name: "sensor_msgs/msg/NavSatFix"
+  gz_type_name: "gz.msgs.NavSat"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "gps2/fix"
+  gz_topic_name: "navsat2"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "gz.msgs.NavSat"
   direction: GZ_TO_ROS

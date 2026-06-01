@@ -67,14 +67,14 @@ def launch_setup(context, *args, **kwargs):
         )
 
     selected_waypoint_file = waypoint_files[waypoint_file]
-
+    
     nav2_gps_waypoint_node = Node(
         package='warrior_navigation',
         executable='nav2_gps_waypoint_follower',
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim.perform(context),
+            'use_sim_time': use_sim.perform(context).lower() == "true",
             'waypoint_file': selected_waypoint_file,
             'action_name': 'navigate_to_pose',
         }],
@@ -113,6 +113,23 @@ def generate_launch_description():
         'config',
         'nav2_params.yaml'
     ])
+
+    pc2ls_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        output='screen',
+        parameters=[{
+            'min_height': 0.5,
+            'range_min': 0.2,
+            'target_frame': 'base_footprint',
+            'use_inf': True
+        }],
+        remappings=[
+            ('cloud_in', 'unilidar/cloud'),
+            ('scan', 'unilidar/scan')
+        ]
+    )
 
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -162,7 +179,7 @@ def generate_launch_description():
     return LaunchDescription([
         declare_use_sim,
         declare_waypoint_file,
-
+        pc2ls_node,
         ekf_launch,
         slam_launch,
         nav2_bringup_launch,
