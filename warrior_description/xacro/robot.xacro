@@ -165,12 +165,18 @@
   <link name="unilidar_lidar">
   </link>
 
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_frame"/>
+    <origin xyz="0.04 0 0" rpy = "0 0 0"/>
+  </joint>
+
   <!-- ========== Camera Sensor ========== -->
   <xacro:camera_macro parent="pole_link" camera_name="insta360_camera" 
                       xyz="${camera_offset}" rpy="${pi} 0 0" mass="0.5"/>
 
   <!-- ========== GPS =========== -->
-  <xacro:gps_macro parent="pole_link" gps_name="gps2" xyz="0.27 0 0"/>
+  <xacro:gps_macro parent="base_link" gps_name="gps_frame" xyz="0.04 0 0"/>
   <xacro:gps_macro parent="base_link" gps_name="gps1" xyz="0.76 0 0"/>
 
   <!-- ========== Beacon Light ========== -->
