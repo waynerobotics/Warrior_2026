@@ -94,7 +94,7 @@ def generate_launch_description():
 
     declare_use_sim = DeclareLaunchArgument(
         'use_sim',
-        default_value='false',
+        default_value='true',
         description='Run in simulation or on real robot'
     )
 
