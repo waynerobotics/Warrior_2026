@@ -5,18 +5,18 @@
     <joint name="${gps_name}_joint" type="fixed">
       <origin xyz="${xyz}" rpy="0 0 0" />
       <parent link="${parent}"/>
-      <child link="${gps_name}_link" />
+      <child link="${gps_name}_frame" />
     </joint>
 
-    <link name="${gps_name}_link">
+    <link name="${gps_name}_frame">
     </link>
 
-    <gazebo reference="${gps_name}_link">
+    <gazebo reference="${gps_name}_frame">
       <sensor name="${gps_name}" type="navsat">
         <always_on>1</always_on>
         <update_rate>1</update_rate>
         <topic>${gps_name}</topic>
-        <gz_frame_id>${gps_name}_link</gz_frame_id>
+        <gz_frame_id>${gps_name}_frame</gz_frame_id>
       </sensor>
     </gazebo>
   </xacro:macro>
