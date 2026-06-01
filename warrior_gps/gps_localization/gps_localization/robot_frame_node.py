@@ -19,7 +19,7 @@ class RobotFrameNode(Node):
         super().__init__('robot_frame_node')
         
         # Robot identification
-        self.declare_parameter('robot_name', 'mini_shanti')
+        self.declare_parameter('robot_name', 'warrior_1')
         self.robot_name = self.get_parameter('robot_name').value
         
         # Initial position (can be set from AprilTag detection)
