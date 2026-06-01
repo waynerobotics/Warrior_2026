@@ -89,14 +89,14 @@ ekf_node_map:
       false, false, false    # ax, ay, az
     ]
 
-    odom2: /odometry/gps2
-    odom2_config: [
-      true, true, false,     # x, y, z
-      false, false, false,   # roll, pitch, yaw
-      false, false, false,   # vx, vy, vz
-      false, false, false,   # vroll, vpitch, vyaw
-      false, false, false    # ax, ay, az
-    ]
+    # odom2: /odometry/gps2
+    # odom2_config: [
+    #   true, true, false,     # x, y, z
+    #   false, false, false,   # roll, pitch, yaw
+    #   false, false, false,   # vx, vy, vz
+    #   false, false, false,   # vroll, vpitch, vyaw
+    #   false, false, false    # ax, ay, az
+    # ]
 
     # IMU
     imu0: /unilidar/imu
