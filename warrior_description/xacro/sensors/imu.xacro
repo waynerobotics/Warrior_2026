@@ -8,11 +8,11 @@
 
   <joint name="imu_joint" type="fixed">
     <parent link="base_link"/>
-    <child link ="imu_link"/>
+    <child link ="imu_frame"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
-  <link name="imu_link">
+  <link name="imu_frame">
     <visual>
       <geometry>
         <box size="${imu_length} ${imu_width} ${imu_height}" />
@@ -21,7 +21,7 @@
     </visual>
   </link>
 
-  <gazebo reference="imu_link">
+  <gazebo reference="imu_frame">
     <sensor name="imu_sensor" type="imu">
       <pose>0 0 0 0 0 0</pose>
       <update_rate>100</update_rate>
@@ -40,7 +40,7 @@
         </linear_acceleration>
       </imu>
       <topic>imu</topic>
-      <gz_frame_id>imu_link</gz_frame_id>
+      <gz_frame_id>imu_frame</gz_frame_id>
     </sensor>
     
   </gazebo>
@@ -58,4 +58,3 @@
   </gazebo>
 
 </robot>
-

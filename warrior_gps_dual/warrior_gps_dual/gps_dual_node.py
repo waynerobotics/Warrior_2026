@@ -172,8 +172,8 @@ class GpsDualNode(Node):
         self.declare_parameter("port1", "")
         self.declare_parameter("port2", "")
         self.declare_parameter("baud", 9600)
-        self.declare_parameter("frame_id1", "gps1")
-        self.declare_parameter("frame_id2", "gps2")
+        self.declare_parameter("frame_id1", "gps1_frame")
+        self.declare_parameter("frame_id2", "gps2_frame")
         self.declare_parameter("publish_rate", 1.0)
         self.declare_parameter("publish_nmea", True)
 

@@ -20,8 +20,14 @@
   direction: GZ_TO_ROS
 
 # gps
-- ros_topic_name: "gps/fix"
-  gz_topic_name: "navsat"
+- ros_topic_name: "gps1/fix"
+  gz_topic_name: "gps1"
+  ros_type_name: "sensor_msgs/msg/NavSatFix"
+  gz_type_name: "gz.msgs.NavSat"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "mobile_sensor/gps"
+  gz_topic_name: "gps"
   ros_type_name: "sensor_msgs/msg/NavSatFix"
   gz_type_name: "gz.msgs.NavSat"
   direction: GZ_TO_ROS
@@ -34,7 +40,7 @@
   direction: GZ_TO_ROS
 
 # imu — matches /unilidar/imu used by real hardware and EKF
-- ros_topic_name: "unilidar/imu"
+- ros_topic_name: "mobile_sensor/imu"
   gz_topic_name: "imu"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"

@@ -159,15 +159,17 @@ local_costmap:
       global_frame: odom
       robot_base_frame: base_footprint
       rolling_window: true
-      width: 3
-      height: 3
-      resolution: 0.05
-      robot_radius: 0.22
+      width: 10
+      height: 10
+      resolution: 0.1
+      robot_radius: 0.75
+      track_unknown_space: true
+      unknown_cost_value: 10
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.70
+        inflation_radius: 0.8
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -175,25 +177,24 @@ local_costmap:
         origin_z: 0.0
         z_resolution: 0.1
         z_voxels: 16
-        # max_obstacle_height: 2.0
         mark_threshold: 4
-        observation_sources: pointcloud lanes
+        observation_sources: pointcloud lanes floor
         pointcloud:
           topic: /unilidar/cloud
           max_obstacle_height: 0.9
           min_obstacle_height: 0.3
-          clearing: true
-          marking: true
+          clearing: True
+          marking: True
           data_type: "PointCloud2"
-          raytrace_max_range: 15.0
-          raytrace_min_range: 0.05
+          raytrace_max_range: 15.5
+          raytrace_min_range: 0.0
           obstacle_max_range: 14.0
           obstacle_min_range: 0.9
           inf_is_valid: True
 
         lanes:
           topic: /obstacle_laserscan
-          mclearing: true
+          clearing: false
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 7.0
@@ -201,6 +202,18 @@ local_costmap:
           obstacle_max_range: 6.5
           obstacle_min_range: 0.1
           inf_is_valid: True
+
+        floor:
+          topic: /unilidar/cloud
+          clearing: True
+          marking: False
+          data_type: "PointCloud2"
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 4.5
+          obstacle_min_range: 0.5
+          max_obstacle_height: 0.05
+          min_obstacle_height: 0.0
 
       always_send_full_costmap: True
 
@@ -211,15 +224,16 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map
       robot_base_frame: base_footprint
-      robot_radius: 0.33
-      resolution: 0.05
-      track_unknown_space: true
+      robot_radius: 0.75
+      resolution: 0.1
+      track_unknown_space: True
+      unknown_cost_value: 10
 
-      rolling_window: true
-      width: 153
-      height: 153
-      origin_x: -76.5
-      origin_y: -76.5
+      rolling_window: True
+      width: 250
+      height: 250
+      origin_x: 0.0
+      origin_y: 0.0
 
       plugins: ["voxel_layer", "inflation_layer"]
       voxel_layer:
@@ -229,37 +243,47 @@ global_costmap:
         origin_z: 0.0
         z_resolution: 0.1
         z_voxels: 16
-        # max_obstacle_height: 2.0
         mark_threshold: 4
-        observation_sources: pointcloud lanes
+        observation_sources: pointcloud lanes floor
         pointcloud:
           topic: /unilidar/cloud
           max_obstacle_height: 0.9
           min_obstacle_height: 0.3
-          clearing: true
-          marking: true
+          clearing: True
+          marking: True
           data_type: "PointCloud2"
-          raytrace_max_range: 15.0
-          raytrace_min_range: 0.05
+          raytrace_max_range: 15.5
+          raytrace_min_range: 0.0
           obstacle_max_range: 14.0
-          obstacle_min_range: 0.9
-          inf_is_valid: True
+          obstacle_min_range: 0.5
 
         lanes:
           topic: /obstacle_laserscan
-          mclearing: true
+          clearing: false
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 7.0
-          raytrace_min_range: 0.05
+          raytrace_min_range: 0.0
           obstacle_max_range: 6.5
-          obstacle_min_range: 0.1
+          obstacle_min_range: 0.9
           inf_is_valid: True
 
+        floor:
+          topic: /unilidar/cloud
+          clearing: True
+          marking: False
+          data_type: "PointCloud2"
+          raytrace_max_range: 6.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 5.5
+          obstacle_min_range: 0.9
+          max_obstacle_height: 0.05
+          min_obstacle_height: 0.0
+          
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.7
+        inflation_radius: 0.8
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
@@ -400,12 +424,13 @@ collision_monitor:
       min_points: 6
       visualize: False
       enabled: True
-    observation_sources: ["scan"]
-    scan:
-      type: "scan"
-      topic: "scan"
-      min_height: 0.15
-      max_height: 2.0
+    observation_sources: ["cloud"]
+    cloud:
+      type: "pointcloud"
+      topic: "/unilidar/cloud"
+      min_height: 0.3
+      max_height: 0.9
+      min_range: 0.9
       enabled: True
 
 docking_server:
