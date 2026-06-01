@@ -192,7 +192,7 @@ void UnitreeLidarSDKNode::timer_callback()
             pub_imu_->publish(imuMsg);
 
             // // publish tf from initial imu to real-time imu
-            geometry_msgs::msg::TransformStamped transformStamped;
+            // geometry_msgs::msg::TransformStamped transformStamped;
             // transformStamped.header.stamp = this->now(); // 使用当前时间
             // transformStamped.header.frame_id = imu_frame_ + "_initial"; // 父坐标系
             // transformStamped.child_frame_id = imu_frame_; // 子坐标系

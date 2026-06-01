@@ -12,8 +12,8 @@ class AprilTagGPSBridge(Node):
         super().__init__('apriltag_gps_bridge')
         
         # Settings
-        self.robot_name = 'mini_shanti'
-        self.mini_shanti_tag_id = 0
+        self.robot_name = 'warrior_1'
+        self.warrior_1_tag_id = 0
         self.master_tag_id = 1  # Reference tag
         self.tag_size = 0.1651 #meters
         
@@ -103,7 +103,7 @@ class AprilTagGPSBridge(Node):
         
         # Find our tags
         for tag in tags:
-            if tag.tag_id == self.mini_shanti_tag_id:
+            if tag.tag_id == self.warrior_1_tag_id:
                 robot_tag = tag
                 # Draw robot tag in cyan
                 corners = tag.corners.astype(int)

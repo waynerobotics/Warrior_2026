@@ -164,6 +164,8 @@
 
   <link name="unilidar_lidar">
   </link>
+  <!-- <link name="unilidar_imu_initial">
+  </link> -->
 
   <!-- ========== Camera Sensor ========== -->
   <xacro:camera_macro parent="pole_link" camera_name="insta360_camera" 

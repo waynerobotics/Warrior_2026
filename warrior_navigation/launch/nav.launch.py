@@ -74,7 +74,7 @@ def launch_setup(context, *args, **kwargs):
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim.perform(context).lower() == "true",
+            'use_sim_time': use_sim.perform(context).lower() == 'true',
             'waypoint_file': selected_waypoint_file,
             'action_name': 'navigate_to_pose',
         }],
@@ -94,7 +94,7 @@ def generate_launch_description():
 
     declare_use_sim = DeclareLaunchArgument(
         'use_sim',
-        default_value='true',
+        default_value='false',
         description='Run in simulation or on real robot'
     )
 
@@ -113,6 +113,12 @@ def generate_launch_description():
         'config',
         'nav2_params.yaml'
     ])
+    
+    map_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'maps',
+        'gz_world_save.yaml'
+    )
 
     pc2ls_node = Node(
         package='pointcloud_to_laserscan',
@@ -169,9 +175,10 @@ def generate_launch_description():
             'slam': 'False',
             'use_localization': 'False',
             'use_sim_time': use_sim,
+            'map': map_file,
             'params_file': nav2_params_file,
-            'autostart': 'true',
-            'use_composition': 'True',
+            'autostart': 'True',
+            'use_composition': 'False',
             'use_respawn': 'False',
         }.items()
     )
@@ -181,7 +188,7 @@ def generate_launch_description():
         declare_waypoint_file,
         pc2ls_node,
         ekf_launch,
-        slam_launch,
+        # slam_launch,
         nav2_bringup_launch,
 
         OpaqueFunction(function=launch_setup),

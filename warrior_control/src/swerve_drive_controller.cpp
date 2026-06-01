@@ -156,7 +156,7 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
     );
 
     odom_pub_       = get_node()->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
-    /*tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());*/
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
 
     // Ground-truth odometry subscriber (simulation only)
     odom_gt_sub_ = get_node()->create_subscription<nav_msgs::msg::Odometry>(
@@ -255,6 +255,8 @@ controller_interface::return_type SwerveDriveController::update(
 
     // 5. Send smoothed commands to joints
     computeJointCommand(vx_cmd_, vy_cmd_, wz_cmd_);
+
+    updateOdometry(dt, body_twist);
 
     return controller_interface::return_type::OK;
 }
@@ -471,14 +473,17 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
     odom.twist.covariance[0]  = kf_cov_(3, 3);
     odom.twist.covariance[7]  = kf_cov_(4, 4);
     odom.twist.covariance[35] = kf_cov_(5, 5);
+    odom_pub_->publish(odom);
 
-    /*geometry_msgs::msg::TransformStamped tf_msg;
+    geometry_msgs::msg::TransformStamped tf_msg;
     tf_msg.header                   = odom.header;
     tf_msg.child_frame_id           = base_frame_;
     tf_msg.transform.translation.x  = x_;
     tf_msg.transform.translation.y  = y_;
     tf_msg.transform.rotation       = odom.pose.pose.orientation;
-    tf_broadcaster_->sendTransform(tf_msg);*/
+    if (tf_broadcaster_) {
+        tf_broadcaster_->sendTransform(tf_msg);
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
