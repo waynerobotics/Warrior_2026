@@ -13,7 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', glob('launch/*.py')),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
-        ('share/' + package_name + '/maps', glob('maps/*.yaml')),
+        ('share/' + package_name + '/maps', glob('maps/*')),
         ('share/' + package_name + '/rviz2', glob('rviz2/*.rviz')),
         
     ],
@@ -42,7 +42,8 @@ setup(
             'follow_path = warrior_navigation.follow_path:main',
             'waypoint_follower = warrior_navigation.logged_waypoint_follower:main',
             'gps_waypoint_manager = warrior_navigation.gps_waypoint_manager:main',
-            'nav2_gps_waypoint_follower = warrior_navigation.nav2_gps_waypoint_follower:main'
+            'nav2_gps_waypoint_follower = warrior_navigation.nav2_gps_waypoint_follower:main',
+            'twist_to_stamped = warrior_navigation.twist_to_stamped:main'
         ],
     },
 )

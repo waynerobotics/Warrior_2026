@@ -21,7 +21,10 @@
   <depend>warrior_joy</depend>
   <depend>warrior_serial</depend>
   <depend>warrior_msgs</depend>
-  <depend>omnivision</depend>
+  <depend>warrior_localization</depend>
+  <depend>warrior_navigation</depend>
+  <depend>gps_localization</depend>
+  <!-- <depend>omnivision</depend> -->
   <depend>joy</depend>
   <exec_depend>teleop_twist_joy</exec_depend>
 

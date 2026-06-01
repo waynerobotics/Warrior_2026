@@ -113,6 +113,19 @@ def generate_launch_description():
         'config',
         'nav2_params.yaml'
     ])
+    
+    map_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'maps',
+        'gz_world_save.yaml'
+    )
+
+    twist_stamped_node = Node(
+        package='warrior_navigation',
+        executable='twist_to_stamped',
+        name='twist_to_stamped',
+        output='screen',
+    )
 
     pc2ls_node = Node(
         package='pointcloud_to_laserscan',
@@ -169,8 +182,9 @@ def generate_launch_description():
             'slam': 'False',
             'use_localization': 'False',
             'use_sim_time': use_sim,
+            'map': map_file,
             'params_file': nav2_params_file,
-            'autostart': 'true',
+            'autostart': 'True',
             'use_composition': 'True',
             'use_respawn': 'False',
         }.items()
@@ -184,5 +198,6 @@ def generate_launch_description():
         slam_launch,
         nav2_bringup_launch,
 
+        twist_stamped_node,
         OpaqueFunction(function=launch_setup),
     ])
