@@ -13,6 +13,8 @@
   <depend>warrior_driver</depend>
   <depend>warrior_gazebo</depend>
   <depend>warrior_system</depend>
+  <depend>warrior_localization</depend>
+  <depend>warrior_navigation</depend>
   <depend>robot_state_publisher</depend>
   <depend>joint_state_publisher</depend>
   <depend>controller_manager</depend>

@@ -94,7 +94,7 @@ def generate_launch_description():
 
     declare_use_sim = DeclareLaunchArgument(
         'use_sim',
-        default_value='true',
+        default_value='false',
         description='Run in simulation or on real robot'
     )
 
@@ -113,6 +113,12 @@ def generate_launch_description():
         'config',
         'nav2_params.yaml'
     ])
+    
+    map_file = os.path.join(
+        get_package_share_directory('warrior_navigation'),
+        'maps',
+        'gz_world_save.yaml'
+    )
 
     ekf_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -150,12 +156,12 @@ def generate_launch_description():
         ),
         launch_arguments={
             'slam': 'False',
-            'map': '',
             'use_localization': 'False',
             'use_sim_time': use_sim,
+            'map': map_file,
             'params_file': nav2_params_file,
-            'autostart': 'true',
-            'use_composition': 'True',
+            'autostart': 'True',
+            'use_composition': 'False',
             'use_respawn': 'False',
         }.items()
     )
@@ -165,7 +171,7 @@ def generate_launch_description():
         declare_waypoint_file,
 
         ekf_launch,
-        slam_launch,
+        # slam_launch,
         nav2_bringup_launch,
 
         OpaqueFunction(function=launch_setup),
