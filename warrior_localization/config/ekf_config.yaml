@@ -10,14 +10,6 @@ ekf_node_odom:
     odom_frame: odom
     base_link_frame: base_footprint
     world_frame: odom
-   
-   # control input
-    use_control: true
-    stamped_control: true
-    control_config: [
-      true, true, false,
-      false, false, true
-    ]
 
     # Wheel odometry
     odom0: /odom
@@ -74,14 +66,6 @@ ekf_node_map:
     odom_frame: odom
     base_link_frame: base_footprint
     world_frame: map
-
-    # control input
-    use_control: true
-    stamped_control: true
-    control_config: [
-      true, true, false,
-      false, false, true
-    ]
 
     # Wheel odometry
     odom0: /odom
