@@ -43,7 +43,7 @@ DOCKERFILE=../dockerfile/${PLATFORM}.Dockerfile
 export DOCKER_BUILDKIT=1
 
 # -------- Start SSH agent --------
-SSH_KEY="$HOME/.ssh/id_rsa"
+SSH_KEY="$HOME/.ssh/id_ed25519"
 SSH_OPTION=""
 
 if [ -f "$SSH_KEY" ]; then

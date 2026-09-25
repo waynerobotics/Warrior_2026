@@ -24,7 +24,7 @@ case "${ARCH}" in
 esac
 
 docker run -it --rm \
-  --user wrclub \
+  --user 1000 \
   ${GPU_ARGS} \
   --net host \
   --pid host \

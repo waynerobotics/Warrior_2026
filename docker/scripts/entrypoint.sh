@@ -48,7 +48,7 @@ echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
 
 # ---------- Fix Permissions for Input Devices ----------
-sudo setfacl -m u:${USERNAME}:rwx /dev/input/*
+# sudo setfacl -m u:${USERNAME}:rwx /dev/input/*
 
 # ---------- VIM settings ----------
 echo "set number" >> ~/.vimrc
