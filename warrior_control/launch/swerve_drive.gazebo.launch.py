@@ -58,6 +58,7 @@ def generate_launch_description():
         executable="spawner",
         arguments=["joint_state_broadcaster", "--controller-manager-timeout", "120"],
         output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
     )
     
     swerve_drive_controller_spawner = Node(
@@ -65,6 +66,7 @@ def generate_launch_description():
         executable="spawner",
         arguments=["swerve_drive_controller", "--controller-manager-timeout", "120"],
         output="screen",
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
     rviz2 = Node(
