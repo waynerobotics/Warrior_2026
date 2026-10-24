@@ -26,6 +26,9 @@ def generate_launch_description():
     nav2_params_file = PathJoinSubstitution(
         [warrior_nav, 'config', 'nav2_params.yaml']
     )
+    map_file = PathJoinSubstitution(
+        [warrior_nav, 'maps', 'gz_world_save.yaml']
+    )
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -72,6 +75,7 @@ def generate_launch_description():
             'slam': 'False',
             'use_localization': 'False',
             'use_sim_time': use_sim,
+            'map': map_file,
             'params_file': nav2_params_file,
             'autostart': 'true',
             'use_composition': 'True',

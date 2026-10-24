@@ -17,15 +17,13 @@ Script: [scripts/wheel_sweep_test.py](scripts/wheel_sweep_test.py)
 ### Build (do not skip — stale binaries bite)
 
 The `warrior_system` plugin and `warrior_driver` node are C++ and **must be
-rebuilt on the distro you are running** (humble or jazzy). A stale
+rebuilt in the current Pixi environment**. A stale
 `libwarrior_system.so` shows up as a ros2_control "Discrepancy between robot
 description file (urdf) and actually exported HW interfaces" error — it is not
 an API problem, it is an out-of-date `.so`.
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select warrior_msgs warrior_driver warrior_system
-source install/setup.bash
+pixi run build
 ```
 
 ### Confirm USB devices are present
@@ -57,7 +55,7 @@ controller fighting the script for `/warrior_swerve_command`.
 ### Option A — driver alone (recommended)
 
 ```bash
-ros2 launch warrior_driver warrior_driver.launch.py
+pixi run ros2 launch warrior_driver warrior_driver.launch.py
 ```
 
 Wait for all three SPARK MAXes and three Arduinos to be discovered. Look for:
@@ -81,20 +79,20 @@ If the full bringup is running (`warrior.real.launch.py`), the
 override the script. Deactivate it first:
 
 ```bash
-ros2 control set_controller_state swerve_drive_controller inactive
+pixi run ros2 control set_controller_state swerve_drive_controller inactive
 # verify:
-ros2 control list_controllers     # swerve_drive_controller -> inactive
+pixi run ros2 control list_controllers     # swerve_drive_controller -> inactive
 ```
 
-Re-activate when done: `ros2 control set_controller_state swerve_drive_controller active`
+Re-activate when done:
+`pixi run ros2 control set_controller_state swerve_drive_controller active`.
 
 ---
 
 ## 2. Run the sweep
 
 ```bash
-source ~/ros2_ws/install/setup.bash
-python3 ~/ros2_ws/src/Warrior_2026/warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py
+pixi run python warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py
 ```
 
 Defaults = the requested test:
@@ -113,10 +111,11 @@ Total run ≈ 19 × (2 s settle + 5 s drive) ≈ **2 min 13 s**.
 Examples:
 ```bash
 # strict literal: 5 s drive at each angle, no settle phase
-python3 .../wheel_sweep_test.py --settle-s 0
+pixi run python warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py --settle-s 0
 
 # gentler smoke test: just 0° and 90°, 5%, before committing to the full sweep
-python3 .../wheel_sweep_test.py --start-deg 0 --end-deg 90 --step-deg 90 --speed-percent 5
+pixi run python warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py \
+  --start-deg 0 --end-deg 90 --step-deg 90 --speed-percent 5
 ```
 
 ---
@@ -144,7 +143,7 @@ Pass criteria per angle:
 
 Optionally record the run for later inspection:
 ```bash
-ros2 bag record /warrior_swerve_command /warrior_swerve_state /diagnostics
+pixi run ros2 bag record /warrior_swerve_command /warrior_swerve_state /diagnostics
 ```
 
 ---
@@ -162,10 +161,8 @@ ros2 bag record /warrior_swerve_command /warrior_swerve_state /diagnostics
 
 ## Known gotchas (from the 2026-05-29 bring-up session)
 
-- **Rebuild per distro.** The repo targets humble but was debugged on jazzy.
-  The source uses the deprecated-but-functional `on_init(HardwareInfo)` /
-  by-value `export_*_interfaces()` API, which works on both — you just have to
-  `colcon build` on the distro you run. Jazzy prints deprecation warnings only.
+- **Rebuild in Pixi.** The lock pins Humble; use `pixi run build` after C++
+  edits so the runtime never picks up a stale plugin from another workspace.
 - **Stale `.so` → "Discrepancy ... missing state interfaces".** Always rebuild
   `warrior_system` after editing it. See §0.
 - **`swerve_drive_controller` has no `cmd_vel` timeout** (separate from this

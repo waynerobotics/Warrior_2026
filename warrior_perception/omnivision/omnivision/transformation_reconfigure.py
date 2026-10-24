@@ -17,6 +17,9 @@ import math
 import os
 import yaml
 
+from omnivision.config_paths import default_transformation_config_path
+
+
 class TransformationReconfigurationServer(Node):
     def __init__(self):
         super().__init__('transformation_reconfiguration_server')
@@ -41,9 +44,7 @@ class TransformationReconfigurationServer(Node):
         self.declare_parameter('yaw_angle', 0.0, yaw_descriptor)
         self.declare_parameter(
             'config_file_path',
-            os.path.join(
-                os.path.expanduser('~'),
-                'ros2_ws/src/Warrior_2026/warrior_perception/omnivision/config/transformation.yaml'))
+            default_transformation_config_path())
 
         # Get initial parameters
         self.base_transformation = np.array(

@@ -1,0 +1,83 @@
+[workspace]
+name = "warrior-2026"
+version = "0.1.0"
+description = "Reproducible ROS 2 Humble development environment for the Warrior robot"
+channels = ["https://prefix.dev/robostack-humble", "conda-forge"]
+platforms = ["linux-64", "linux-aarch64"]
+requires-pixi = ">=0.54.1"
+
+[dependencies]
+# Build and workspace tooling
+bash = "*"
+cmake = ">=3.22,<4"
+colcon-common-extensions = "*"
+compilers = "*"
+make = "*"
+ninja = "*"
+pkg-config = "*"
+python = "3.12.*"
+# colcon's symlink install still calls `setup.py develop --editable`, an
+# option removed by setuptools 80.
+setuptools = ">=69,<80"
+
+# ROS 2 Humble and the runtime stacks used by this repository
+ros-humble-desktop = "*"
+ros-humble-gz-ros2-control = "*"
+ros-humble-joint-state-publisher-gui = "*"
+ros-humble-joy = "*"
+ros-humble-nav2-bringup = "*"
+ros-humble-pointcloud-to-laserscan = "*"
+ros-humble-rmw-cyclonedds-cpp = "*"
+ros-humble-rmw-fastrtps-cpp = "*"
+ros-humble-robot-localization = "*"
+ros-humble-ros-gz = "*"
+ros-humble-ros2-control = "*"
+ros-humble-ros2-controllers = "*"
+ros-humble-slam-toolbox = "*"
+ros-humble-teleop-twist-joy = "*"
+ros-humble-teleop-twist-keyboard = "*"
+ros-humble-turtlebot3-gazebo = "*"
+ros-humble-twist-stamper = "*"
+ros-humble-xacro = "*"
+
+# Perception, navigation, and hardware helpers
+ros-humble-cv-bridge = "*"
+ros-humble-image-transport = "*"
+ros-humble-pcl-conversions = "*"
+ros-humble-sensor-msgs-py = "*"
+ros-humble-v4l2-camera = "*"
+ros-humble-vision-msgs = "*"
+click = "*"
+eigen = "*"
+numpy = "*"
+opencv = "4.*"
+pcl = "*"
+pynmea2 = "*"
+pyproj = "*"
+pyqt = "5.*"
+pyserial = "*"
+# RoboStack Humble's launch_testing plugin still uses the pre-pytest-9 hook API.
+pytest = ">=7,<9"
+pyyaml = "*"
+
+[pypi-dependencies]
+pupil-apriltags = ">=1.0.4.post11"
+
+[activation]
+scripts = ["warrior_scripts/pixi_activate.sh"]
+
+[activation.env]
+PYTHONNOUSERSITE = "1"
+QT_X11_NO_MITSHM = "1"
+RCUTILS_COLORIZED_OUTPUT = "1"
+RMW_IMPLEMENTATION = "rmw_fastrtps_cpp"
+ROS_DISTRO = "humble"
+ROS_DOMAIN_ID = "0"
+
+[tasks]
+build = { cmd = "colcon --log-base log/pixi build --build-base build/pixi --install-base install/pixi --symlink-install --packages-skip neural_engine omnivision unitree_lidar_sdk --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPython_FIND_VIRTUALENV=ONLY -DPython3_FIND_VIRTUALENV=ONLY", description = "Build the base stack, excluding the TensorRT perception packages" }
+build-perception = { cmd = "bash -c 'source install/pixi/setup.bash && colcon --log-base log/pixi build --build-base build/pixi --install-base install/pixi --symlink-install --packages-select neural_engine omnivision --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPython_FIND_VIRTUALENV=ONLY -DPython3_FIND_VIRTUALENV=ONLY'", depends-on = ["build"], description = "Build the TensorRT perception packages (requires host CUDA and TensorRT)" }
+test = { cmd = "bash -c 'source install/pixi/setup.bash && colcon --log-base log/pixi test --build-base build/pixi --install-base install/pixi --packages-skip neural_engine omnivision unitree_lidar_sdk --event-handlers console_direct+; test_status=$?; colcon test-result --test-result-base build/pixi --verbose; result_status=$?; (( test_status == 0 && result_status == 0 ))'", depends-on = ["build"], description = "Build, run, and summarize the ROS package tests" }
+launch-sim = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup swerve_sim.launch.py'", depends-on = ["build"], description = "Build and launch the default swerve simulation" }
+launch-real = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup warrior_swerve_teleop.launch.py'", depends-on = ["build"], description = "Build and launch the real robot teleoperation stack" }
+

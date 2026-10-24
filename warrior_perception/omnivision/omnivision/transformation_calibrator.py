@@ -29,6 +29,9 @@ import os
 import yaml
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 
+from omnivision.config_paths import default_transformation_config_path
+
+
 class TransformationCalibrator(Node):
     def __init__(self):
         super().__init__('transformation_calibrator')
@@ -44,9 +47,7 @@ class TransformationCalibrator(Node):
         self.declare_parameter('image_topic', '/camera/image_raw')
         self.declare_parameter(
             'config_file_path',
-            os.path.join(
-                os.path.expanduser('~'),
-                'ros2_ws/src/Warrior_2026/warrior_perception/omnivision/config/transformation.yaml'))
+            default_transformation_config_path())
 
         # Get parameters
         self.base_transformation = np.array(

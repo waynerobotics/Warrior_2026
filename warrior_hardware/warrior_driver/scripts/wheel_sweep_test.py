@@ -26,13 +26,13 @@ IMPORTANT: run this against the warrior_driver node ALONE. If the full
 controller stack is up, swerve_drive_controller also publishes
 /warrior_swerve_command at 50 Hz and will fight this script. Deactivate it
 first, e.g.:
-    ros2 control set_controller_state swerve_drive_controller inactive
+    pixi run ros2 control set_controller_state swerve_drive_controller inactive
 
 Usage:
-    source install/setup.bash
-    python3 wheel_sweep_test.py
-    python3 wheel_sweep_test.py --speed-percent 10 --hold-s 5 --step-deg 20 \
-        --start-deg 0 --end-deg 360 --settle-s 2.0
+    pixi run python warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py
+    pixi run python warrior_hardware/warrior_driver/scripts/wheel_sweep_test.py \
+        --speed-percent 10 --hold-s 5 --step-deg 20 --start-deg 0 \
+        --end-deg 360 --settle-s 2.0
 
 Ctrl-C at any time sends a zero-drive command and exits cleanly.
 """

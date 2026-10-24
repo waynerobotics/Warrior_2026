@@ -51,6 +51,7 @@ tags
 # Local environment files
 .env
 .venv/
+.pixi/
 
 # Calibration images / large datasets
 trt_calibration_images*

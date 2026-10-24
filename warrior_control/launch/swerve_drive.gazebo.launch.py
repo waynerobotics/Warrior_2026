@@ -2,12 +2,17 @@
 import os
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
+from launch.actions import (
+    TimerAction,
+    RegisterEventHandler,
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    SetEnvironmentVariable,
+    Shutdown,
+)
 from launch_ros.actions import Node
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
-from launch.actions import ExecuteProcess
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
 
@@ -17,7 +22,6 @@ def generate_launch_description():
     gazebo_world = LaunchConfiguration('world_name', default='competition.world')
     
     # ----------------- path -----------------
-    pkg_gz_ros = FindPackageShare("ros_gz_sim")
     pkg_warrior_description = FindPackageShare("warrior_description")
     pkg_warrior_control = FindPackageShare("warrior_control")
     pkg_warrior_bringup = FindPackageShare("warrior_bringup")
@@ -28,15 +32,29 @@ def generate_launch_description():
     controller_yaml  = PathJoinSubstitution([pkg_warrior_control, "config", "warrior_controllers_sim.yaml"])
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
 
-    # Set GAZEBO model path
-    pkg_gazebo_path = get_package_share_directory("warrior_gazebo")
-    model_resource_path = os.path.join(pkg_gazebo_path, "models")
-
-    os.environ["IGN_GAZEBO_RESOURCE_PATH"] = \
-        os.environ.get("IGN_GAZEBO_RESOURCE_PATH", "") + ":" + model_resource_path
-
-    os.environ["GZ_SIM_RESOURCE_PATH"] = \
-        os.environ.get("GZ_SIM_RESOURCE_PATH", "") + ":" + model_resource_path
+    model_resource_path = os.path.join(
+        get_package_share_directory("warrior_gazebo"), "models"
+    )
+    pixi_prefix = os.environ.get("CONDA_PREFIX", "")
+    pixi_library_path = os.path.join(pixi_prefix, "lib") if pixi_prefix else ""
+    system_plugin_path = os.pathsep.join(filter(None, [
+        pixi_library_path,
+        os.environ.get("IGN_GAZEBO_SYSTEM_PLUGIN_PATH", ""),
+        os.environ.get("GZ_SIM_SYSTEM_PLUGIN_PATH", ""),
+        os.environ.get("LD_LIBRARY_PATH", ""),
+    ]))
+    gazebo_env = {
+        "IGN_GAZEBO_RESOURCE_PATH": os.pathsep.join(filter(None, [
+            model_resource_path,
+            os.environ.get("IGN_GAZEBO_RESOURCE_PATH", ""),
+        ])),
+        "GZ_SIM_RESOURCE_PATH": os.pathsep.join(filter(None, [
+            model_resource_path,
+            os.environ.get("GZ_SIM_RESOURCE_PATH", ""),
+        ])),
+        "IGN_GAZEBO_SYSTEM_PLUGIN_PATH": system_plugin_path,
+        "GZ_SIM_SYSTEM_PLUGIN_PATH": system_plugin_path,
+    }
 
     rviz2_config_file = PathJoinSubstitution(
         [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
@@ -91,13 +109,25 @@ def generate_launch_description():
         ]
     )
     
-    gazebo = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([pkg_gz_ros, "launch", "gz_sim.launch.py"])
-        ),
-        launch_arguments={
-            "gz_args": ["-r -v 4 --render-engine ogre --render-engine-gui ogre ", world_file]
-        }.items(),
+    # Fortress can leave an unsupervised server behind when GUI and server are
+    # started together. Separate processes keep shutdown and logging reliable.
+    gazebo_server = ExecuteProcess(
+        cmd=[
+            "ign", "gazebo", "--force-version", "6",
+            "-s", "-r", "-v", "4", world_file,
+        ],
+        additional_env=gazebo_env,
+        output="screen",
+        on_exit=Shutdown(),
+    )
+
+    gazebo_gui = ExecuteProcess(
+        cmd=[
+            "ign", "gazebo", "--force-version", "6",
+            "-g", "-v", "4",
+        ],
+        additional_env=gazebo_env,
+        output="screen",
     )
     
     gz_spawn_entity = Node(
@@ -164,6 +194,10 @@ def generate_launch_description():
 
     # ----------------- launch order -----------------
     return LaunchDescription([
+        # Keep every Gazebo Transport participant on the same local interface.
+        # On multi-interface hosts, automatic selection can split discovery.
+        SetEnvironmentVariable("IGN_IP", "127.0.0.1"),
+        SetEnvironmentVariable("GZ_IP", "127.0.0.1"),
         DeclareLaunchArgument(
             'use_sim_time',
             default_value=use_sim_time,
@@ -175,7 +209,8 @@ def generate_launch_description():
             description='Gazebo world file to load'
         ),
         
-        gazebo,
+        gazebo_server,
+        TimerAction(period=3.0, actions=[gazebo_gui]),
         robot_state_publisher,
         # joint_state_publisher,
         # ros2_control_node,

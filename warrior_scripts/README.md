@@ -1,53 +1,53 @@
 # warrior_scripts
 
-Install + dev helper shell scripts. See the [workspace README](../README.md)
-for overview.
+Pixi activation and development helpers. See the
+[workspace README](../README.md) for the quick start.
 
-## First-time install
+## Environment
 
-```mermaid
-flowchart LR
-  A[installWarriorDependencies.sh<br/>sudo] --> B[source ~/.bashrc]
-  B --> C[build_warrior_ws.sh<br/>or ros_rebuild]
-```
+From the repository root:
 
 ```bash
-sudo bash installWarriorDependencies.sh
-source ~/.bashrc
-bash build_warrior_ws.sh        # or the ros_rebuild alias
+pixi install --locked
+pixi run build
 ```
 
-`installWarriorDependencies.sh` (Ubuntu 22.04 / WSL2):
-- adds the ROS 2 apt repo + universe
-- installs ROS 2 **Humble** desktop, `ros-dev-tools`, **Gazebo Fortress**
-  (`ros-humble-ros-gz`), `ros2_control` + controllers, `gz_ros2_control`,
-  `libeigen3-dev`
-- appends to `~/.bashrc`: `source /opt/ros/humble/setup.bash` and the aliases below
+`pixi.toml` contains the dependencies and task definitions; `pixi.lock` pins
+the x86_64 and ARM64 environments. The activation hook in this directory sets
+`WARRIOR_WORKSPACE` and sources `install/pixi/setup.bash` after the first
+successful build. Use `pixi shell` for an interactive ROS shell.
 
-| Alias | Expands to |
-|---|---|
-| `sorce` | `source ~/.bashrc` |
-| `ros_rebuild` | `cd ~/ros2_ws && colcon build && source install/setup.bash` |
+Do not source `/opt/ros/*/setup.bash` in the same shell. RoboStack supplies ROS
+inside the Pixi prefix, and mixing apt and Pixi ROS/Python libraries can create
+ABI and import conflicts.
 
 ## Scripts
 
 | Script | What it does | Usage |
 |---|---|---|
-| `installWarriorDependencies.sh` | One-shot dependency installer (ROS 2 Humble + Gazebo Fortress + ros2_control). Run with sudo. | `sudo bash installWarriorDependencies.sh` |
-| `build_warrior_ws.sh` | Auto-detects the `warrior_ws*` root and runs `colcon build --packages-up-to warrior_bringup --symlink-install`. | `bash build_warrior_ws.sh [-w DIR]` |
+| `pixi_activate.sh` | Pixi activation hook; exports the repository root and loads the Pixi-built ROS overlay when present. | Sourced automatically by Pixi. |
 | `pub_swerve_cmd.sh` | Publishes a `warrior_msgs/SwerveCmd` to `/warrior_swerve_command` at a fixed rate — manual swerve module bring-up/test. | `./pub_swerve_cmd.sh [id] [steer_rad] [drive_rad_s] [rate_hz]` |
-| `deprecated_installWarriorDeps.sh` | **DEPRECATED** — old hardcoded installer (targets Gazebo Harmonic, `USERNAME=fire`). Do not use; superseded by `installWarriorDependencies.sh`. | — |
-
-`build_warrior_ws.sh` workspace resolution order: `-w/--workspace` arg →
-`$WARRIOR_WORKSPACE` env → auto-detect a `warrior_ws*` ancestor dir.
 
 `pub_swerve_cmd.sh` defaults: `id=left steer=0.0 drive=0.0 rate=10`. Example:
 
 ```bash
-./pub_swerve_cmd.sh front 0.785 32.0 10
+pixi run ./warrior_scripts/pub_swerve_cmd.sh front 0.785 32.0 10
 ```
 
 ## Launching the robot
 
-This package only sets up the environment + offers test helpers. To launch
-the robot, see [warrior_bringup](../warrior_bringup/README.md).
+Use `pixi run launch-sim` or `pixi run launch-real`, or enter `pixi shell` and
+use any command documented in
+[warrior_bringup](../warrior_bringup/README.md).
+
+## Host-only setup
+
+Pixi replaces the former Docker/apt provisioning, but it cannot configure
+physical devices or proprietary GPU drivers:
+
+- add the robot user to the appropriate serial/video/input groups or install
+  equivalent udev rules;
+- configure the Unitree LiDAR NIC as described in
+  [PERCEPTION_SETUP.md](../warrior_perception/PERCEPTION_SETUP.md);
+- on Jetson, install the supported JetPack release so CUDA, TensorRT, and
+  `trtexec` are available to `pixi run build-perception`.

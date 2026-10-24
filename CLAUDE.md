@@ -11,7 +11,7 @@ One-shot real-robot teleop (joy → teleop_twist_joy → controller → bridge �
 `warrior_driver`, all in one):
 
 ```bash
-ros2 launch warrior_bringup warrior_swerve_teleop.launch.py
+pixi run launch-real
 ```
 
 It owns `warrior_driver`, so don't also start the driver or

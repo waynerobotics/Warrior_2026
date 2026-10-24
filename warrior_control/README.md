@@ -172,15 +172,12 @@ Joints (from config): `{front,left,right}_steer_joint`, `{front,left,right}_driv
 
 ## Usage
 
-### Dependencies
-```bash
-rosdep install --from-paths src --ignore-src -r -y
-```
-
 ### Build
 ```bash
-colcon build --packages-select warrior_control
-source install/setup.bash
+pixi run build
+# Package-only iteration after the initial build:
+pixi run colcon build --build-base build/pixi --install-base install/pixi \
+  --symlink-install --packages-select warrior_control
 ```
 
 ### Launch
@@ -189,6 +186,7 @@ Normally invoked via `warrior_bringup` (`main.launch.py` / swerve teleop), not
 directly. To run the controller stack on its own:
 
 ```bash
+# Run these from `pixi shell`, or prefix either command with `pixi run`.
 # Real robot — controller_manager + swerve_drive_controller + rviz:
 ros2 launch warrior_control swerve_drive.real.launch.py
 

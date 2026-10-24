@@ -45,6 +45,9 @@ find_package(CUDAToolkit REQUIRED)
 
 set(TENSORRT_ROOT "" CACHE PATH
     "Root of the TensorRT installation (set if not on the default path)")
+if(NOT TENSORRT_ROOT AND DEFINED ENV{TENSORRT_ROOT})
+    set(TENSORRT_ROOT "$ENV{TENSORRT_ROOT}")
+endif()
 
 set(_trt_include_hints
     ${TENSORRT_ROOT}/include

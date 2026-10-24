@@ -10,14 +10,15 @@ Usage:
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare('warrior_bringup')
     world_name = LaunchConfiguration('world_name')
-    
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'world_name',
@@ -31,12 +32,14 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                str(pkg_warrior_bringup) + '/launch/main.launch.py'
+                PathJoinSubstitution([
+                    pkg_warrior_bringup, 'launch', 'main.launch.py'
+                ])
             ),
             launch_arguments={
                 'robot_type': 'diff_sim',
                 'world_name': world_name,
-                'use_sim_time': 'true',
+                'use_sim_time': use_sim_time,
             }.items(),
         ),
     ])

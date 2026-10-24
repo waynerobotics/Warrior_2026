@@ -33,6 +33,8 @@ flowchart LR
 | [turtlebot3_world_gps.launch.py](launch/turtlebot3_world_gps.launch.py) | sim | TurtleBot3 Gazebo world + spawn. ⚠️ sim-only. |
 | [spawn_turtlebot3_gps.launch.py](launch/spawn_turtlebot3_gps.launch.py) | sim | Spawn TB3 burger + gz bridges. ⚠️ sim-only. |
 
+After `pixi run build`, run ROS commands inside `pixi shell`:
+
 ```bash
 ros2 launch warrior_navigation nav.launch.py use_sim:=false waypoint_file:=<path>
 ```

@@ -41,7 +41,7 @@ flowchart TB
 
 > Dev/debug Python helpers (SLCAN reference) live in
 > [warrior_driver/scripts/](warrior_driver/scripts/) — they are run directly
-> with `python3`, not installed as ROS executables.
+> with `pixi run python`, not installed as ROS executables.
 
 ## Topics
 
@@ -104,10 +104,13 @@ api_class `0x2E`: **Status 0** = applied output + faults (offset 0..3),
 ## Build & run
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-up-to warrior_driver warrior_system --symlink-install
-source install/setup.bash
+pixi run build
+pixi shell
+```
 
+Then, inside that shell:
+
+```bash
 # Driver alone (owns USB connections; auto-calibrates steer on startup):
 ros2 launch warrior_driver warrior_driver.launch.py
 
@@ -173,7 +176,7 @@ forward; the remaining per-module trims live in
 ## SPARK MAX troubleshooting
 
 Dev tools in [warrior_driver/scripts/](warrior_driver/scripts/) (run with
-`python3`):
+`pixi run python`):
 
 | Tool | What it does |
 |---|---|

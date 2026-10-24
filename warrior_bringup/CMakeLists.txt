@@ -27,8 +27,10 @@ install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}/
 )
 
-install(DIRECTORY launch_wrappers
-  DESTINATION share/${PROJECT_NAME}/
+# Wrapper launch files include main.launch.py from the conventional package
+# launch directory, so install their contents alongside the other launchers.
+install(DIRECTORY launch_wrappers/
+  DESTINATION share/${PROJECT_NAME}/launch
 )
 
 install(DIRECTORY config

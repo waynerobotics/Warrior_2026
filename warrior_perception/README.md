@@ -45,16 +45,22 @@ flowchart LR
 ## Build
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select \
-  unitree_lidar_ros2 unitree_l2_lidar insta360_camera \
-  neural_engine omnivision
-source install/setup.bash
+pixi run build-perception
 ```
+
+The normal `pixi run build` builds the camera and LiDAR packages but skips
+`neural_engine` and its dependent `omnivision` package. The perception task
+adds both and expects CUDA + TensorRT from the host (JetPack on Jetson).
 
 Jetson TensorRT engine build, version matrix, and tuning → [PERCEPTION_SETUP.md](PERCEPTION_SETUP.md).
 
 ## Launch
+
+```bash
+pixi shell
+```
+
+Then, inside that shell:
 
 ```bash
 ros2 launch omnivision perception.launch.py          # full pipeline: cam + lidar + neural_engine + fusion
@@ -64,7 +70,7 @@ ros2 launch insta360_camera insta360.launch.py
 ros2 launch neural_engine multitask.launch.py engine_path:=/opt/warrior/models/resnet18_fp16.engine
 ```
 
-omnivision calibration GUIs run standalone:
+The omnivision calibration GUIs run in the same Pixi shell:
 
 ```bash
 ros2 run omnivision transformation_calibrator   # OpenCV trackbar UI

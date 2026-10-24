@@ -5,6 +5,10 @@ See the [workspace README](../README.md) for the whole-system picture.
 
 ## Quick Start
 
+Run `pixi run build` once, then enter `pixi shell` before using the `ros2`
+commands below. The top-level `pixi run launch-sim` and `pixi run launch-real`
+tasks cover the two common cases directly.
+
 | Goal | Command |
 |---|---|
 | **Drive real swerve (Xbox)** | `ros2 launch warrior_bringup warrior_swerve_teleop.launch.py` |
@@ -82,18 +86,34 @@ rviz configs in [rviz/](rviz/): `warrior.gazebo.rviz`, `warrior.real.rviz`, `tur
 
 Helper scripts live in [scipts/](scipts/) (**dir name is misspelled** — `scipts`, not `scripts`):
 
-- [scipts/on_start.sh](scipts/on_start.sh) — sources ROS + ws, sets `ROS_DOMAIN_ID=30`, `exec ros2 launch … warrior_swerve_teleop.launch.py`.
+- [scipts/on_start.sh](scipts/on_start.sh) — enters the locked Pixi environment, sets `ROS_DOMAIN_ID=30`, and launches real teleoperation.
 - [scipts/launch_gazebo.sh](scipts/launch_gazebo.sh) — software-GL Gazebo launch (`world_name` arg).
+
+Provision the environment and build as the service user before enabling the
+unit; boot should not need to download packages:
+
+```bash
+sudo -u fire -H bash -lc 'cd /home/fire/Warrior_2026 && ~/.pixi/bin/pixi install --locked && ~/.pixi/bin/pixi run build'
+```
 
 Example unit (`/etc/systemd/system/warrior-2026.service`):
 
 ```ini
+[Unit]
+Description=Warrior 2026 robot stack
+After=network-online.target
+Wants=network-online.target
+
 [Service]
 Type=simple
 User=fire
+WorkingDirectory=/home/fire/Warrior_2026
 Environment=ROS_DOMAIN_ID=30
-ExecStart=/home/fire/ros2_ws/src/Warrior_2026/warrior_bringup/scipts/on_start.sh
+ExecStart=/home/fire/Warrior_2026/warrior_bringup/scipts/on_start.sh
 Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
 ```
 
 ```bash
@@ -109,7 +129,7 @@ journalctl -u warrior-2026.service -f
 
 | Symptom | Fix |
 |---|---|
-| `Resource not found: warrior_control` | `source install/setup.bash` |
+| `Resource not found: warrior_control` | Run `pixi run build`, then use `pixi shell` or `pixi run …`. |
 | Teleop sends nothing | controller subscribes `/cmd_vel` as **TwistStamped** — confirm `publish_stamped_twist: true` |
 | Xbox does nothing | hold the deadman/enable button (`warrior_joy/config/joystick.yaml`) |
 | Gazebo OGRE crash on WSL2 | already patched (`--render-engine ogre`) |

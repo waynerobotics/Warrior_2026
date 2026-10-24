@@ -28,13 +28,10 @@ Insta360 (USB-C UVC)
 | vision_msgs | `ros-humble-vision-msgs` |
 | cv_bridge | `ros-humble-cv-bridge` |
 
-Install ROS 2 deps if not already present:
-```bash
-sudo apt install \
-  ros-humble-vision-msgs \
-  ros-humble-cv-bridge \
-  ros-humble-image-transport
-```
+ROS 2, OpenCV, `vision_msgs`, and `cv_bridge` come from the repository's
+locked Pixi environment. Install it once with `pixi install --locked`. Keep
+JetPack's system CUDA and TensorRT installation; those proprietary host
+libraries are intentionally not duplicated inside Pixi.
 
 ---
 
@@ -135,27 +132,22 @@ Typical ResNet18 640×1280 on Orin NX with FP16: **~6–12 ms/frame**.
 ## Step 3 — Build the ROS 2 packages
 
 ```bash
-cd ~/Warrior_2026
-
-colcon build --packages-select \
-  insta360_camera \
-  neural_engine \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release
-
-source install/setup.bash
+cd Warrior_2026
+pixi run build-perception
 ```
 
-If TensorRT is not on the default library path (unlikely on JetPack), pass:
+If TensorRT is not on the default library path (unlikely on JetPack), expose
+its root to the existing task:
 ```bash
---cmake-args -DCMAKE_BUILD_TYPE=Release -DTENSORRT_ROOT=/usr/local/tensorrt
+TENSORRT_ROOT=/usr/local/tensorrt pixi run build-perception
 ```
 
 Verify both nodes are installed:
 ```bash
-ros2 pkg executables insta360_camera
+pixi run ros2 pkg executables insta360_camera
 # insta360_camera insta360_node
 
-ros2 pkg executables neural_engine
+pixi run ros2 pkg executables neural_engine
 # neural_engine multitask_node
 # neural_engine seg_viz_node
 ```
@@ -197,8 +189,7 @@ See CLAUDE.md Rule 1 before doing this — port numbers change on replug.
 
 ### Terminal 1 — camera
 ```bash
-source ~/Warrior_2026/install/setup.bash
-ros2 launch insta360_camera insta360.launch.py
+pixi run ros2 launch insta360_camera insta360.launch.py
 ```
 
 Expected output:
@@ -208,8 +199,7 @@ Expected output:
 
 ### Terminal 2 — inference
 ```bash
-source ~/Warrior_2026/install/setup.bash
-ros2 launch neural_engine multitask.launch.py \
+pixi run ros2 launch neural_engine multitask.launch.py \
   engine_path:=/opt/warrior/models/resnet18_fp16.engine
 ```
 
@@ -231,20 +221,20 @@ Expected output:
 
 ### Check topics are publishing
 ```bash
-ros2 topic list
+pixi run ros2 topic list
 # Should include:
 #   /camera/image_raw
 #   /ai/seg_mask
 #   /ai/detections
 
-ros2 topic hz /camera/image_raw      # should be ~30 Hz
-ros2 topic hz /ai/seg_mask           # should be ~30 Hz (or slightly less)
-ros2 topic hz /ai/detections         # same
+pixi run ros2 topic hz /camera/image_raw      # should be ~30 Hz
+pixi run ros2 topic hz /ai/seg_mask           # should be ~30 Hz (or slightly less)
+pixi run ros2 topic hz /ai/detections         # same
 ```
 
 ### Inspect detections
 ```bash
-ros2 topic echo /ai/detections --once
+pixi run ros2 topic echo /ai/detections --once
 ```
 
 Each detection has:
@@ -311,7 +301,7 @@ The inference node has no dependency on the drive stack. Run it standalone — y
 ### Low detection confidence / no detections
 - Confirm the camera is outputting an equirectangular (360°) image, not a cropped view.
 - Confirm `score_threshold` is not set too high. Default is 0.20.
-- Check `ros2 topic echo /ai/seg_mask --once` to confirm the model is running (non-zero data).
+- Check `pixi run ros2 topic echo /ai/seg_mask --once` to confirm the model is running (non-zero data).
 
 ### Inference falls below 30 fps
 1. Confirm the engine is FP16 — check `trtexec` output from Step 2b.

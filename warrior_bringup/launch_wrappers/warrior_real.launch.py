@@ -9,16 +9,19 @@ Usage:
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 
 def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare('warrior_bringup')
-    
+
     return LaunchDescription([
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                str(pkg_warrior_bringup) + '/launch/main.launch.py'
+                PathJoinSubstitution([
+                    pkg_warrior_bringup, 'launch', 'main.launch.py'
+                ])
             ),
             launch_arguments={
                 'robot_type': 'warrior_real',

@@ -60,10 +60,13 @@ and publishes. Threads reconnect on serial error (unplug / late enumerate).
 ## Build & run
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select warrior_gps_dual
-source install/setup.bash
+pixi run build
+pixi shell
+```
 
+Then, inside that shell:
+
+```bash
 ros2 launch warrior_gps_dual gps_dual.launch.py    # auto-discovers both receivers
 # override a port only if discovery picks wrong (prefer by-id):
 ros2 run warrior_gps_dual gps_dual_node --ros-args \
@@ -78,7 +81,8 @@ User must be in the `dialout` group: `sudo usermod -aG dialout $USER` (re-login)
 ## SBAS / WAAS (one-time, per receiver)
 
 Receivers ship with SBAS off. Enabling it lifts fix quality `GPS`→`DGPS`
-(~2-5 m → ~1-3 m). Flashes to battery-backed RAM, persists across power cycles:
+(~2-5 m → ~1-3 m). Flashes to battery-backed RAM and persists across power
+cycles. Run this from the same Pixi shell used above:
 
 ```bash
 # auto-detects a single u-blox port; pass one explicitly if both are plugged in
@@ -90,7 +94,7 @@ the US); `status.status` then reads `STATUS_SBAS_FIX` (2).
 
 ## Targets
 
-| | ROS 2 | Ubuntu | Arch |
+| | ROS 2 | Host | Arch |
 |---|---|---|---|
-| Primary | Humble | 22.04 | ARM (RPi 4 / Jetson) |
-| Test | Jazzy | 24.04 | x86-64 |
+| Pixi environment | Humble | Linux | x86-64 / ARM64 |
+| Hardware target | Humble | Jetson / RPi | ARM64 |

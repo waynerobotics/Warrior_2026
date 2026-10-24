@@ -6,9 +6,8 @@ URDF / xacro / meshes for the 2026 WSU Warrior swerve robot. See the
 ## Quick start
 
 ```bash
-colcon build --packages-up-to warrior_description --symlink-install
-source ~/ros2_ws/install/setup.bash
-ros2 launch warrior_description display.launch.py     # RViz + joint_state_publisher_gui
+pixi run build
+pixi run ros2 launch warrior_description display.launch.py
 ```
 
 <p align="center"><img src="./docs/rviz.png" alt="robot" height="500"></p>

@@ -11,15 +11,17 @@ Gazebo simulation assets for Warrior 2026. See the
 
 ## Stack
 
-**ROS 2 Humble** + **Gazebo Fortress (Ignition)** on **Ubuntu 22.04**.
-(Not Gazebo Classic, not Garden/Harmonic/Ionic — `gz_ros2_control` ABI is
-pinned to Fortress on Humble.)
+The locked Pixi environment supplies **ROS 2 Humble** + **Gazebo Fortress
+(Ignition)** on Linux x86_64 and ARM64. It is not Gazebo Classic or
+Garden/Harmonic/Ionic; `gz_ros2_control` is pinned to Fortress on Humble.
 
 ## How worlds are launched
 
 Worlds are not launched from this package. `warrior_bringup` sim launches
 take a `world_name:=` arg and load the matching file from
 `warrior_gazebo/worlds/`.
+
+Run the commands below inside `pixi shell`, after `pixi run build`.
 
 ```mermaid
 flowchart LR
@@ -46,7 +48,5 @@ Default worlds: `competition.world` (swerve_sim), `empty.world` (diff_sim),
 ## Build
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select warrior_gazebo
-source install/setup.bash
+pixi run build
 ```

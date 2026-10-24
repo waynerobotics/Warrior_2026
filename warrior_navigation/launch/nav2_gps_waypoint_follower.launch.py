@@ -66,6 +66,11 @@ def generate_launch_description():
         'config',
         'nav2_params.yaml'
     ])
+    map_file = PathJoinSubstitution([
+        warrior_nav,
+        'maps',
+        'gz_world_save.yaml'
+    ])
 
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -112,6 +117,7 @@ def generate_launch_description():
             'slam': 'False',
             'use_localization': 'False',
             'use_sim_time': use_sim,
+            'map': map_file,
             'params_file': nav2_params_file,
             'autostart': 'true',
             'use_composition': 'True',
@@ -130,7 +136,7 @@ def generate_launch_description():
             'map_origin_longitude': map_origin_longitude,
             'map_origin_yaw': map_origin_yaw,
             'utm_zone': utm_zone,
-            # 'utm_hemisphere': utm_hemisphere,
+            'utm_hemisphere': utm_hemisphere,
             'action_name': 'navigate_to_pose',
         }],
     )
@@ -143,7 +149,7 @@ def generate_launch_description():
         declare_map_origin_yaw,
         declare_utm_zone,
         declare_utm_hemisphere,
-        
+
         gazebo_launch,
         ekf_launch,
         slam_launch,

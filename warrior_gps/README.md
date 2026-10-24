@@ -48,6 +48,8 @@ Non-node helper scripts (not in `console_scripts`, not launched):
 
 ## Launch — [gps_localization.launch.py](gps_localization/launch/gps_localization.launch.py)
 
+After `pixi run build`, run this inside `pixi shell`:
+
 ```bash
 ros2 launch gps_localization gps_localization.launch.py mode:=indoor   # outdoor | indoor | gazebo
 ```
