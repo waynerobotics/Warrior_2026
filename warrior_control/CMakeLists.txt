@@ -8,6 +8,7 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(controller_interface REQUIRED)
 find_package(hardware_interface REQUIRED)
@@ -17,6 +18,7 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(realtime_tools REQUIRED)
 
 
 
@@ -34,6 +36,8 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2
   tf2_ros
   tf2_geometry_msgs
+  realtime_tools
+  pluginlib
 )
 
 
@@ -42,7 +46,20 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 ament_export_include_directories(include)
-ament_export_dependencies(rclcpp geometry_msgs controller_interface hardware_interface pluginlib Eigen3)
+ament_export_dependencies(
+  rclcpp
+  rclcpp_lifecycle
+  geometry_msgs
+  nav_msgs
+  controller_interface
+  hardware_interface
+  pluginlib
+  Eigen3
+  realtime_tools
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+)
 
 
 pluginlib_export_plugin_description_file(controller_interface swerve_drive_controller.xml)

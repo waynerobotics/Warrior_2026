@@ -21,8 +21,10 @@ class FollowPath(Node):
 
         self.declare_parameter('robot_base_frame', 'base_footprint')
         self.robot_base_frame = self.get_parameter('robot_base_frame').get_parameter_value().string_value
+        self.declare_parameter('cmd_vel_topic', '/cmd_vel_stamped')
+        cmd_vel_topic = self.get_parameter('cmd_vel_topic').get_parameter_value().string_value
 
-        self.cmd_vel_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
+        self.cmd_vel_pub = self.create_publisher(TwistStamped, cmd_vel_topic, 10)
         self.status_pub = self.create_publisher(String, '~/tracking_status', 10)
         self.path_sub = self.create_subscription(Path, 'a_star_path', self.path_callback, 10)
 
@@ -192,6 +194,8 @@ class FollowPath(Node):
 
     def publish_stop(self):
         twist = TwistStamped()
+        twist.header.stamp = self.get_clock().now().to_msg()
+        twist.header.frame_id = self.robot_base_frame
         twist.twist.linear.x = 0.0
         twist.twist.angular.z = 0.0
         self.cmd_vel_pub.publish(twist)

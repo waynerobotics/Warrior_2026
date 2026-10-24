@@ -87,9 +87,7 @@ def generate_launch_description():
         name='teleop_twist_keyboard',
         output='screen',
         prefix='gnome-terminal --', 
-        # remappings=[
-        #     ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
-        # ],
+        remappings=[('cmd_vel', '/cmd_vel_stamped')],
         parameters=[
             {'stamped': True},
         ]

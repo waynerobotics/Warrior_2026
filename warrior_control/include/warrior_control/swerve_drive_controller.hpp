@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,6 +16,7 @@
 #include "tf2_ros/transform_broadcaster.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "realtime_tools/realtime_buffer.hpp"
 #include <eigen3/Eigen/Dense>
 
 #include "warrior_control/swerve_ik.hpp"
@@ -29,6 +31,7 @@ public:
     controller_interface::CallbackReturn on_init() override;
     controller_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State & previous_state) override;
     controller_interface::CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
+    controller_interface::CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
 
     controller_interface::return_type update(
         const rclcpp::Time & time, const rclcpp::Duration & period) override;
@@ -71,6 +74,16 @@ private:
     // Target is considered "stop" when its magnitude is below this threshold
     double stop_threshold_linear_  = 0.01;  // m/s
     double stop_threshold_angular_ = 0.01;  // rad/s
+    double cmd_vel_timeout_         = 0.25;  // s; <= 0 disables the timeout
+
+    struct VelocityCommand {
+        double vx = 0.0;
+        double vy = 0.0;
+        double wz = 0.0;
+        std::chrono::steady_clock::time_point received_at{};
+        bool valid = false;
+    };
+    realtime_tools::RealtimeBuffer<VelocityCommand> command_buffer_;
 
     // ── Wheel states ──────────────────────────────────────────────────────────
     double front_wheel_w_    = 0.0;
@@ -81,11 +94,10 @@ private:
     double right_steer_angle_ = 0.0;
 
     // ── Odometry & TF ────────────────────────────────────────────────────────
+    std::string cmd_vel_topic_;
     std::string odom_topic_;
     std::string odom_frame_;
     std::string base_frame_;
-    double base_link_height_offset_ = 0.0;
-    double base_link_height_        = 0.0;
     double x_ = 0.0, y_ = 0.0, yaw_ = 0.0;
 
     // ── Kalman filter ─────────────────────────────────────────────────────────
@@ -101,7 +113,6 @@ private:
 
     // ── ROS interfaces ────────────────────────────────────────────────────────
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr cmd_vel_sub_;
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_gt_sub_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
@@ -116,7 +127,7 @@ private:
     bool estimateBodyTwist(Eigen::Vector3d & body_twist) const;
     void kalmanPredict(double dt);
     void kalmanCorrect(const Eigen::Vector3d & body_twist);
-    void updateOdometry(double dt, const Eigen::Vector3d & body_twist);
+    void updateOdometry(const rclcpp::Time & time);
     void computeJointCommand(double vx, double vy, double wz);
     double wrap2Pi(double angle);
 };

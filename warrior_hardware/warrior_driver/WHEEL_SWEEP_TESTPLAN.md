@@ -165,9 +165,8 @@ pixi run ros2 bag record /warrior_swerve_command /warrior_swerve_state /diagnost
   edits so the runtime never picks up a stale plugin from another workspace.
 - **Stale `.so` → "Discrepancy ... missing state interfaces".** Always rebuild
   `warrior_system` after editing it. See §0.
-- **`swerve_drive_controller` has no `cmd_vel` timeout** (separate from this
-  test): with the full stack it keeps republishing the last `/cmd_vel` forever,
-  so the robot keeps driving after teleop stops. Not used in Option A, but
-  relevant if you test via `/cmd_vel`.
+- **`swerve_drive_controller` rejects stale velocity commands.** Its
+  `cmd_vel_timeout` is independent of this test; the real-robot profile uses a
+  0.25 s timeout on `/cmd_vel_stamped`.
 - **SPARK MAX cold-boot Status 2 delay**: wait for `idle` (not `no_feedback`)
   on all three modules before sweeping, so position feedback is live.

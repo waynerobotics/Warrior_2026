@@ -29,6 +29,9 @@
   <!-- Base properties -->
   <!-- <xacro:property name="base_mass" value="6.0"/> -->
   <xacro:property name="base_mass" value="25.0"/> 
+  <!-- Locate base_footprint at the centroid of the three swerve modules. -->
+  <xacro:property name="base_footprint_x_offset" value="-0.307963"/>
+  <xacro:property name="base_footprint_y_offset" value="-0.002156"/>
   <xacro:property name="base_footprint_height" value="0.640773"/>
   
   <!-- Initial orientations (radians) -->
@@ -49,7 +52,7 @@
   <joint name="base_footprint_joint" type="fixed">
       <parent link="base_footprint"/>
       <child link="base_link"/>
-      <origin xyz="0 0 ${base_footprint_height}" rpy="0 0 0"/>
+      <origin xyz="${base_footprint_x_offset} ${base_footprint_y_offset} ${base_footprint_height}" rpy="0 0 0"/>
   </joint>
 
   <!-- ========== Base Link ========== -->

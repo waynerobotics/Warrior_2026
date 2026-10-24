@@ -18,8 +18,11 @@ from launch.conditions import IfCondition, UnlessCondition
 
 def generate_launch_description():
     # Launch Arguments
-    use_sim_time = LaunchConfiguration('use_sim_time', default=True)
-    gazebo_world = LaunchConfiguration('world_name', default='competition.world')
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    gazebo_world = LaunchConfiguration('world_name')
+    launch_gui = LaunchConfiguration('launch_gui')
+    gui_delay = LaunchConfiguration('gui_delay')
+    launch_rviz = LaunchConfiguration('launch_rviz')
     
     # ----------------- path -----------------
     pkg_warrior_description = FindPackageShare("warrior_description")
@@ -88,6 +91,7 @@ def generate_launch_description():
     rviz2 = Node(
         package="rviz2",
         executable="rviz2",
+        condition=IfCondition(launch_rviz),
         output="screen",
         arguments=["-d", rviz2_config_file],
         parameters=[{"robot_description": robot_description},
@@ -100,9 +104,7 @@ def generate_launch_description():
         name='teleop_twist_keyboard',
         output='screen',
         prefix='gnome-terminal --', 
-        # remappings=[
-        #     ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
-        # ],
+        remappings=[('cmd_vel', '/cmd_vel_stamped')],
         parameters=[
             {'stamped': True},
             {'use_sim_time': use_sim_time}
@@ -122,6 +124,7 @@ def generate_launch_description():
     )
 
     gazebo_gui = ExecuteProcess(
+        condition=IfCondition(launch_gui),
         cmd=[
             "ign", "gazebo", "--force-version", "6",
             "-g", "-v", "4",
@@ -200,17 +203,32 @@ def generate_launch_description():
         SetEnvironmentVariable("GZ_IP", "127.0.0.1"),
         DeclareLaunchArgument(
             'use_sim_time',
-            default_value=use_sim_time,
+            default_value='true',
             description='If true, use simulated clock'
         ),
         DeclareLaunchArgument(
             'world_name',
-            default_value=world_file,
-            description='Gazebo world file to load'
+            default_value='competition.world',
+            description='Name of the Gazebo world file to load'
+        ),
+        DeclareLaunchArgument(
+            'launch_gui',
+            default_value='true',
+            description='Launch the Gazebo graphical client'
+        ),
+        DeclareLaunchArgument(
+            'gui_delay',
+            default_value='3.0',
+            description='Seconds to delay the Gazebo graphical client'
+        ),
+        DeclareLaunchArgument(
+            'launch_rviz',
+            default_value='true',
+            description='Launch the basic robot RViz view'
         ),
         
         gazebo_server,
-        TimerAction(period=3.0, actions=[gazebo_gui]),
+        TimerAction(period=gui_delay, actions=[gazebo_gui]),
         robot_state_publisher,
         # joint_state_publisher,
         # ros2_control_node,

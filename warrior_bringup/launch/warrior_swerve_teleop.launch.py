@@ -6,7 +6,7 @@ Drive the REAL Warrior swerve robot from an Xbox controller.
 
 Pipeline:
 
-  joy_node  →  teleop_twist_joy  →  /cmd_vel (TwistStamped)
+  joy_node  →  teleop_twist_joy  →  /cmd_vel_stamped (TwistStamped)
     →  swerve_drive_controller            (ros2_control)
     →  warrior_system/SwerveTopicBridge   →  /warrior_swerve_command
     →  warrior_driver                     →  USB (drive Arduinos + SPARK MAX steering)
@@ -25,7 +25,7 @@ Usage:
 Pad mapping lives in warrior_joy/config/joystick.yaml (teleop_node section):
 hold the enable (deadman) button to drive; left stick = forward/back + yaw,
 second button = turbo. publish_stamped_twist is true there because
-swerve_drive_controller subscribes to /cmd_vel as a TwistStamped.
+swerve_drive_controller subscribes to /cmd_vel_stamped as a TwistStamped.
 """
 
 from launch import LaunchDescription
@@ -111,7 +111,7 @@ def generate_launch_description():
         parameters=[joy_config, {'device_id': ParameterValue(joy_dev, value_type=int)}],
     )
 
-    # teleop_twist_joy — Joy → /cmd_vel as TwistStamped (publish_stamped_twist
+    # teleop_twist_joy — Joy → /cmd_vel_stamped as TwistStamped (publish_stamped_twist
     # is set in joystick.yaml). Node name 'teleop_node' matches the yaml block.
     teleop_node = Node(
         package='teleop_twist_joy',
@@ -119,6 +119,7 @@ def generate_launch_description():
         name='teleop_node',
         output='screen',
         parameters=[joy_config],
+        remappings=[('cmd_vel', '/cmd_vel_stamped')],
     )
 
     return LaunchDescription([

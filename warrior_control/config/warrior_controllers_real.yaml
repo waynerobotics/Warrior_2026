@@ -30,8 +30,10 @@ diff_drive_controller:
 
 swerve_drive_controller:
   ros__parameters:
-    update_rate: 100
+    update_rate: 50
 
+    cmd_vel_topic: "/cmd_vel_stamped"
+    cmd_vel_timeout: 0.25
     odom_topic: "/odom"
 
     odom_frame_id: "odom"

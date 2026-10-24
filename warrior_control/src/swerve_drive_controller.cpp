@@ -60,11 +60,11 @@ controller_interface::CallbackReturn SwerveDriveController::on_init()
     steer_joint_names_ = auto_declare<std::vector<std::string>>("steer_joint_names", {});
     drive_joint_names_ = auto_declare<std::vector<std::string>>("drive_joint_names", {});
 
-    // Odometry / TF
+    // Command input / odometry / TF
+    cmd_vel_topic_            = auto_declare<std::string>("cmd_vel_topic", "/cmd_vel_stamped");
     odom_topic_               = auto_declare<std::string>("odom_topic", "/odom_est");
     odom_frame_               = auto_declare<std::string>("odom_frame_id", "odom");
     base_frame_               = auto_declare<std::string>("base_frame_id", "base_footprint");
-    base_link_height_offset_  = auto_declare<double>("base_link_height_offset", 0.0);
 
     // Kalman filter noise
     process_noise_position_   = auto_declare<double>("kf.process_noise_position",  1e-3);
@@ -103,6 +103,7 @@ controller_interface::CallbackReturn SwerveDriveController::on_init()
     // Threshold below which target velocity is treated as "stop"
     stop_threshold_linear_  = auto_declare<double>("smoother.stop_threshold_linear",  0.01);
     stop_threshold_angular_ = auto_declare<double>("smoother.stop_threshold_angular", 0.01);
+    cmd_vel_timeout_        = auto_declare<double>("cmd_vel_timeout", 0.25);
 
     // Initialize SwerveIK
     try {
@@ -143,43 +144,37 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
     steer_cmd_.reserve(steer_joint_names_.size());
     drive_cmd_.reserve(drive_joint_names_.size());
 
-    // ── /cmd_vel subscriber — only store target; smoother runs in update() ──
+    // Store commands in a realtime-safe buffer; smoothing runs in update().
     cmd_vel_sub_ = get_node()->create_subscription<geometry_msgs::msg::TwistStamped>(
-        "/cmd_vel", 10,
+        cmd_vel_topic_, rclcpp::QoS(1),
         [this](const geometry_msgs::msg::TwistStamped::SharedPtr msg)
         {
-            // Clamp here so targets are always within limits
-            vx_target_ = std::clamp(msg->twist.linear.x,  vx_limit_min_, vx_limit_max_);
-            vy_target_ = std::clamp(msg->twist.linear.y,  vy_limit_min_, vy_limit_max_);
-            wz_target_ = std::clamp(msg->twist.angular.z, wz_limit_min_, wz_limit_max_);
+            if ((!msg->header.frame_id.empty() && msg->header.frame_id != base_frame_) ||
+                !std::isfinite(msg->twist.linear.x) ||
+                !std::isfinite(msg->twist.linear.y) ||
+                !std::isfinite(msg->twist.angular.z))
+            {
+                RCLCPP_WARN_THROTTLE(
+                    get_node()->get_logger(), *get_node()->get_clock(), 2000,
+                    "Ignoring invalid velocity command (expected frame '%s', got '%s').",
+                    base_frame_.c_str(), msg->header.frame_id.c_str());
+                return;
+            }
+
+            VelocityCommand command;
+            command.vx = std::clamp(msg->twist.linear.x, vx_limit_min_, vx_limit_max_);
+            command.vy = std::clamp(msg->twist.linear.y, vy_limit_min_, vy_limit_max_);
+            command.wz = std::clamp(msg->twist.angular.z, wz_limit_min_, wz_limit_max_);
+            command.received_at = std::chrono::steady_clock::now();
+            command.valid = true;
+            command_buffer_.writeFromNonRT(command);
         }
     );
 
     odom_pub_       = get_node()->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
 
-    // Ground-truth odometry subscriber (simulation only)
-    odom_gt_sub_ = get_node()->create_subscription<nav_msgs::msg::Odometry>(
-        "/odom_gt", 10,
-        [this](const nav_msgs::msg::Odometry::SharedPtr msg)
-        {
-            // std::cout << "base_link_height_offset_: " << base_link_height_offset_ << std::endl;
-            nav_msgs::msg::Odometry compensated = *msg;
-            compensated.pose.pose.position.z += base_link_height_offset_;
-            base_link_height_ = compensated.pose.pose.position.z;
-            odom_pub_->publish(compensated);
-
-            /*geometry_msgs::msg::TransformStamped tf_msg;
-            tf_msg.header                   = compensated.header;
-            tf_msg.child_frame_id           = compensated.child_frame_id;
-            tf_msg.transform.translation.x  = compensated.pose.pose.position.x;
-            tf_msg.transform.translation.y  = compensated.pose.pose.position.y;
-            tf_msg.transform.translation.z  = compensated.pose.pose.position.z;
-            tf_msg.transform.rotation       = compensated.pose.pose.orientation;
-            tf_broadcaster_->sendTransform(tf_msg);*/
-        });
-
-    RCLCPP_INFO(logger, "SwerveDriveController configured.");
+    RCLCPP_INFO(logger, "SwerveDriveController configured; listening on %s.", cmd_vel_topic_.c_str());
     return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -196,6 +191,7 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
     // Reset smoother state so robot doesn't lurch on re-activation
     vx_cmd_ = vy_cmd_ = wz_cmd_ = 0.0;
     vx_target_ = vy_target_ = wz_target_ = 0.0;
+    command_buffer_.writeFromNonRT(VelocityCommand{});
 
     RCLCPP_INFO(logger, "command_interfaces_ size: %zu", command_interfaces_.size());
 
@@ -215,9 +211,32 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
         }
     }
 
+    if (steer_cmd_.size() != 3 || drive_cmd_.size() != 3) {
+        RCLCPP_ERROR(logger, "Expected 3 steer and 3 drive interfaces, got %zu and %zu.",
+            steer_cmd_.size(), drive_cmd_.size());
+        return controller_interface::CallbackReturn::ERROR;
+    }
+
     RCLCPP_INFO(logger, "SwerveDriveController activated with %zu steer and %zu drive interfaces.",
         steer_cmd_.size(), drive_cmd_.size());
         
+    return controller_interface::CallbackReturn::SUCCESS;
+}
+
+controller_interface::CallbackReturn SwerveDriveController::on_deactivate(
+    const rclcpp_lifecycle::State & previous_state)
+{
+    (void)previous_state;
+    command_buffer_.writeFromNonRT(VelocityCommand{});
+    vx_cmd_ = vy_cmd_ = wz_cmd_ = 0.0;
+    vx_target_ = vy_target_ = wz_target_ = 0.0;
+
+    for (auto & command_interface : drive_cmd_) {
+        command_interface.get().set_value(0.0);
+    }
+
+    steer_cmd_.clear();
+    drive_cmd_.clear();
     return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -227,8 +246,20 @@ controller_interface::CallbackReturn SwerveDriveController::on_activate(
 controller_interface::return_type SwerveDriveController::update(
     const rclcpp::Time & time, const rclcpp::Duration & period)
 {
-    (void)time;
     const double dt = period.seconds();
+
+    const VelocityCommand * command = command_buffer_.readFromRT();
+    const bool fresh = command != nullptr && command->valid &&
+        (cmd_vel_timeout_ <= 0.0 ||
+         std::chrono::duration<double>(
+             std::chrono::steady_clock::now() - command->received_at).count() <= cmd_vel_timeout_);
+    if (fresh) {
+        vx_target_ = command->vx;
+        vy_target_ = command->vy;
+        wz_target_ = command->wz;
+    } else {
+        vx_target_ = vy_target_ = wz_target_ = 0.0;
+    }
 
     // 1. Smooth cmd vel (includes emergency-stop detection), then hard-clamp
     smoothCmdVel(dt);
@@ -256,7 +287,7 @@ controller_interface::return_type SwerveDriveController::update(
     // 5. Send smoothed commands to joints
     computeJointCommand(vx_cmd_, vy_cmd_, wz_cmd_);
 
-    updateOdometry(dt, body_twist);
+    updateOdometry(time);
 
     return controller_interface::return_type::OK;
 }
@@ -356,8 +387,8 @@ bool SwerveDriveController::estimateBodyTwist(Eigen::Vector3d & body_twist) cons
     const double alpha_left  = alpha_.at("left");
     const double alpha_right = alpha_.at("right");
 
-    const double front_x = df * std::sin(alpha_front);
-    const double front_y = df * std::cos(alpha_front);
+    const double front_x = df * std::cos(alpha_front);
+    const double front_y = df * std::sin(alpha_front);
     const double left_x  = dl * std::cos(alpha_left);
     const double left_y  = dl * std::sin(alpha_left);
     const double right_x = dr * std::cos(alpha_right);
@@ -394,7 +425,25 @@ bool SwerveDriveController::estimateBodyTwist(Eigen::Vector3d & body_twist) cons
 void SwerveDriveController::kalmanPredict(double dt)
 {
     Eigen::Matrix<double, 6, 6> F = Eigen::Matrix<double, 6, 6>::Identity();
-    F(0, 3) = dt; F(1, 4) = dt; F(2, 5) = dt;
+    const double yaw = kf_state_(2);
+    const double vx = kf_state_(3);
+    const double vy = kf_state_(4);
+    const double cy = std::cos(yaw);
+    const double sy = std::sin(yaw);
+
+    // Velocity is expressed in the child (base) frame. Rotate it into odom
+    // before integrating pose, while keeping the reported twist body-fixed.
+    kf_state_(0) += (vx * cy - vy * sy) * dt;
+    kf_state_(1) += (vx * sy + vy * cy) * dt;
+    kf_state_(2) = wrap2Pi(kf_state_(2) + kf_state_(5) * dt);
+
+    F(0, 2) = (-vx * sy - vy * cy) * dt;
+    F(0, 3) = cy * dt;
+    F(0, 4) = -sy * dt;
+    F(1, 2) = (vx * cy - vy * sy) * dt;
+    F(1, 3) = sy * dt;
+    F(1, 4) = cy * dt;
+    F(2, 5) = dt;
 
     Eigen::Matrix<double, 6, 6> Q = Eigen::Matrix<double, 6, 6>::Zero();
     Q(0, 0) = process_noise_position_ * dt * dt;
@@ -404,8 +453,6 @@ void SwerveDriveController::kalmanPredict(double dt)
     Q(4, 4) = process_noise_velocity_ * dt;
     Q(5, 5) = process_noise_velocity_ * dt;
 
-    kf_state_    = F * kf_state_;
-    kf_state_(2) = wrap2Pi(kf_state_(2));
     kf_cov_      = F * kf_cov_ * F.transpose() + Q;
 }
 
@@ -437,22 +484,16 @@ double SwerveDriveController::wrap2Pi(double angle)
 // ═══════════════════════════════════════════════════════════════════════════
 //  Odometry publish + TF
 // ═══════════════════════════════════════════════════════════════════════════
-void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & body_twist)
+void SwerveDriveController::updateOdometry(const rclcpp::Time & time)
 {
-    (void)dt;
-    (void)body_twist;
-
     x_   = kf_state_(0);
     y_   = kf_state_(1);
     yaw_ = kf_state_(2);
 
-    const double cy = std::cos(yaw_), sy = std::sin(yaw_);
     const double body_vx = kf_state_(3), body_vy = kf_state_(4), body_wz = kf_state_(5);
-    const double global_vx = body_vx * cy - body_vy * sy;
-    const double global_vy = body_vx * sy + body_vy * cy;
 
     nav_msgs::msg::Odometry odom;
-    odom.header.stamp    = get_node()->now();
+    odom.header.stamp    = time;
     odom.header.frame_id = odom_frame_;
     odom.child_frame_id  = base_frame_;
 
@@ -463,8 +504,8 @@ void SwerveDriveController::updateOdometry(double dt, const Eigen::Vector3d & bo
     q.setRPY(0, 0, yaw_);
     odom.pose.pose.orientation = tf2::toMsg(q);
 
-    odom.twist.twist.linear.x  = global_vx;
-    odom.twist.twist.linear.y  = global_vy;
+    odom.twist.twist.linear.x  = body_vx;
+    odom.twist.twist.linear.y  = body_vy;
     odom.twist.twist.angular.z = body_wz;
 
     odom.pose.covariance[0]  = kf_cov_(0, 0);

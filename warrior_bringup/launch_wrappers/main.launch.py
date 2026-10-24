@@ -42,6 +42,8 @@ def launch_robot(context, *args, **kwargs):
     robot_type = LaunchConfiguration('robot_type').perform(context)
     world_name = LaunchConfiguration('world_name').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
+    launch_gui = LaunchConfiguration('launch_gui').perform(context)
+    launch_rviz = LaunchConfiguration('launch_rviz').perform(context)
     namespace = LaunchConfiguration('namespace').perform(context)
     
     launch_actions = []
@@ -56,6 +58,8 @@ def launch_robot(context, *args, **kwargs):
             launch_arguments={
                 'world_name': world_name,
                 'use_sim_time': use_sim_time,
+                'launch_gui': launch_gui,
+                'launch_rviz': launch_rviz,
             }.items(),
         )
         launch_actions.append(swerve_launcher)
@@ -153,6 +157,16 @@ def generate_launch_description():
             'namespace',
             default_value='',
             description='Namespace for robot (typically empty or /robot1 for multi-robot setup)'
+        ),
+        DeclareLaunchArgument(
+            'launch_gui',
+            default_value='true',
+            description='Launch a simulator GUI when supported'
+        ),
+        DeclareLaunchArgument(
+            'launch_rviz',
+            default_value='true',
+            description='Launch RViz when supported'
         ),
         
         # ===================== OPAQUE FUNCTION FOR CONDITIONAL LAUNCH =====================

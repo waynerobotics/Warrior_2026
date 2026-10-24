@@ -4,7 +4,7 @@ ROS 2 workspace for the Warrior swerve robot.
 
 - **Drive velocity** → three swerve Arduinos, addressed by name over USB-serial.
 - **Steering position** → three REV SPARK MAX controllers over USB-SLCAN.
-- **Pipeline:** `/cmd_vel` (TwistStamped) → `swerve_drive_controller` →
+- **Pipeline:** `/cmd_vel_stamped` (TwistStamped) → `swerve_drive_controller` →
   `SwerveTopicBridge` (warrior_system) → `warrior_driver` → both transports.
 
 One-shot real-robot teleop (joy → teleop_twist_joy → controller → bridge →

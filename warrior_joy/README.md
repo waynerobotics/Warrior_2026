@@ -7,7 +7,7 @@ See the [workspace README](../README.md) for context.
 flowchart LR
     PAD["Xbox pad"] --> JOY["joy_node<br/>(sensor_msgs/Joy)"]
     JOY --> MUX{launch variant}
-    MUX -->|joy_swerve| SW["joy_swerve → cmd_vel (Twist)"]
+    MUX -->|joy_swerve| SW["joy_swerve → /cmd_vel_stamped (TwistStamped)"]
     MUX -->|joy_2stick| DS["joy_2stick → left_cmd_vel,<br/>right_cmd_vel (Twist)"]
     MUX -->|joy_turtle| TT["teleop_twist_joy → cmd_vel"]
 ```
@@ -16,11 +16,13 @@ flowchart LR
 
 | Launcher | Node(s) | Output topic(s) | For |
 |---|---|---|---|
-| [joy_swerve.launch.py](launch/joy_swerve.launch.py) | `joy_node` + `joy_swerve` | `cmd_vel` (`Twist`) | swerve drive (sim) |
+| [joy_swerve.launch.py](launch/joy_swerve.launch.py) | `joy_node` + `joy_swerve` | `/cmd_vel_stamped` (`TwistStamped`) | swerve drive (sim) |
 | [joy_2stick.launch.py](launch/joy_2stick.launch.py) | `joy_node` + `joy_2stick` | `left_cmd_vel`, `right_cmd_vel` (`Twist`) | tank/diff (one stick per side) |
 | [joy_turtle.launch.py](launch/joy_turtle.launch.py) | `joy_node` + `teleop_twist_joy` | `cmd_vel` | TurtleBot3 / generic teleop |
 
-Topics are relative — remap or namespace at launch to target a controller.
+The swerve command uses the controller's standard absolute topic;
+the tank/diff and generic teleop topics remain relative and can be remapped or
+namespaced at launch.
 
 ## Nodes
 
@@ -45,15 +47,13 @@ From [config/joystick.yaml](config/joystick.yaml):
 
 `publish_stamped_twist: true`, `require_enable_button: true`, deadzone 0.15.
 
-After `pixi run build`, run ROS commands inside `pixi shell`:
+After `pixi run --locked build`, run ROS commands inside `pixi shell`:
 
 ```bash
 ros2 launch warrior_joy joy_swerve.launch.py
 ```
 
-> **Real swerve robot:** these `warrior_joy` nodes publish **unstamped**
-> `Twist`, but the real `swerve_drive_controller` wants `TwistStamped` on
-> `/cmd_vel`. Use the `teleop_twist_joy` path
+> **Real swerve robot:** prefer the `teleop_twist_joy` path
 > (`publish_stamped_twist: true` from `joystick.yaml`), wired end-to-end —
 > including `warrior_driver` — by
 > [warrior_bringup/launch/warrior_swerve_teleop.launch.py](../warrior_bringup/launch/warrior_swerve_teleop.launch.py).

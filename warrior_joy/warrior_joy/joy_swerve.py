@@ -1,41 +1,49 @@
+"""Convert joystick axes to stamped velocity commands for the swerve base."""
 
+from geometry_msgs.msg import TwistStamped
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
-from geometry_msgs.msg import Twist
-
-"""
-Node to convert one joystick to direction and another to magnitude for cmd_vel (swerve drive).
-"""
 
 
 class JoySwerve(Node):
+    """Publish forward and yaw commands from a five-axis joystick."""
+
     def __init__(self):
         super().__init__('joy_swerve')
 
-        self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.joy_sub = self.create_subscription(Joy, 'joy', self.joy_callback, 10)
-        self.get_logger().info("joy_swerve node has been started.")
+        self.declare_parameter('frame_id', 'base_footprint')
+        self.frame_id = self.get_parameter('frame_id').value
 
-    def joy_callback(self, msg:Joy):
-        cmd_msg = Twist()
+        self.cmd_pub = self.create_publisher(
+            TwistStamped, '/cmd_vel_stamped', 10)
+        self.joy_sub = self.create_subscription(
+            Joy, 'joy', self.joy_callback, 10)
+        self.get_logger().info('joy_swerve node has started.')
 
-        #For joy package msg 0 LEFTX 1 LEFTY 2 RIGHTX 3 RIGHTY 4 TRIGGERLEFT 5 TRIGGERRIGHT 
-        cmd_msg.linear.x = msg.axes[1] 
-        # cmd_msg.linear.y = msg.axes[1] 
+    def joy_callback(self, msg: Joy):
+        """Map left-Y and axis 4 to forward speed and yaw rate."""
+        if len(msg.axes) <= 4:
+            self.get_logger().warning(
+                'Ignoring Joy message with fewer than five axes')
+            return
 
-        cmd_msg.angular.z = msg.axes[4]
-
+        cmd_msg = TwistStamped()
+        cmd_msg.header.stamp = self.get_clock().now().to_msg()
+        cmd_msg.header.frame_id = self.frame_id
+        cmd_msg.twist.linear.x = msg.axes[1]
+        cmd_msg.twist.angular.z = msg.axes[4]
         self.cmd_pub.publish(cmd_msg)
-        # self.get_logger().info(f"Published cmd_vel: linear_x={cmd_msg.linear.x}, linear_y={cmd_msg.linear.y}, angular_z={cmd_msg.angular.z}")
+
 
 def main(args=None):
+    """Run the joystick converter."""
     rclpy.init(args=args)
     joy_swerve = JoySwerve()
     rclpy.spin(joy_swerve)
     joy_swerve.destroy_node()
     rclpy.shutdown()
 
+
 if __name__ == '__main__':
     main()
-

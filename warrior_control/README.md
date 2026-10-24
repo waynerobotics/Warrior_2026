@@ -134,7 +134,7 @@ The controller's per-tick data flow inside `update()`:
 
 ```mermaid
 flowchart LR
-    CV[/cmd_vel\nTwistStamped/] --> CL[clamp to cmd_vel_limit]
+    CV[/cmd_vel_stamped\nTwistStamped/] --> CL[clamp to cmd_vel_limit]
     CL --> SM[smoother\naccel/decel limits]
     SM --> IK[SwerveIK]
     IK -->|steer θ/position| SCMD[steer cmd ifaces]
@@ -174,9 +174,9 @@ Joints (from config): `{front,left,right}_steer_joint`, `{front,left,right}_driv
 
 ### Build
 ```bash
-pixi run build
+pixi run --locked build
 # Package-only iteration after the initial build:
-pixi run colcon build --build-base build/pixi --install-base install/pixi \
+pixi run --locked colcon build --build-base build/pixi --install-base install/pixi \
   --symlink-install --packages-select warrior_control
 ```
 
@@ -200,17 +200,21 @@ Edit [config/warrior_controllers_real.yaml](config/warrior_controllers_real.yaml
 (real) or [config/warrior_controllers_sim.yaml](config/warrior_controllers_sim.yaml)
 (sim) to configure:
 - Wheel radius (`wheel_radius`), module positions (`wheel_to_center`) and bearings (`alpha`, 0/120/240°)
+- Command and odometry topics (`cmd_vel_topic`, `odom_topic`) and stale-command timeout (`cmd_vel_timeout`)
 - Velocity limits (`cmd_vel_limit`) and the accel/decel `smoother`
 - Odometry EKF process/measurement noise (`kf.*`)
 
 ### API
 
 **Subscribed Topics:**
-- `/cmd_vel` (`geometry_msgs/TwistStamped`): desired base twist (hardcoded topic name)
-- `/odom_gt` (`nav_msgs/Odometry`): simulation ground truth (republished as `/odom` with a z offset)
+- `/cmd_vel_stamped` (`geometry_msgs/TwistStamped`): desired body-frame base
+  twist (default set by `cmd_vel_topic`). Non-finite or wrong-frame commands
+  are rejected, and stale commands decay to zero after `cmd_vel_timeout`.
 
 **Published Topics:**
-- `/odom` (`nav_msgs/Odometry`): EKF-fused odometry (topic set by the `odom_topic` param)
+- `/odom` (`nav_msgs/Odometry`): wheel-derived odometry (topic set by the
+  `odom_topic` parameter). Gazebo ground truth remains a separate diagnostic
+  topic and is not republished over controller odometry.
 
 ## 📝 References
 

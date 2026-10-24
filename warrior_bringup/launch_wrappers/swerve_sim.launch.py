@@ -18,6 +18,8 @@ def generate_launch_description():
     pkg_warrior_bringup = FindPackageShare('warrior_bringup')
     world_name = LaunchConfiguration('world_name')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    launch_gui = LaunchConfiguration('launch_gui')
+    launch_rviz = LaunchConfiguration('launch_rviz')
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -30,6 +32,16 @@ def generate_launch_description():
             default_value='true',
             description='Use simulation time'
         ),
+        DeclareLaunchArgument(
+            'launch_gui',
+            default_value='true',
+            description='Launch the Gazebo graphical client'
+        ),
+        DeclareLaunchArgument(
+            'launch_rviz',
+            default_value='true',
+            description='Launch the basic robot RViz view'
+        ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([pkg_warrior_bringup, 'launch', 'main.launch.py'])
@@ -38,6 +50,8 @@ def generate_launch_description():
                 'robot_type': 'swerve_sim',
                 'world_name': world_name,
                 'use_sim_time': use_sim_time,
+                'launch_gui': launch_gui,
+                'launch_rviz': launch_rviz,
             }.items(),
         ),
     ])

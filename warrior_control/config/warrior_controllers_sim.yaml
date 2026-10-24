@@ -30,8 +30,12 @@ diff_drive_controller:
 
 swerve_drive_controller:
   ros__parameters:
-    update_rate: 100
+    update_rate: 50
 
+    cmd_vel_topic: "/cmd_vel_stamped"
+    # Long enough to bridge a desktop keyboard's initial key-repeat delay.
+    # Nav2 and joystick sources publish continuously at a much higher rate.
+    cmd_vel_timeout: 0.75
     odom_topic: "/odom"
 
     odom_frame_id: "odom"
@@ -68,7 +72,7 @@ swerve_drive_controller:
 
     # Positions of wheels relative to robot center of mass
     wheel_to_center:
-      front: 0.538   # m
+      front: 0.545   # m
       left: 0.545    # m
       right: 0.545   # m
 

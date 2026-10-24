@@ -81,7 +81,10 @@ def launch_setup(context, *args, **kwargs):
             "scale_linear.y": 1.0,
             "scale_angular.yaw": 2.0
         }],
-        # remappings=[("cmd_vel", f"/{controller_type}/cmd_vel")],
+        remappings=[
+            ("cmd_vel", "/cmd_vel_stamped" if controller_type == "swerve_drive_controller"
+             else "/diff_drive_controller/cmd_vel")
+        ],
         output="screen",
     )
 

@@ -41,4 +41,10 @@ install(DIRECTORY rviz
   DESTINATION share/${PROJECT_NAME}/
 )
 
+install(PROGRAMS
+  scripts/activate_nav2.py
+  scripts/wait_for_nav_ready.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
