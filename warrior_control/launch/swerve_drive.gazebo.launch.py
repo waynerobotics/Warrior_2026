@@ -53,6 +53,13 @@ def generate_launch_description():
                     {"use_sim_time": use_sim_time}],
     )
 
+    controller_manager_node = Node(
+        package='controller_manager',
+        executable='ros2_control_node',
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -76,21 +83,6 @@ def generate_launch_description():
         arguments=["-d", rviz2_config_file],
         parameters=[{"robot_description": robot_description},
                     {"use_sim_time": use_sim_time}],
-    )
-    
-    teleop_node = Node(
-        package='teleop_twist_keyboard',
-        executable='teleop_twist_keyboard',
-        name='teleop_twist_keyboard',
-        output='screen',
-        prefix='gnome-terminal --', 
-        # remappings=[
-        #     ('/cmd_vel', '/swerve_drive_controller/cmd_vel')
-        # ],
-        parameters=[
-            {'stamped': True},
-            {'use_sim_time': use_sim_time}
-        ]
     )
     
     gazebo = IncludeLaunchDescription(
@@ -179,8 +171,7 @@ def generate_launch_description():
         
         gazebo,
         robot_state_publisher,
-        # joint_state_publisher,
-        # ros2_control_node,
+        controller_manager_node,
         gz_bridge,
         gz_spawn_entity,
         
