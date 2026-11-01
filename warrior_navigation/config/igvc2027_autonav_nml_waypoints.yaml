@@ -1,0 +1,20 @@
+# Estimated simulation targets inside Oakland University P37.
+# Not official or surveyed 2027 competition waypoints.
+# Generated from warrior_simulation/igvc2027/course.yaml.
+waypoints:
+- latitude: 42.668237916863
+  longitude: -83.219352082302
+  altitude: 284.688
+  yaw: -1.5434812637059212
+- latitude: 42.668117337537
+  longitude: -83.21934761852
+  altitude: 284.151
+  yaw: -1.5434812637059214
+- latitude: 42.668077144423
+  longitude: -83.219346130597
+  altitude: 283.972
+  yaw: -1.5434812637059212
+- latitude: 42.667962306935
+  longitude: -83.21934187942
+  altitude: 284.068
+  yaw: -1.5434812637059212

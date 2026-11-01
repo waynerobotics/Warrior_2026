@@ -1,0 +1,7 @@
+# Generated from warrior_simulation/igvc2027/course.yaml.
+world_name: igvc2027_autonav.world
+spawn_x: 18.646795993839998
+spawn_y: 37.83203449128161
+spawn_z: -1.1940422090410592
+spawn_yaw: -1.5434812637059212
+waypoint_file: igvc2027_autonav_nml_waypoints.yaml

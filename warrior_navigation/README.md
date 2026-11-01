@@ -40,13 +40,60 @@ run a teleop publisher at the same time: the stack has no command mux yet. No
 
 ## Nav2 GPS waypoint flow
 
+For the current Warrior model, use `pixi run --locked launch-gps-sim`; see the
+[GPS simulation guide](../warrior_bringup/README.md#gps-waypoints-through-an-open-area).
+This uses `nav2_gps_sim_params.yaml` and the same `waypoints` list of
+`latitude`, `longitude`, and `yaw` fields as `demo_waypoints.yaml`. Yaw is
+radians counterclockwise from east. The default
+`igvc2027_no_mans_land_waypoints.yaml` matches the separate schematic training
+world; it contains simulated coordinates, not official surveyed waypoints.
+`no_mans_land_waypoints.yaml` is a smoke route in the older `competition.world`.
+Both use its Oakland datum; the California coordinates in `demo_waypoints.yaml`
+do not match these worlds.
+
+The new simulation passes `conversion_mode:=from_ll` to the follower. It waits
+for navsat odometry and converts every waypoint through `/fromLL` before
+starting. `intermediate_goal_distance:=20.0` splits far destinations using the
+current TF pose; only reaching the final destination advances the GPS waypoint
+index. Any rejected, canceled, or aborted goal stops the mission with an error.
+The GPS launch also supplies `costmap_topic:=/global_costmap/costmap` so an
+intermediate endpoint inside a known inflated obstacle is shortened before
+dispatch. The actual GPS destination stays fixed. Other callers can opt into
+this check using a Nav2 OccupancyGrid topic in the same global frame.
+`/gps_waypoints` and `/gps_waypoint_trajectory` retain their latest visualization
+for RViz. YAML is validated as a complete mission rather than skipping bad rows.
+
+Legacy launches default to `conversion_mode:=projection`, with an automatic
+UTM zone and the first waypoint as origin unless `map_origin_latitude` and
+`map_origin_longitude` are explicitly set. This fallback is only valid when
+that origin matches the localization frame. Set `map_origin_yaw` to that
+frame's heading and `intermediate_goal_distance` to a suitable positive value
+when using a rolling global map. The new GPS simulation avoids this manual
+origin configuration by using `/fromLL`.
+
+For the complete P37 environment and its generated four-target mission, use
+`pixi run --locked launch-igvc2027-gazebo` or
+`pixi run --locked launch-igvc2027-isaac`; see the
+[2027 course guide](../warrior_simulation/igvc2027/README.md).
+
+Both simulators use `ground_filter.py` to estimate the nearby road plane and
+follow gradual curvature using radial profiles of low lidar returns.
+Gazebo's `ground_obstacle_scan` node first applies the full
+sensor mounting transform and projects the retained obstacle returns into
+`/navigation/scan`; Isaac calls the same filter on its raycast returns.
+The plane estimate uses no simulator pose or DEM. It falls back to the nominal
+ground height when the measured support is insufficient. Beyond 5 m, an extra
+2.5 cm per metre (capped at 25 cm) allows gentle road curvature; small distant
+obstacles may only become detectable as the robot approaches. This is an
+obstacle filter for the GPS test, not a lane, pothole or general terrain classifier.
+
 ```mermaid
 flowchart LR
     YAML[waypoint yaml<br/>lat/lon/yaw] --> WF[nav2_gps_waypoint_follower]
-    WF -->|GeoPose via robot_localization datum| N2[Nav2<br/>navigate_to_pose]
+    WF -->|PoseStamped converted by /fromLL| N2[Nav2<br/>navigate_to_pose]
     N2 -->|/cmd_vel → stamper → /cmd_vel_stamped| BASE[robot base]
     LOC[warrior_localization<br/>dual EKF + navsat] -->|map→odom TF| N2
-    GPS[warrior_gps] -->|/gps/fix| LOC
+    GPS[Gazebo GPS] -->|/gps1/fix| LOC
     WF -.->|/gps_waypoints MarkerArray<br/>/gps_waypoint_trajectory Path| RVIZ[RViz]
 ```
 
@@ -55,6 +102,7 @@ flowchart LR
 | File | Stack | Notes |
 |---|---|---|
 | [swerve_nav_sim.launch.py](../warrior_bringup/launch_wrappers/swerve_nav_sim.launch.py) | **Nav2** | Recommended Warrior simulation entry point; base simulation + Twist stamper + odom-relative Nav2 + RViz. |
+| [swerve_gps_nav_sim.launch.py](../warrior_bringup/launch_wrappers/swerve_gps_nav_sim.launch.py) | **Nav2 GPS** | Four-waypoint 2027 schematic simulation, fused localization, filtered lidar, and GPS mission. |
 | [nav.launch.py](launch/nav.launch.py) | **Nav2** | Main entry. EKF + SLAM + `nav2_bringup` + `nav2_gps_waypoint_follower`. Defaults to `real_waypoints.yaml`, map origin args (lat/lon/yaw, UTM zone/hemisphere). |
 | [nav2_gps_waypoint_follower.launch.py](launch/nav2_gps_waypoint_follower.launch.py) | **Nav2** | Gazebo + EKF + SLAM + nav2_bringup + follower. |
 | [gps_waypoint_follower.launch.py](launch/gps_waypoint_follower.launch.py) | **custom A\*** | Gazebo + EKF + SLAM + costmap + `path_to_pose_server` + `recovery_manager` + `follow_path` + `gps_waypoint_manager`. |
@@ -96,6 +144,8 @@ Shared helper: [utils/gps_utils.py](utils/gps_utils.py) (`latLonYaw2Geopose`, qu
 | File | Purpose |
 |---|---|
 | [nav2_sim_params.yaml](config/nav2_sim_params.yaml) | Mapless, odom-relative Warrior simulation profile. |
+| [nav2_gps_sim_params.yaml](config/nav2_gps_sim_params.yaml) | Mapless GPS profile using filtered lidar and intermediate goals. |
+| [igvc2027_no_mans_land_waypoints.yaml](config/igvc2027_no_mans_land_waypoints.yaml) | Simulated GPS targets for the separate 2027 schematic approximation. |
 | [nav2_params.yaml](config/nav2_params.yaml) | Nav2 bringup params. |
 | [costmaps_only.yaml](config/costmaps_only.yaml) | Standalone costmap params (costmap.launch.py). |
 | [real_waypoints.yaml](config/real_waypoints.yaml) | **Real-robot** GPS waypoints (default for `nav.launch.py`). |

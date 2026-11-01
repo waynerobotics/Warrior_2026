@@ -1,0 +1,301 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="igvc2027_no_mans_land">
+    <!--
+      Simulation approximation of the four-waypoint No Man's Land pattern in
+      the IGVC 2027 rules (7 July 2026 version), PDF page 11:
+      https://gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf
+
+      This is only the unpainted section, not a surveyed competition course.
+      Its north-facing orientation, 40 m length, 8 m width, waypoint spacing,
+      and barrel coordinates are chosen simulation dimensions. The official
+      schematic does not publish georeferenced waypoint coordinates.
+      Waypoint order: entrance (0,0), interior (0,17), interior (0,22), exit (0,40).
+      Recommended spawn: (0,-2,0.1), yaw pi/2.
+    -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>42.66791</latitude_deg>
+      <longitude_deg>-83.21958</longitude_deg>
+      <elevation>286</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <scene>
+      <ambient>1 1 1</ambient>
+      <grid>false</grid>
+    </scene>
+    <physics name="1ms" type="ODE">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-contact-system" name="gz::sim::systems::Contact"/>
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
+    <plugin filename="ignition-gazebo-navsat-system"
+            name="ignition::gazebo::systems::NavSat"/>
+    <!-- The robot description loads the rendering sensor system, as in competition.world. -->
+    <include>
+      <uri>model://ground_plane</uri>
+      <name>Ground Plane</name>
+      <pose>0 20 0 0 0 0</pose>
+    </include>
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 20 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- Finite barrel rows leave bypass corridors on both sides of the center obstacles. -->
+    <model name="barrels">
+      <static>true</static>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_0</name>
+        <pose>-4 0 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_4</name>
+        <pose>-4 4 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_8</name>
+        <pose>-4 8 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_12</name>
+        <pose>-4 12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_16</name>
+        <pose>-4 16 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_20</name>
+        <pose>-4 20 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_24</name>
+        <pose>-4 24 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_28</name>
+        <pose>-4 28 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_32</name>
+        <pose>-4 32 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_36</name>
+        <pose>-4 36 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_west_40</name>
+        <pose>-4 40 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_0</name>
+        <pose>4 0 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_4</name>
+        <pose>4 4 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_8</name>
+        <pose>4 8 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_12</name>
+        <pose>4 12 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_16</name>
+        <pose>4 16 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_20</name>
+        <pose>4 20 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_24</name>
+        <pose>4 24 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_28</name>
+        <pose>4 28 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_32</name>
+        <pose>4 32 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_36</name>
+        <pose>4 36 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>side_east_40</name>
+        <pose>4 40 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_15_0</name>
+        <pose>-0.6 15 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_15_1</name>
+        <pose>0 15 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_15_2</name>
+        <pose>0.6 15 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_20_0</name>
+        <pose>-0.6 20 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_20_1</name>
+        <pose>0 20 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_20_2</name>
+        <pose>0.6 20 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_25_0</name>
+        <pose>-0.6 25 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_25_1</name>
+        <pose>0 25 0 0 0 0</pose>
+      </include>
+      <include>
+        <uri>model://construction_barrel</uri>
+        <name>center_25_2</name>
+        <pose>0.6 25 0 0 0 0</pose>
+      </include>
+    </model>
+
+    <!-- Ground-level disks are visual annotations only: no collision geometry. -->
+    <model name="waypoint_1">
+      <static>true</static>
+      <pose>0 0 0.015 0 0 0</pose>
+      <link name="marker">
+        <visual name="disk">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <cylinder>
+              <radius>0.45</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.0 0.5 1.0 1</ambient>
+            <diffuse>0.0 0.5 1.0 1</diffuse>
+            <emissive>0.0 0.2 0.5 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="waypoint_2">
+      <static>true</static>
+      <pose>0 17 0.015 0 0 0</pose>
+      <link name="marker">
+        <visual name="disk">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <cylinder>
+              <radius>0.45</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.0 0.5 1.0 1</ambient>
+            <diffuse>0.0 0.5 1.0 1</diffuse>
+            <emissive>0.0 0.2 0.5 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="waypoint_3">
+      <static>true</static>
+      <pose>0 22 0.015 0 0 0</pose>
+      <link name="marker">
+        <visual name="disk">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <cylinder>
+              <radius>0.45</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.0 0.5 1.0 1</ambient>
+            <diffuse>0.0 0.5 1.0 1</diffuse>
+            <emissive>0.0 0.2 0.5 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="waypoint_4">
+      <static>true</static>
+      <pose>0 40 0.015 0 0 0</pose>
+      <link name="marker">
+        <visual name="disk">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <cylinder>
+              <radius>0.45</radius>
+              <length>0.01</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.0 0.5 1.0 1</ambient>
+            <diffuse>0.0 0.5 1.0 1</diffuse>
+            <emissive>0.0 0.2 0.5 1</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>

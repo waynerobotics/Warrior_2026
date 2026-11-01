@@ -65,6 +65,7 @@ controller_interface::CallbackReturn SwerveDriveController::on_init()
     odom_topic_               = auto_declare<std::string>("odom_topic", "/odom_est");
     odom_frame_               = auto_declare<std::string>("odom_frame_id", "odom");
     base_frame_               = auto_declare<std::string>("base_frame_id", "base_footprint");
+    enable_odom_tf_           = auto_declare<bool>("enable_odom_tf", true);
 
     // Kalman filter noise
     process_noise_position_   = auto_declare<double>("kf.process_noise_position",  1e-3);
@@ -172,7 +173,12 @@ controller_interface::CallbackReturn SwerveDriveController::on_configure(
     );
 
     odom_pub_       = get_node()->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
-    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
+    // Sensor-fusion launches let the local EKF own odom -> base instead.
+    if (enable_odom_tf_) {
+        tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(get_node());
+    } else {
+        tf_broadcaster_.reset();
+    }
 
     RCLCPP_INFO(logger, "SwerveDriveController configured; listening on %s.", cmd_vel_topic_.c_str());
     return controller_interface::CallbackReturn::SUCCESS;

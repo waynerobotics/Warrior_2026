@@ -84,8 +84,9 @@ local copy.
 
 ## Notes / staleness
 
-- `gzsim.ros2_control.xacro` hardcodes the sim controller config path
-  `$(find warrior_control)/config/warrior_controllers_sim.yaml`.
+- `gzsim.urdf.xacro` accepts `controllers_file`, defaulting to
+  `$(find warrior_control)/config/warrior_controllers_sim.yaml`. GPS simulation
+  uses this to disable controller TF while its local EKF owns that transform.
 - [CMakeLists.txt](CMakeLists.txt) installs `launch urdf meshes xacro rviz` but
   **not** `config/` or `docs/` — `config/gazebo_bridge.yaml` isn't installed
   (the live bridge yamls live in `warrior_bringup`, so this is harmless).

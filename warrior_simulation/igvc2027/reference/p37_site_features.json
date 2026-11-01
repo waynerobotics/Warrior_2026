@@ -1,0 +1,821 @@
+{
+  "source": "p37_oakland_2025.png",
+  "source_georeference": "p37_oakland_2025_georeference.json",
+  "digitization_reference": {
+    "width": 1800,
+    "height": 800,
+    "extent_epsg3857": {
+      "xmin": -9264008.023816226,
+      "ymin": 5261497.726984424,
+      "xmax": -9263529.350005815,
+      "ymax": 5261710.470900162
+    },
+    "pixel_origin": "upper_left",
+    "pixel_convention": "Continuous image coordinates, not integer georeferenced pixel-center indices. The bundled4700px image has a fractionally adjusted export extent; use ENU positions below."
+  },
+  "datum": {
+    "latitude": 42.66791,
+    "longitude": -83.21958,
+    "elevation": 286
+  },
+  "method": "Manual visual digitization of2025 aerial image. Point locations identify pole feet or approximate canopy centers; they are not surveyed coordinates.",
+  "horizontal_accuracy_estimate_m": 1.0,
+  "vertical_policy": "No feature heights were measured. Tree height/canopy volume, lamp height, and building height must remain explicitly inferred model parameters.",
+  "light_poles": [
+    {
+      "id": "p37_light_01",
+      "source_pixel": [
+        405,
+        367
+      ],
+      "position_enu_m": [
+        44.88511217487907,
+        38.6564997291607
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_02",
+      "source_pixel": [
+        696,
+        360
+      ],
+      "position_enu_m": [
+        101.87620407722326,
+        40.02304633837399
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_03",
+      "source_pixel": [
+        983,
+        350
+      ],
+      "position_enu_m": [
+        158.08387747534033,
+        41.97544744043955
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_04",
+      "source_pixel": [
+        1268,
+        340
+      ],
+      "position_enu_m": [
+        213.89982800493812,
+        43.92829174335991
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_05",
+      "source_pixel": [
+        1558,
+        332
+      ],
+      "position_enu_m": [
+        270.69499002256157,
+        45.491354061832716
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_06",
+      "source_pixel": [
+        406,
+        529
+      ],
+      "position_enu_m": [
+        45.081163544786136,
+        7.044598123746692
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_07",
+      "source_pixel": [
+        698,
+        520
+      ],
+      "position_enu_m": [
+        102.26835619891256,
+        8.801426619140958
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_08",
+      "source_pixel": [
+        981,
+        509
+      ],
+      "position_enu_m": [
+        157.69289211756876,
+        10.948957298815515
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_09",
+      "source_pixel": [
+        1269,
+        499
+      ],
+      "position_enu_m": [
+        214.0966320516313,
+        12.90182525196078
+      ],
+      "height_m": null
+    },
+    {
+      "id": "p37_light_10",
+      "source_pixel": [
+        1559,
+        490
+      ],
+      "position_enu_m": [
+        270.892040656595,
+        14.660031556368818
+      ],
+      "height_m": null
+    }
+  ],
+  "trees": [
+    {
+      "id": "p37_tree_01",
+      "group": "west_edge",
+      "source_pixel": [
+        68,
+        44
+      ],
+      "position_enu_m": [
+        -21.114712087806215,
+        101.68462989111053
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_02",
+      "group": "west_edge",
+      "source_pixel": [
+        66,
+        83
+      ],
+      "position_enu_m": [
+        -21.506423635140507,
+        94.07443996896629
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_03",
+      "group": "west_edge",
+      "source_pixel": [
+        63,
+        126
+      ],
+      "position_enu_m": [
+        -22.093982922116485,
+        85.68370865045286
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_04",
+      "group": "west_edge",
+      "source_pixel": [
+        90,
+        275
+      ],
+      "position_enu_m": [
+        -16.80625417550935,
+        56.60874970602203
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_05",
+      "group": "west_edge",
+      "source_pixel": [
+        77,
+        367
+      ],
+      "position_enu_m": [
+        -19.352292403880092,
+        38.65638140204774
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_06",
+      "group": "west_edge",
+      "source_pixel": [
+        82,
+        415
+      ],
+      "position_enu_m": [
+        -18.37308850395067,
+        29.28990391848521
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_07",
+      "group": "west_edge",
+      "source_pixel": [
+        73,
+        488
+      ],
+      "position_enu_m": [
+        -20.1357439848504,
+        15.045037606679637
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_08",
+      "group": "west_edge",
+      "source_pixel": [
+        93,
+        539
+      ],
+      "position_enu_m": [
+        -16.218839014597073,
+        5.093113763913532
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_09",
+      "group": "west_edge",
+      "source_pixel": [
+        104,
+        575
+      ],
+      "position_enu_m": [
+        -14.064539636405502,
+        -1.931779650142255
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_10",
+      "group": "north_grass",
+      "source_pixel": [
+        164,
+        257
+      ],
+      "position_enu_m": [
+        -2.3137053642493024,
+        60.12114550032689
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_11",
+      "group": "north_grass",
+      "source_pixel": [
+        252,
+        258
+      ],
+      "position_enu_m": [
+        14.920667296901655,
+        59.92602701197016
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_12",
+      "group": "north_grass",
+      "source_pixel": [
+        801,
+        231
+      ],
+      "position_enu_m": [
+        122.43955860134885,
+        65.19571300287552
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_13",
+      "group": "north_grass",
+      "source_pixel": [
+        895,
+        213
+      ],
+      "position_enu_m": [
+        140.84891681236886,
+        68.70847414811071
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_14",
+      "group": "north_grass",
+      "source_pixel": [
+        1012,
+        211
+      ],
+      "position_enu_m": [
+        163.76276046722228,
+        69.09924553030027
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_15",
+      "group": "north_grass",
+      "source_pixel": [
+        1100,
+        227
+      ],
+      "position_enu_m": [
+        180.9971919121059,
+        65.97753092789088
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_16",
+      "group": "north_grass",
+      "source_pixel": [
+        1127,
+        230
+      ],
+      "position_enu_m": [
+        186.28502193350525,
+        65.39226902183728
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_17",
+      "group": "north_grass",
+      "source_pixel": [
+        1243,
+        209
+      ],
+      "position_enu_m": [
+        209.0029172026839,
+        69.49072997385329
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_18",
+      "group": "north_grass",
+      "source_pixel": [
+        1278,
+        212
+      ],
+      "position_enu_m": [
+        215.85750603364787,
+        68.90553835013374
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_19",
+      "group": "north_grass",
+      "source_pixel": [
+        1331,
+        216
+      ],
+      "position_enu_m": [
+        226.23731072359388,
+        68.12533370136437
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_20",
+      "group": "north_grass",
+      "source_pixel": [
+        1513,
+        201
+      ],
+      "position_enu_m": [
+        261.8809742444717,
+        71.05359733472677
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_21",
+      "group": "north_grass",
+      "source_pixel": [
+        1544,
+        197
+      ],
+      "position_enu_m": [
+        267.95213379660925,
+        71.83436478012848
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_22",
+      "group": "north_grass",
+      "source_pixel": [
+        1572,
+        195
+      ],
+      "position_enu_m": [
+        273.4357730217935,
+        72.22484661659358
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_23",
+      "group": "south_woodland",
+      "source_pixel": [
+        411,
+        635
+      ],
+      "position_enu_m": [
+        46.06053420473467,
+        -13.63980441951047
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_24",
+      "group": "south_woodland",
+      "source_pixel": [
+        474,
+        638
+      ],
+      "position_enu_m": [
+        58.39891421430384,
+        -14.225120130440999
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_25",
+      "group": "south_woodland",
+      "source_pixel": [
+        545,
+        641
+      ],
+      "position_enu_m": [
+        72.30407436008429,
+        -14.810397756922963
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_26",
+      "group": "south_woodland",
+      "source_pixel": [
+        614,
+        642
+      ],
+      "position_enu_m": [
+        85.81753747664827,
+        -15.005379860566496
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_27",
+      "group": "south_woodland",
+      "source_pixel": [
+        684,
+        638
+      ],
+      "position_enu_m": [
+        99.5268346082459,
+        -14.224651550244658
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_28",
+      "group": "south_woodland",
+      "source_pixel": [
+        738,
+        630
+      ],
+      "position_enu_m": [
+        110.10256076683622,
+        -12.663401871848876
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_29",
+      "group": "south_woodland",
+      "source_pixel": [
+        791,
+        627
+      ],
+      "position_enu_m": [
+        120.48245196864544,
+        -12.077820637960347
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_30",
+      "group": "south_grass",
+      "source_pixel": [
+        970,
+        663
+      ],
+      "position_enu_m": [
+        155.53925470957213,
+        -19.10202853934171
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_31",
+      "group": "south_grass",
+      "source_pixel": [
+        1008,
+        659
+      ],
+      "position_enu_m": [
+        162.98143670959502,
+        -18.321312066465424
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_32",
+      "group": "south_grass",
+      "source_pixel": [
+        1054,
+        651
+      ],
+      "position_enu_m": [
+        171.99037633000518,
+        -16.760003702106918
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_33",
+      "group": "south_grass",
+      "source_pixel": [
+        1098,
+        656
+      ],
+      "position_enu_m": [
+        180.60768346415978,
+        -17.735466119442293
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_34",
+      "group": "south_grass",
+      "source_pixel": [
+        1129,
+        668
+      ],
+      "position_enu_m": [
+        186.67901404924072,
+        -20.076941688569832
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_35",
+      "group": "south_grass",
+      "source_pixel": [
+        1163,
+        661
+      ],
+      "position_enu_m": [
+        193.33778772211426,
+        -18.710804447705172
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_36",
+      "group": "south_grass",
+      "source_pixel": [
+        1199,
+        633
+      ],
+      "position_enu_m": [
+        200.38813494646928,
+        -13.24678811131275
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_37",
+      "group": "south_grass",
+      "source_pixel": [
+        1220,
+        655
+      ],
+      "position_enu_m": [
+        204.50105307554534,
+        -17.539665956885834
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_38",
+      "group": "south_grass",
+      "source_pixel": [
+        1168,
+        587
+      ],
+      "position_enu_m": [
+        194.3166196971333,
+        -4.270701013521924
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_39",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1395,
+        566
+      ],
+      "position_enu_m": [
+        238.77373811469775,
+        -0.17145799274262682
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_40",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1450,
+        574
+      ],
+      "position_enu_m": [
+        249.54537067341008,
+        -1.7321654685199013
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_41",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1493,
+        576
+      ],
+      "position_enu_m": [
+        257.96680133162545,
+        -2.122128921863654
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_42",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1545,
+        595
+      ],
+      "position_enu_m": [
+        268.1509834658596,
+        -5.829325481138729
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_43",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1602,
+        616
+      ],
+      "position_enu_m": [
+        279.31442776112306,
+        -9.926741876596186
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_44",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1629,
+        681
+      ],
+      "position_enu_m": [
+        284.60282080555226,
+        -22.610386012731457
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    },
+    {
+      "id": "p37_tree_45",
+      "group": "southeast_grass",
+      "source_pixel": [
+        1615,
+        741
+      ],
+      "position_enu_m": [
+        281.86143228311914,
+        -34.318696295636926
+      ],
+      "height_m": null,
+      "note": "Approximate canopy center; source does not establish trunk location or species."
+    }
+  ],
+  "buildings": [
+    {
+      "id": "p37_southeast_building",
+      "source_pixel_polygon": [
+        [
+          1290,
+          696
+        ],
+        [
+          1500,
+          696
+        ],
+        [
+          1500,
+          800
+        ],
+        [
+          1290,
+          800
+        ]
+      ],
+      "footprint_enu_m": [
+        [
+          218.210618319058,
+          -25.53984207140458
+        ],
+        [
+          259.33860582686583,
+          -25.538425139151023
+        ],
+        [
+          259.33936520908486,
+          -45.83265640042536
+        ],
+        [
+          218.21125727241616,
+          -45.83407333656983
+        ]
+      ],
+      "height_m": null,
+      "note": "Approximate visible roof extent. Southern edge is clipped by this crop; this polygon is not a surveyed complete building footprint."
+    }
+  ]
+}

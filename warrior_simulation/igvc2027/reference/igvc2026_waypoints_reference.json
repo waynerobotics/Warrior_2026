@@ -1,0 +1,213 @@
+{
+  "event_year": 2026,
+  "source_page": "https://gl-systems-technology.net/autonav.html",
+  "source_image": "https://gl-systems-technology.net/uploads/3/4/7/2/34727963/2026-igvc-gps-waypoints-2_orig.jpg",
+  "retrieved_date": "2026-11-01",
+  "source_image_sha256": "7d6d6215999286aebf9bbd7fac48f7e1cc5ac50be1a3eb94abb851f511779785",
+  "interpretation": "Packed degrees/minutes/seconds DD.MMSSsssss; inferred from image values and independently checked against the P37 footprint. These are not NMEA DDMM.MMMM or decimal degrees. The image does not explicitly state its encoding or horizontal datum. WGS84 is assumed for simulation.",
+  "accuracy": "Source labels points surveyed but supplies no accuracy specification or coordinate reference metadata. Decimal digits do not imply survey accuracy. These are historical 2026 reference positions, not surveyed 2027 targets.",
+  "datum_for_enu": {
+    "latitude": 42.66791,
+    "longitude": -83.21958,
+    "elevation": 286.0
+  },
+  "enu_elevation_policy": "No source altitude is available. All points are projected at the existing simulation datum ellipsoid elevation 286m; the tiny ENU z values only express tangent-plane curvature.",
+  "points": [
+    {
+      "id": "5001",
+      "group": "main",
+      "label": "North",
+      "source_latitude_string": "42.400577100",
+      "source_longitude_string": "-83.130962509",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 5.771,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 9.62509,
+        "sign": -1
+      },
+      "latitude": 42.66826972222222,
+      "longitude": -83.21934030277778,
+      "enu_m": [
+        19.65083959820706,
+        39.962024304918316,
+        -0.00015567250341774752
+      ]
+    },
+    {
+      "id": "5006",
+      "group": "main",
+      "label": "North Mid",
+      "source_latitude_string": "42.400523432",
+      "source_longitude_string": "-83.130969819",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 5.23432,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 9.69819,
+        "sign": -1
+      },
+      "latitude": 42.66812064444444,
+      "longitude": -83.21936060833333,
+      "enu_m": [
+        17.98619405369164,
+        23.400780673904308,
+        -6.833597411493031e-05
+      ]
+    },
+    {
+      "id": "5005",
+      "group": "main",
+      "label": "South Mid",
+      "source_latitude_string": "42.400507588",
+      "source_longitude_string": "-83.130969297",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 5.07588,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 9.69297,
+        "sign": -1
+      },
+      "latitude": 42.668076633333335,
+      "longitude": -83.21935915833333,
+      "enu_m": [
+        18.105080901550966,
+        18.51153100334441,
+        -5.257570922090338e-05
+      ]
+    },
+    {
+      "id": "5000",
+      "group": "main",
+      "label": "South",
+      "source_latitude_string": "42.400453974",
+      "source_longitude_string": "-83.130957951",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 4.53974,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 9.57951,
+        "sign": -1
+      },
+      "latitude": 42.667927705555556,
+      "longitude": -83.21932764166667,
+      "enu_m": [
+        20.688935276277014,
+        1.966963372183581,
+        -3.380584406209586e-05
+      ]
+    },
+    {
+      "id": "5002",
+      "group": "practice",
+      "label": "North",
+      "source_latitude_string": "42.400556255",
+      "source_longitude_string": "-83.130645144",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 5.56255,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 6.45144,
+        "sign": -1
+      },
+      "latitude": 42.668211819444444,
+      "longitude": -83.21845873333334,
+      "enu_m": [
+        91.92368463532735,
+        33.53011309966209,
+        -0.0007496834868625513
+      ]
+    },
+    {
+      "id": "5004",
+      "group": "practice",
+      "label": "Mid",
+      "source_latitude_string": "42.400510946",
+      "source_longitude_string": "-83.130640432",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 5.10946,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 6.40432,
+        "sign": -1
+      },
+      "latitude": 42.66808596111111,
+      "longitude": -83.21844564444444,
+      "enu_m": [
+        92.9969255447314,
+        19.54836590448729,
+        -0.000706920109116993
+      ]
+    },
+    {
+      "id": "5003",
+      "group": "practice",
+      "label": "South",
+      "source_latitude_string": "42.400465621",
+      "source_longitude_string": "-83.130635756",
+      "latitude_dms": {
+        "degrees": 42,
+        "minutes": 40,
+        "seconds": 4.65621,
+        "sign": 1
+      },
+      "longitude_dms": {
+        "degrees": 83,
+        "minutes": 13,
+        "seconds": 6.35756,
+        "sign": -1
+      },
+      "latitude": 42.667960058333335,
+      "longitude": -83.21843265555556,
+      "enu_m": [
+        94.06197261642255,
+        5.561681684510708,
+        -0.0006949247850882578
+      ]
+    }
+  ],
+  "main_axis_registration": {
+    "centroid_enu_m": [
+      19.10776245743167,
+      20.960324838587653
+    ],
+    "south_to_north_enu_vector_m": [
+      -1.0380956780699542,
+      37.99506093273474
+    ],
+    "south_to_north_geodesic_bearing_deg": -1.5648670502601698,
+    "south_to_north_geodesic_distance_m": 38.00753178112398,
+    "rotation_from_enu_north_ccw_deg": 1.5650378321318665,
+    "status": "Historical geographic alignment only; preserve the 2027 schematic relative geometry and its independently calibrated scale."
+  }
+}

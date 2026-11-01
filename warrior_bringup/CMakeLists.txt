@@ -44,6 +44,7 @@ install(DIRECTORY rviz
 install(PROGRAMS
   scripts/activate_nav2.py
   scripts/wait_for_nav_ready.py
+  scripts/isaac_ros_bridge.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

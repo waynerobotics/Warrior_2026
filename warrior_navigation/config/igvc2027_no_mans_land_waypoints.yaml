@@ -1,0 +1,31 @@
+# Simulation approximation of the four-waypoint order in the IGVC 2027 rules
+# (7 July 2026 version), PDF page 11:
+# https://gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf
+#
+# Use with igvc2027_no_mans_land.world. These are NOT official surveyed GPS
+# coordinates. The source is a schematic without geographic coordinates.
+# We chose a north-facing, 40 m long simulation section: entrance, two interior
+# points, exit. Barrel positions and waypoint spacing are simulation choices.
+# Spawn: world x=0.0, y=-2.0, z=0.1, yaw=1.5707963267948966 (north).
+#
+# Datum: WGS84 (42.66791, -83.21958), altitude 286 m, ENU, heading_deg=0.
+# Coordinates use the inverse WGS84 Cartesian/topocentric transform (up=0).
+# The 17 m and 18 m legs exceed the simulated LiDAR's 15 m sensing range.
+# yaw is radians counterclockwise from east, matching demo_waypoints.yaml.
+waypoints:
+  # 1. Entrance: world (east, north) = (0.0, 0.0) m.
+  - latitude: 42.667910000000
+    longitude: -83.219580000000
+    yaw: 1.5707963267948966
+  # 2. First interior point: world (east, north) = (0.0, 17.0) m.
+  - latitude: 42.668063027337
+    longitude: -83.219580000000
+    yaw: 1.5707963267948966
+  # 3. Second interior point: world (east, north) = (0.0, 22.0) m.
+  - latitude: 42.668108035376
+    longitude: -83.219580000000
+    yaw: 1.5707963267948966
+  # 4. Exit: world (east, north) = (0.0, 40.0) m.
+  - latitude: 42.668270064315
+    longitude: -83.219580000000
+    yaw: 1.5707963267948966

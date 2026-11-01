@@ -36,12 +36,19 @@ updating the environment and lock file.
 | `pixi run --locked test` | Rebuild and run the ROS tests. |
 | `pixi run --locked launch-sim` | Build and launch the default swerve simulation for manual driving. |
 | `pixi run --locked launch-nav-sim` | Build and launch the swerve simulation with mapless, odom-relative Nav2. |
+| `pixi run --locked launch-gps-sim` | Build and launch GPS/IMU/odometry navigation with lidar obstacle avoidance and a sample waypoint mission. |
+| `pixi run --locked launch-igvc2027-gazebo` | Launch Warrior's GPS mission in the complete P37 AutoNav approximation. |
+| `pixi run --locked launch-igvc2027-isaac` | Spawn Warrior in Isaac Sim and drive the four GPS targets with simulated sensors. |
+| `pixi run --locked inspect-igvc2027-isaac` | Inspect the matching Isaac course without starting a robot mission. |
 | `pixi run --locked launch-real` | Build and launch real-robot Xbox teleoperation. |
 | `pixi run --locked build-perception` | Build `neural_engine` + `omnivision`; requires host CUDA and TensorRT. |
 | `pixi shell` | Open an activated shell for arbitrary `ros2`/`colcon` commands. |
 
 For keyboard controls and sending a navigation goal from RViz or the command
 line, see the [bringup simulation guide](warrior_bringup/README.md#simulation-workflows).
+
+The [IGVC 2027 course guide](warrior_simulation/igvc2027/README.md) includes
+simulator previews, geographic provenance, generated GPS targets and editing instructions.
 
 The test task reports the repository's existing lint/test debt instead of
 hiding it; the migration baseline is not yet a green test suite.

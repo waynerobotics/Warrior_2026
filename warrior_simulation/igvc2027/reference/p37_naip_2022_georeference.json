@@ -1,0 +1,20 @@
+{
+  "asset": "p37_naip_2022.png",
+  "crs": "EPSG:3857",
+  "extent": {
+    "xmin": -9264008.023816226,
+    "ymin": 5261497.726984424,
+    "xmax": -9263529.350005815,
+    "ymax": 5261710.470900162
+  },
+  "width": 1800,
+  "height": 800,
+  "row_order": "north_to_south",
+  "pixel_convention": "extent is outside pixel edges",
+  "retrieved_date": "2026-11-01",
+  "capture_date": "2022-07-30",
+  "native_resolution_m": 0.6,
+  "source_service": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer",
+  "source_raster": "m_4208323_sw_17_060_20220730",
+  "reuse": "Public-domain USDA/USGS NAIP imagery; attribution USDA, USGS, The National Map."
+}

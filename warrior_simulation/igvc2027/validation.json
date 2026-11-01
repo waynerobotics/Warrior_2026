@@ -1,0 +1,265 @@
+{
+  "validation_date": "2026-11-01",
+  "status": "passed_with_documented_limits",
+  "scene": {
+    "file": "scene.json",
+    "sha256": "74d1e828594fa272c7515baf76b85ab83488f7e10929aae596ebfa226d642a8a",
+    "object_count": 942,
+    "datum": {
+      "latitude": 42.66791,
+      "longitude": -83.21958,
+      "elevation": 286.0,
+      "heading_deg": 0.0
+    },
+    "placement": {
+      "center_enu": [
+        38.239560112060055,
+        21.642628102138637
+      ],
+      "heading_deg": 1.5650378321318665,
+      "status": "historical_2026_registration_unsurveyed_2027"
+    },
+    "gazebo_world": {
+      "file": "../warrior_gazebo/worlds/igvc2027_autonav.world",
+      "sha256": "afa7eaf81d93881a9d457b2b3d2ff18cbff647df2fe5ac40c2cb954728430fbe"
+    },
+    "isaac_stage": {
+      "file": "../warrior_isaac/worlds/igvc2027_autonav.usda",
+      "sha256": "759b04199c59245782f7b545fe286b0c8b201a74fe4c9781d7ed78f7f772c27b"
+    }
+  },
+  "automated_checks": {
+    "focused_tests": {
+      "command": "pixi run --locked python -m pytest warrior_simulation/igvc2027/test warrior_navigation/test",
+      "passed": 63,
+      "duration_seconds": 20.09
+    },
+    "ros_package_build": {
+      "packages_succeeded": 15,
+      "duration_seconds": 61.0,
+      "command": "pixi run --locked build",
+      "exit_code": 0,
+      "scope": "Final build after dependency metadata updates and artifact regeneration",
+      "warning": "Existing warrior_bringup CMake compatibility deprecation warning for versions below 3.10; build succeeded."
+    },
+    "git_diff_check": "passed",
+    "deterministic_regeneration": {
+      "command": "pixi run --locked build-igvc2027-course",
+      "artifacts_compared": 440,
+      "byte_identical": true,
+      "scope": "Scene JSON, Gazebo SDF, Isaac USD, generated waypoint/profile YAML and COLLADA meshes"
+    }
+  },
+  "geographic_and_collision_checks": {
+    "historical_coordinate_points": 7,
+    "historical_event_year": 2026,
+    "encoding": "Packed DMS interpretation inferred from organizer image and geographic footprint; source horizontal datum unspecified, WGS84 assumed",
+    "orthophoto": "Oakland County 2025; native 0.0762 m resolution; source metadata/georeference in reference/",
+    "elevation": "USGS Oakland County 2017 acquisition; native 1 m NAVD88; relative-height alignment only",
+    "background_independent_geometry_audit": {
+      "method": "One-off independent Shapely union/intersection compared with independently projected aerial extent minus P37 outline; production tests do not require Shapely",
+      "valid_polygon": true,
+      "holes": 1,
+      "background_triangles": 3500,
+      "intersection_with_parking_m2": 0.0,
+      "triangle_area_minus_union_m2": 1.4551915228366852e-11,
+      "symmetric_difference_from_expected_m2": 2.2424283815435955e-07,
+      "boundary_hausdorff_error_m": 6.361174660368013e-10
+    },
+    "paint_surface_check": {
+      "method": "Independent barycentric interpolation of actual asphalt triangles; vertices and triangle centers checked for lane tape, gates, and pothole disks",
+      "required_clearance_m": [
+        0.001,
+        0.03
+      ],
+      "passed": true
+    },
+    "other_tests": [
+      "WGS84 independent geodesic axes and ENU roundtrip",
+      "Actual terrain pixel-center sampling and aerial UV corner alignment",
+      "Asphalt area, boundary containment and shared interior edges",
+      "Closed curb solids with positive signed volume",
+      "Watertight ramp and actual surface grade <= 15%",
+      "Robot footprint connectivity from spawn through all four targets",
+      "Generated GPS altitudes and spawn clearance against actual mesh",
+      "Historical registration preserves 2027 marker geometry and 152.4 m loop scale",
+      "Two-target diagnostic uses true endpoints separated by more than 30 m",
+      "One Gazebo static body preserves shared object poses, materials, collisions and mesh UVs"
+    ]
+  },
+  "simulators": {
+    "gazebo": {
+      "name": "Gazebo Fortress",
+      "version": "6.16.0",
+      "package": "libignition-gazebo6",
+      "default_mission": {
+        "status": "passed",
+        "waypoint_file": "../../warrior_navigation/config/igvc2027_autonav_nml_waypoints.yaml",
+        "requested_gps_targets": 4,
+        "completed_gps_targets": 4,
+        "successful_navigation_legs": 4,
+        "max_intermediate_distance_m": 20.0,
+        "evidence_file": "validation/gazebo_default_mission_excerpt.log",
+        "runtime_log": "/tmp/igvc_gui_responsiveness/audited/launch.log",
+        "start_log_unix_time": "1793509547.873350819",
+        "completed_log_unix_time": "1793509684.679904790",
+        "wall_seconds": 136.806553971
+      },
+      "long_leg_diagnostic": {
+        "status": "passed",
+        "waypoint_file": "../../warrior_navigation/config/igvc2027_autonav_long_leg.yaml",
+        "requested_gps_targets": 2,
+        "completed_gps_targets": 2,
+        "successful_navigation_legs": 3,
+        "intermediate_goals": 1,
+        "max_intermediate_distance_m": 20.0,
+        "target_separation_m": 30.629273118814698,
+        "lidar_range_m": 15.0,
+        "start_log_unix_time": "1793509725.534007429",
+        "completed_log_unix_time": "1793509842.477857441",
+        "wall_seconds": 116.943850012,
+        "evidence_file": "validation/gazebo_long_leg_mission_excerpt.log",
+        "runtime_log": "/tmp/igvc_gui_responsiveness/longleg/launch.log",
+        "cleanup": "Gazebo, RViz and associated test processes stopped after completion."
+      },
+      "gui": {
+        "launch": "pixi run --locked launch-igvc2027-gazebo",
+        "tested_actions": [
+          "Open and close menu twice",
+          "Three mouse-wheel camera zoom steps",
+          "Robot and RViz visible"
+        ],
+        "observation": "Menu state changes were visible in screenshots completed about 0.42 s after each click (250 ms intentional wait plus capture overhead). Escape dismissed the menu; camera follow/zoom changed the view. This is a screenshot observation, not a general input-latency benchmark.",
+        "source_logs": "/tmp/igvc_gui_responsiveness/audited",
+        "screenshot": "preview/gazebo_navigation_gui.png",
+        "screenshot_completion_seconds_after_click_approx": 0.42
+      },
+      "real_time_factor_snapshot": {
+        "value": 0.5354,
+        "wall_seconds_into_run": 92.7,
+        "note": "One observed snapshot, not an average or performance guarantee."
+      },
+      "stage_validation": {
+        "static_models": 1,
+        "physics_links": 1,
+        "visuals": 942,
+        "colliders": 203,
+        "sdf_validation": "passed"
+      }
+    },
+    "isaac": {
+      "name": "Isaac Sim",
+      "version": "5.1.0",
+      "gpu": "NVIDIA RTX 5090",
+      "driver": "580.178.04",
+      "default_mission": {
+        "status": "passed",
+        "waypoint_file": "../../warrior_navigation/config/igvc2027_autonav_nml_waypoints.yaml",
+        "requested_gps_targets": 4,
+        "completed_gps_targets": 4,
+        "successful_navigation_legs": 4,
+        "max_intermediate_distance_m": 20.0,
+        "evidence_file": "validation/isaac_default_mission_excerpt.log",
+        "runtime_log": "/tmp/isaac_final_gui_nav.log",
+        "start_log_unix_time": "1793509538.941320759",
+        "completed_log_unix_time": "1793509650.389017972",
+        "wall_seconds": 111.447697213,
+        "approximate_simulation_completion_seconds": 103
+      },
+      "long_leg_diagnostic": {
+        "status": "not_run",
+        "reason": "Long-distance waypoint diagnostic tested separately in Gazebo"
+      },
+      "robot_and_sensors": {
+        "status": "passed",
+        "evidence_file": "validation/isaac_robot_report.json",
+        "frames": 9299,
+        "simulation_seconds": 155.00000808387995,
+        "final_position_enu_m": [
+          19.472896575927734,
+          5.955020427703857,
+          -1.9538217782974243
+        ],
+        "final_wheel_odometry": [
+          31.830508018466055,
+          0.008795427200389191,
+          0.06634847428487234
+        ],
+        "minimum_lidar_range_m": 0.9000641938343685,
+        "final_scan_finite_bins": 98,
+        "final_imu": {
+          "time": 154.98960876464844,
+          "physics_step": 18600.0,
+          "lin_acc": [
+            1.7270994186401367,
+            -0.4045608937740326,
+            9.6972074508667
+          ],
+          "ang_vel": [
+            0.0002914367360062897,
+            -5.1408103900030255e-05,
+            -0.00640142522752285
+          ],
+          "orientation": [
+            0.7525460720062256,
+            -0.06961850821971893,
+            -0.03372737765312195,
+            -0.6539801955223083
+          ]
+        },
+        "cleanup": "Runtime exited after the 155 s bounded session; associated simulator/bridge processes were stopped.",
+        "command_loss_watchdog": {
+          "status": "passed",
+          "evidence_file": "validation/isaac_watchdog_report.json",
+          "simulation_seconds": 7.000000365078449,
+          "valid_command_motion_m": 0.5245567751059558,
+          "post_watchdog_drift_m": 0.006471616765771669,
+          "max_post_watchdog_encoder_speed_mps": 0.0036911981920540863,
+          "packets": 419,
+          "stale_packets_rejected": true,
+          "nonfinite_packets_rejected": true,
+          "exit_code": 0,
+          "scope": "Bounded physical command-transport test: valid commands during simulation t=2\u20133 s, stale packets during t=4\u20135 s and nonfinite packets during t=5\u20136 s."
+        }
+      },
+      "stage_validation": {
+        "meshes": 942,
+        "colliders": 203,
+        "textures": 3,
+        "cameras": 2,
+        "compliance_warnings": 0,
+        "evidence_file": "validation/isaac_stage_report.json",
+        "scope": "OpenUSD structural checks; actual runtime validation is recorded separately in robot_and_sensors."
+      },
+      "gui": {
+        "status": "passed",
+        "screenshot": "preview/isaac_gui.png",
+        "robot_capture": "preview/isaac_robot.png",
+        "runtime_log": "/tmp/isaac_final_gui_nav.log"
+      }
+    }
+  },
+  "limits": [
+    "2027 targets and obstacle arrangement are schematic reconstruction, not a surveyed final 2027 course.",
+    "Published 2026 coordinate encoding is inferred; numeric precision does not establish positioning accuracy.",
+    "2017 DEM supports broad terrain relief; curb sections, tree heights/canopies and other vertical features are inferred.",
+    "Relative NAVD88 elevation is aligned to the inherited WGS84 simulation anchor without claiming a geoid conversion.",
+    "Ground filtering uses measured lidar only; objects below thresholds, sparse distant returns and drop-offs are not guaranteed detectable.",
+    "No real-world GPS noise, wheel slip, physical sensor calibration or outdoor safety validation is claimed."
+  ],
+  "validated_at_utc": "2026-11-01T05:12:33+00:00",
+  "navigation_sources": [
+    {
+      "file": "../../warrior_navigation/warrior_navigation/ground_filter.py",
+      "sha256": "04ef0bbd9de7aef59d9074f4dee3d33e8092fe27cea9545fb0297c20a13ffbd0"
+    },
+    {
+      "file": "../../warrior_navigation/warrior_navigation/nav2_gps_waypoint_follower.py",
+      "sha256": "767b5e3483df381d13b18495cf85a27a411d25335887116b60fa35bda4ac9aa0"
+    },
+    {
+      "file": "../../warrior_navigation/config/nav2_gps_sim_params.yaml",
+      "sha256": "3aebca3dda4a249d8141aab3829f1dc2de45a0d36ed1b606b8d95b355a9860cb"
+    }
+  ]
+}

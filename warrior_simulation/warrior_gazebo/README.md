@@ -23,6 +23,8 @@ worlds get launched.
 | File | What it is |
 | --- | --- |
 | `competition.world` | Full IGVC course (barrels, track) — default for swerve_sim |
+| `igvc2027_no_mans_land.world` | Separate four-waypoint no-man's-land training approximation — default for `launch-gps-sim` |
+| `igvc2027_autonav.world` | Complete site-georeferenced AutoNav approximation with matching Isaac stage — `launch-igvc2027-gazebo`; [course guide](../igvc2027/README.md) |
 | `competition_no_barrels.world` | Competition layout minus obstacle barrels |
 | `fullTrack.world` | Long-form practice track |
 | `map1.world` | Practice map |
@@ -30,6 +32,16 @@ worlds get launched.
 | `empty.world` | Bare ground + sun — controller / gate smoke tests |
 | `empty_test.world` | Empty variant for plugin debugging |
 | `turtlebot3_world_gps.world` | TurtleBot3 world + GPS — default for `turtlebot_sim` |
+
+The 2027 training world follows the four-marker pattern from the
+[2027 rules schematic, page 11](https://gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf).
+It is not an official surveyed course. Its 40 m by 8 m section, barrel spacing,
+and north-facing orientation are simulation choices anchored at WGS84
+`42.66791, -83.21958`, elevation 286 m. Spawn at `(0, -2, 0.1)`, heading north;
+the four visual markers match the companion
+[`igvc2027_no_mans_land_waypoints.yaml`](../../warrior_navigation/config/igvc2027_no_mans_land_waypoints.yaml).
+Run `pixi run --locked launch-gps-sim` from the workspace root; see the
+[GPS simulation guide](../../warrior_bringup/README.md#gps-waypoints-through-an-open-area).
 
 ## Models
 

@@ -1,0 +1,24 @@
+# Initial GPS navigation test in the unpainted opening of competition.world.
+# This region is inferred from the track texture; the repository's course is
+# labeled IGVC 2026. These are test points, not an official IGVC 2027 route.
+#
+# World datum: WGS84 latitude 42.66791, longitude -83.21958, altitude 286 m.
+# World axes: ENU, heading_deg=0. Coordinates below were converted using the
+# inverse WGS84 Cartesian/topocentric transform at this datum (up=0).
+# Spawn: world x=17.0, y=3.0, z=0.1, yaw=1.57079632679 (north).
+# The first leg is 18 m, beyond the simulated LiDAR's 15 m range. This short
+# out-and-back route stays in the opening and avoids the dense barrel section.
+# yaw is radians counterclockwise from world east, as in demo_waypoints.yaml.
+waypoints:
+  # World (east, north) = (17.0, 21.0) m.
+  - latitude: 42.668099033581
+    longitude: -83.219372637785
+    yaw: 1.57079632679
+  # World (east, north) = (14.0, 18.0) m.
+  - latitude: 42.668072028817
+    longitude: -83.219409231191
+    yaw: -2.35619449019
+  # World (east, north) = (17.0, 3.0) m, return to the spawn location.
+  - latitude: 42.667937004637
+    longitude: -83.219372638323
+    yaw: -1.37340076695

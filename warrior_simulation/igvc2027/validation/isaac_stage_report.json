@@ -1,0 +1,12 @@
+{
+  "stage": "/home/lab2005/projects/Warrior_2026/warrior_simulation/warrior_isaac/worlds/igvc2027_autonav.usda",
+  "meshes": 942,
+  "colliders": 203,
+  "cameras": [
+    "/World/Cameras/Overview",
+    "/World/Cameras/CourseEye"
+  ],
+  "texture_files": 3,
+  "warnings": [],
+  "runtime_tested": false
+}

@@ -23,6 +23,11 @@ def generate_launch_description():
     launch_gui = LaunchConfiguration('launch_gui')
     gui_delay = LaunchConfiguration('gui_delay')
     launch_rviz = LaunchConfiguration('launch_rviz')
+    spawn_x = LaunchConfiguration('spawn_x')
+    spawn_y = LaunchConfiguration('spawn_y')
+    spawn_z = LaunchConfiguration('spawn_z')
+    spawn_yaw = LaunchConfiguration('spawn_yaw')
+    controller_params_file = LaunchConfiguration('controller_params_file')
     
     # ----------------- path -----------------
     pkg_warrior_description = FindPackageShare("warrior_description")
@@ -47,6 +52,14 @@ def generate_launch_description():
         os.environ.get("LD_LIBRARY_PATH", ""),
     ]))
     gazebo_env = {
+        # Fortress's EntityTree/context menu import the IgnGazebo QML module.
+        # Pixi's Qt does not discover that module's plugin directory itself.
+        "QML2_IMPORT_PATH": os.pathsep.join(filter(None, [
+            os.path.join(pixi_prefix, "qml") if pixi_prefix else "",
+            os.path.join(pixi_prefix, "lib", "ign-gazebo-6", "plugins", "gui")
+            if pixi_prefix else "",
+            os.environ.get("QML2_IMPORT_PATH", ""),
+        ])),
         "IGN_GAZEBO_RESOURCE_PATH": os.pathsep.join(filter(None, [
             model_resource_path,
             os.environ.get("IGN_GAZEBO_RESOURCE_PATH", ""),
@@ -63,7 +76,10 @@ def generate_launch_description():
         [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
     )
 
-    robot_description = Command(["xacro ", xacro_file])
+    robot_description = Command([
+        "xacro ", xacro_file,
+        " controllers_file:=", controller_params_file,
+    ])
 
     # ----------------- nodes -----------------
     robot_state_publisher = Node(
@@ -140,7 +156,8 @@ def generate_launch_description():
             "-topic", "robot_description",
             "-name", "warrior",
             "-allow_renaming", "true",
-            '-x', '-9.11', '-y', '35.92', '-z', '0.1'
+            '-x', spawn_x, '-y', spawn_y, '-z', spawn_z,
+            '-Y', spawn_yaw,
         ],
         output="screen",
         # parameters=[{"use_sim_time": use_sim_time}],
@@ -225,6 +242,31 @@ def generate_launch_description():
             'launch_rviz',
             default_value='true',
             description='Launch the basic robot RViz view'
+        ),
+        DeclareLaunchArgument(
+            'spawn_x',
+            default_value='-9.11',
+            description='Robot spawn x in Gazebo world coordinates (meters)'
+        ),
+        DeclareLaunchArgument(
+            'spawn_y',
+            default_value='35.92',
+            description='Robot spawn y in Gazebo world coordinates (meters)'
+        ),
+        DeclareLaunchArgument(
+            'spawn_z',
+            default_value='0.1',
+            description='Robot spawn height in Gazebo world coordinates (meters)'
+        ),
+        DeclareLaunchArgument(
+            'spawn_yaw',
+            default_value='0.0',
+            description='Robot spawn heading about the world z axis (radians)'
+        ),
+        DeclareLaunchArgument(
+            'controller_params_file',
+            default_value=controller_yaml,
+            description='Controller parameters, including odometry TF ownership'
         ),
         
         gazebo_server,

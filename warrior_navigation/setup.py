@@ -17,7 +17,7 @@ setup(
         ('share/' + package_name + '/rviz2', glob('rviz2/*.rviz')),
         
     ],
-    install_requires=['setuptools', 'pyproj'],
+    install_requires=['setuptools', 'pyproj', 'numpy'],
     zip_safe=True,
     maintainer='alimyust',
     maintainer_email='alimyust@gmail.com',
@@ -42,7 +42,8 @@ setup(
             'follow_path = warrior_navigation.follow_path:main',
             'waypoint_follower = warrior_navigation.logged_waypoint_follower:main',
             'gps_waypoint_manager = warrior_navigation.gps_waypoint_manager:main',
-            'nav2_gps_waypoint_follower = warrior_navigation.nav2_gps_waypoint_follower:main'
+            'nav2_gps_waypoint_follower = warrior_navigation.nav2_gps_waypoint_follower:main',
+            'ground_obstacle_scan = warrior_navigation.ground_obstacle_scan:main',
         ],
     },
 )

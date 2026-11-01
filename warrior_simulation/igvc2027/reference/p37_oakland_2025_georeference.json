@@ -1,0 +1,27 @@
+{
+  "asset": "p37_oakland_2025.png",
+  "crs": "EPSG:3857",
+  "extent": {
+    "xmin": -9264008.023816226,
+    "ymin": 5261497.721326341,
+    "xmax": -9263529.350005815,
+    "ymax": 5261710.476558245
+  },
+  "width": 4700,
+  "height": 2089,
+  "row_order": "north_to_south",
+  "pixel_convention": "extent is outside pixel edges",
+  "retrieved_date": "2026-11-01",
+  "capture_date_range": [
+    "2025-04-27",
+    "2025-05-12"
+  ],
+  "native_resolution_m": 0.0762,
+  "source_service": "https://gisservices.oakgov.com/arcgis/rest/services/ImageServices/EnterpriseOrthoTC2025ImageService/ImageServer",
+  "source_metadata": "https://www.arcgis.com/sharing/rest/content/items/7553600852c44d748c4f068d328b4fd7?f=pjson",
+  "source_crs": "EPSG:2253; source metadata states NAD83 Michigan South State Plane international feet",
+  "reuse": "Oakland County Open Data Terms allow retrieval, download, copy, modification, adaptation, distribution, and reuse for lawful purposes. No county trademark is included.",
+  "license_url": "https://www.oakgov.com/open-data-terms",
+  "attribution": "Oakland County, Michigan; orthoimagery produced by Sanborn Map Company.",
+  "sha256": "7cf9f1e16c1f6a7b6a7b2e8116328e8f4ff421d7c71b0ddd95720dbffdfdf947"
+}

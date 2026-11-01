@@ -1,0 +1,57 @@
+# Full AutoNav reconstruction, not a surveyed 2027 obstacle arrangement.
+# Rules topology: west No Man's Land, east ramp/start, two curved taped runs.
+name: igvc2027_autonav
+datum:
+  latitude: 42.66791
+  longitude: -83.21958
+  elevation: 286.0
+  heading_deg: 0.0
+placement:
+  # Rigid alignment of the four schematic markers' centroid and north axis
+  # to reference/igvc2026_waypoints_reference.json, keeping the 500 ft scale.
+  center_enu: [38.239560112060055, 21.642628102138637]
+  heading_deg: 1.5650378321318665
+  status: historical_2026_registration_unsurveyed_2027
+course:
+  target_centerline_length_m: 152.4
+  lane_width_m: 3.66
+  tape_width_m: 0.1016
+  minimum_speed_check_m: 13.4112
+  ramp_height_m: 0.20
+  ramp_run_m: 2.0
+  ramp_plateau_m: 0.8
+  pothole_diameter_m: 0.6096
+  # Control polygon follows the official diagram. The compiler smooths it and
+  # scales its centerline to 500 ft. Actual footprint is reported in scene.json;
+  # the schematic and nominal 120x100 ft area are not a metric survey.
+  control_points:
+    - [14, -14]
+    - [14, -7]
+    - [14, 0]
+    - [14, 7]
+    - [14, 14]
+    - [12, 17]
+    - [9, 17]
+    - [6, 15]
+    - [2, 13]
+    - [-2, 13]
+    - [-6, 15]
+    - [-10, 17]
+    - [-13, 16]
+    - [-15, 13]
+    - [-15, 7]
+    - [-15, 0]
+    - [-15, -7]
+    - [-15, -13]
+    - [-13, -16]
+    - [-10, -17]
+    - [-6, -15]
+    - [-2, -13]
+    - [2, -13]
+    - [6, -15]
+    - [10, -17]
+    - [13, -16]
+appearance:
+  seed: 2027
+  asphalt_tile_m: 4.0
+  source: 2025 Oakland County aerial, 2017 USGS DEM, and historical competition photographs/video; see reference/sources.json

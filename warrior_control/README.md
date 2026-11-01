@@ -201,6 +201,8 @@ Edit [config/warrior_controllers_real.yaml](config/warrior_controllers_real.yaml
 (sim) to configure:
 - Wheel radius (`wheel_radius`), module positions (`wheel_to_center`) and bearings (`alpha`, 0/120/240°)
 - Command and odometry topics (`cmd_vel_topic`, `odom_topic`) and stale-command timeout (`cmd_vel_timeout`)
+- `enable_odom_tf` (default `true`): publish `odom` → `base_footprint`; set
+  `false` when a local EKF owns that transform. Wheel odometry still publishes.
 - Velocity limits (`cmd_vel_limit`) and the accel/decel `smoother`
 - Odometry EKF process/measurement noise (`kf.*`)
 

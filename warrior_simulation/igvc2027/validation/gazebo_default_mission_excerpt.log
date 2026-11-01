@@ -1,0 +1,20 @@
+[nav2_gps_waypoint_follower-23] [INFO] [1793509543.884113912] [nav2_gps_waypoint_follower]: Loaded 4 GPS waypoints; conversion=from_ll, frame=map, intermediate distance=20.0 m.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509544.372905858] [nav2_gps_waypoint_follower]: Waiting for navsat odometry before GPS conversion...
+[nav2_gps_waypoint_follower-23] [INFO] [1793509545.872810084] [nav2_gps_waypoint_follower]: Converting GPS waypoint 1/4...
+[nav2_gps_waypoint_follower-23] [INFO] [1793509546.372814507] [nav2_gps_waypoint_follower]: Converting GPS waypoint 2/4...
+[nav2_gps_waypoint_follower-23] [INFO] [1793509546.873229948] [nav2_gps_waypoint_follower]: Converting GPS waypoint 3/4...
+[nav2_gps_waypoint_follower-23] [INFO] [1793509547.372747920] [nav2_gps_waypoint_follower]: Converting GPS waypoint 4/4...
+[nav2_gps_waypoint_follower-23] [INFO] [1793509547.873350819] [nav2_gps_waypoint_follower]: Localization, waypoint conversion, and Nav2 are ready. Starting mission.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509547.873611788] [nav2_gps_waypoint_follower]: Waypoint 1/4: final target (0.04, -1.40) in map.
+[bt_navigator-17] [INFO] [1793509551.884144460] [bt_navigator]: Goal succeeded
+[nav2_gps_waypoint_follower-23] [INFO] [1793509551.884530809] [nav2_gps_waypoint_follower]: Waypoint 1 reached successfully.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509551.885222957] [nav2_gps_waypoint_follower]: Waypoint 2/4: final target (0.40, -14.80) in map.
+[bt_navigator-17] [INFO] [1793509599.355668945] [bt_navigator]: Goal succeeded
+[nav2_gps_waypoint_follower-23] [INFO] [1793509599.356013364] [nav2_gps_waypoint_follower]: Waypoint 2 reached successfully.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509599.356653222] [nav2_gps_waypoint_follower]: Waypoint 3/4: final target (0.53, -19.26) in map.
+[bt_navigator-17] [INFO] [1793509627.917056403] [bt_navigator]: Goal succeeded
+[nav2_gps_waypoint_follower-23] [INFO] [1793509627.917394632] [nav2_gps_waypoint_follower]: Waypoint 3 reached successfully.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509627.918207220] [nav2_gps_waypoint_follower]: Waypoint 4/4: final target (0.87, -32.02) in map.
+[bt_navigator-17] [INFO] [1793509684.678852723] [bt_navigator]: Goal succeeded
+[nav2_gps_waypoint_follower-23] [INFO] [1793509684.679159072] [nav2_gps_waypoint_follower]: Waypoint 4 reached successfully.
+[nav2_gps_waypoint_follower-23] [INFO] [1793509684.679904790] [nav2_gps_waypoint_follower]: GPS waypoint mission complete: every waypoint was reached.

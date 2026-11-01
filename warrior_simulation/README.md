@@ -1,6 +1,6 @@
 # warrior_simulation
 
-Gazebo simulation assets for Warrior 2026. See the
+Gazebo and Isaac Sim environments and robot simulation for Warrior. See the
 [workspace README](../README.md) for the overall robot/teleop overview.
 
 ## Contents
@@ -8,6 +8,8 @@ Gazebo simulation assets for Warrior 2026. See the
 | Sub-package | Build | Holds |
 | --- | --- | --- |
 | [warrior_gazebo](warrior_gazebo/) | `ament_cmake` | Sim worlds (`worlds/`) + SDF models (`models/`). No nodes/launch — see its [README](warrior_gazebo/README.md) for the full worlds + models tables. |
+| [igvc2027](igvc2027/) | Course generator | Shared georeferenced AutoNav geometry, materials, GPS targets and references. |
+| [warrior_isaac](warrior_isaac/) | Isaac Sim 5.1 + ROS adapter | USD course, physical Warrior articulation, lidar/IMU/encoder sensors and GPS navigation; requires an existing Isaac installation. |
 
 ## Stack
 

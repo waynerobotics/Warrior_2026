@@ -98,6 +98,7 @@ private:
     std::string odom_topic_;
     std::string odom_frame_;
     std::string base_frame_;
+    bool enable_odom_tf_ = true;
     double x_ = 0.0, y_ = 0.0, yaw_ = 0.0;
 
     // ── Kalman filter ─────────────────────────────────────────────────────────

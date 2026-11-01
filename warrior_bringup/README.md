@@ -12,6 +12,9 @@ Run `pixi run --locked build` once, then enter `pixi shell` before using the
 |---|---|
 | Manual swerve simulation | `pixi run --locked launch-sim` |
 | Autonomous swerve simulation | `pixi run --locked launch-nav-sim` |
+| GPS waypoint simulation | `pixi run --locked launch-gps-sim` |
+| Full 2027 AutoNav course + GPS mission | `pixi run --locked launch-igvc2027-gazebo` |
+| Isaac Warrior + GPS mission | `pixi run --locked launch-igvc2027-isaac` |
 | Real swerve teleop | `pixi run --locked launch-real` |
 | **Drive real swerve (Xbox)** | `ros2 launch warrior_bringup warrior_swerve_teleop.launch.py` |
 | Swerve sim | `ros2 launch warrior_bringup swerve_sim.launch.py` |
@@ -24,6 +27,16 @@ dependency resolution. This prevents a routine run from silently resolving a
 different ROS/Gazebo environment.
 
 ## Simulation workflows
+
+The [full IGVC 2027 course](../warrior_simulation/igvc2027/README.md) is available
+in both Gazebo and Isaac. `igvc2027_autonav.launch.py` uses its generated spawn
+profile and four GPS targets, with the GPS navigation pipeline described below.
+`igvc2027_isaac_nav.launch.py` starts the matching Isaac articulation, wheel
+drives, lidar, IMU, encoder odometry and GPS adapter, then the same EKFs and
+Nav2 mission. Its default view follows the robot. See the
+[Isaac guide](../warrior_simulation/warrior_isaac/README.md) for installation,
+headless runs and transport details. Run one simulator at a time in the same
+ROS domain because both publish the robot's normal topics and clock.
 
 ### Manual keyboard driving
 
@@ -78,6 +91,74 @@ Do not start keyboard or joystick teleoperation while `launch-nav-sim` is
 controlling the robot. There is currently no command-velocity mux/arbitration,
 so two publishers would compete for control.
 
+### GPS waypoints through an open area
+
+```bash
+pixi run --locked launch-gps-sim
+```
+
+This starts the Warrior at world `(0, -2)` facing north in
+`igvc2027_no_mans_land.world`, then runs the GPS YAML mission after wheel/IMU
+localization, GPS conversion, lidar, and Nav2 are ready. The separate world
+is a **simulation approximation** of the four-marker pattern on page 11 of
+the [2027 rules](https://gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf).
+The schematic has no surveyed GPS coordinates; its 40 m length, 8 m width,
+orientation, barrel locations, and waypoint spacing are chosen test geometry.
+It models only no-man's-land, not the full AutoNav course.
+
+`igvc2027_no_mans_land_waypoints.yaml` contains entrance `(0, 0)`, interior
+`(0, 17)` and `(0, 22)`, and exit `(0, 40)`, converted to latitude/longitude
+using the Gazebo WGS84 datum. The 17 m and 18 m legs exceed the simulated
+lidar's 15 m range. Barrel rows require obstacle avoidance between targets.
+The original `competition.world` and a separate three-point
+`no_mans_land_waypoints.yaml` smoke route are retained.
+
+The local EKF fuses `/odom` wheel velocities and `/mobile_sensor/imu`; the global
+EKF adds `/gps1/fix` through navsat. The controller publishes wheel odometry
+with its TF disabled so the EKFs own `map -> odom -> base_footprint`. Ground
+truth `/odom_gt` is available for comparison but is not used for navigation.
+Lidar `/unilidar/cloud` is transformed to the base frame. `ground_obstacle_scan`
+fits a bounded local road plane from nearby low lidar returns, then follows
+gradual height changes in radial sectors using low measured returns. Obstacles
+0.15–1.5 m above that surface become `/navigation/scan` returns, with a limited
+extra tolerance at longer ranges. This removes
+the inverted sensor's ground-return ring and supports the sloping P37 surface.
+The filter uses sensor returns, without querying the terrain map or ground
+truth pose. Camera/lane perception is not required for this GPS mission.
+
+Waypoint conversion uses navsat's `/fromLL` service, so GPS targets and the
+robot share one coordinate reference. The global planner can traverse unseen
+space. Distant GPS destinations become successive goals at most 20 m away,
+inside the 80 m rolling global costmap. Nav2 still replans around observed
+obstacles. Intermediate endpoints are checked against the current global
+costmap and shortened if they land inside a known inflated obstacle. Actual
+GPS targets are never relocated. A rejected or failed leg stops the mission and leaves subsequent
+waypoints unattempted.
+
+After building, use a custom world and waypoint file with:
+
+```bash
+pixi run --locked ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py \
+  world_name:=/absolute/path/to/course.world \
+  waypoint_file:=/absolute/path/to/waypoints.yaml \
+  spawn_x:=0.0 spawn_y:=-2.0 spawn_yaw:=1.5707963267948966
+```
+
+Replace the example spawn with coordinates in that world's open area. The
+world must supply WGS84 spherical coordinates and the IMU/navsat systems, as
+`competition.world` does. External models must be on Gazebo's resource path.
+Use `launch_gui:=false launch_rviz:=false` for a server-only run, or
+`autostart_waypoints:=false` to inspect sensors before sending goals. RViz shows
+the GPS targets and route in `map`.
+
+Keep `intermediate_goal_distance` below half the smaller global costmap
+dimension minus footprint/inflation margin. Subgoals do not provide global
+route search around barriers outside the rolling map. Unknown obstacles can
+still invalidate a goal after it is sent; add route waypoints when a mission
+requires a particular corridor. Painted course lines
+are not lidar obstacles, and simulation GPS has no configured noise; this
+test does not establish field accuracy or full-course lane compliance.
+
 ## Launch files
 
 All `*_sim` / `*_real` wrappers just pre-set `robot_type` on `main.launch.py`.
@@ -88,6 +169,7 @@ All `*_sim` / `*_real` wrappers just pre-set `robot_type` on `main.launch.py`.
 | [main.launch.py](launch/main.launch.py) | dispatcher — branches on `robot_type` (see matrix) | both |
 | [swerve_sim.launch.py](launch/swerve_sim.launch.py) | `main` w/ `robot_type:=swerve_sim` | sim |
 | [swerve_nav_sim.launch.py](launch_wrappers/swerve_nav_sim.launch.py) | Swerve simulation + Twist stamper + odom-relative Nav2 + Nav2 RViz | sim |
+| [swerve_gps_nav_sim.launch.py](launch_wrappers/swerve_gps_nav_sim.launch.py) | Swerve simulation + dual EKF/navsat + mapless GPS Nav2 + YAML mission | sim |
 | [diff_sim.launch.py](launch/diff_sim.launch.py) | `main` w/ `robot_type:=diff_sim` | sim |
 | [warrior_real.launch.py](launch/warrior_real.launch.py) | `main` w/ `robot_type:=warrior_real` | real |
 | [turtlebot_sim.launch.py](launch/turtlebot_sim.launch.py) | `main` w/ `robot_type:=turtlebot_sim` | sim |

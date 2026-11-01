@@ -1,0 +1,321 @@
+{
+  "reviewed_date": "2026-11-01",
+  "status": "Reference-informed simulation reconstruction; not an official surveyed 2027 course",
+  "coordinate_policy": {
+    "reference_system": "WGS84 latitude/longitude; local simulation coordinates use east/north/up metres",
+    "existing_repository_datum": [
+      42.66791,
+      -83.21958
+    ],
+    "datum_interpretation": "Inside the western portion of the publicly mapped P37 parking surface; not an organizer-provided waypoint",
+    "estimated_course_center_enu_m": [
+      38.239560112060055,
+      21.642628102138637
+    ],
+    "checked_course_bounds_enu_m": {
+      "east": [
+        15.126330955842693,
+        58.379554032653466
+      ],
+      "north": [
+        -1.707085851662046,
+        45.44319716833884
+      ]
+    },
+    "placement_check": "All generated 2027 course mesh vertices, box corners and sampled cylindrical boundaries are inside the mapped P37 polygon, checked by independent winding-angle tests. The registered placement preserves the 152.4 m loop scale. The 0.75 m robot has a geometric free-space path between spawn and all four targets. This validates simulated geometry, not an official 2027 obstacle survey.",
+    "gps_accuracy": "Coordinate decimal precision does not establish physical accuracy. Final 2027 competition waypoint coordinates and exact course placement were not available in the reviewed rules.",
+    "placement_classification": "Rigid registration of the 2027 schematic to the historical 2026 main waypoint centroid and north-south bearing;2027 marker geometry preserved",
+    "nominal_rule_envelope_m": [
+      36.576,
+      30.48
+    ],
+    "scale_policy": "The approximate area in the prose and illustrative 480-520 ft diagram do not define a surveyed scale. A route calibrated to 152.4 m can have a different physical footprint; the generated manifest must report its actual footprint separately.",
+    "lane_corridor_bounds_enu_m": [
+      16.975451843409843,
+      -1.6563050882863717,
+      58.26831784179227,
+      45.3926385928781
+    ],
+    "actual_lane_corridor_envelope_m": [
+      41.292865998382425,
+      47.048943681164474
+    ],
+    "actual_course_prop_envelope_m": [
+      43.25322307681077,
+      47.150283020000884
+    ],
+    "centerline_length_m": 152.4,
+    "historical_waypoint_reference": "igvc2026_waypoints_reference.json; seven organizer-published2026 points decoded as packed DMS. Used only for geographic registration, not2027 survey geometry.",
+    "vertical_policy": "USGS NAVD88 terrain is offset by272.1437180431318m at the retained local origin; existing286m WGS84 ellipsoid datum stays fixed. This declared alignment is not a geoid conversion or vertical survey.",
+    "site_feature_reference": "p37_site_features.json; manually digitized pole feet and canopy centers, approximately1m horizontal placement accuracy, all vertical sizes inferred.",
+    "placement_heading_deg": 1.5650378321318665,
+    "parking_relative_height_range_m": [
+      -2.7356562193634772,
+      1.2145436669452465
+    ],
+    "terrain_reference_elevation_m": 272.1437180431318
+  },
+  "sources": [
+    {
+      "id": "igvc_2027_rules",
+      "title": "IGVC 2027 Official Competition Details, Rules and Format, 7 July 2026 version",
+      "url": "https://www.gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf",
+      "pages": [
+        10,
+        11
+      ],
+      "role": "AutoNav requirements and schematic topology",
+      "constraints": {
+        "nominal_course_length_m": 152.4,
+        "illustrative_course_length_range_m": [
+          146.304,
+          158.496
+        ],
+        "approximate_course_area_m": [
+          36.576,
+          30.48
+        ],
+        "lane_width_range_m": [
+          3.048,
+          6.096
+        ],
+        "minimum_turning_radius_m": 1.524,
+        "line_width_range_m": [
+          0.0762,
+          0.1016
+        ],
+        "maximum_ramp_grade": 0.15,
+        "minimum_clear_passage_m": 1.524,
+        "pothole_white_disk_diameter_m": 0.6096,
+        "minimum_speed_check_distance_m": 13.4112,
+        "minimum_speed_mph": 1,
+        "maximum_speed_mph": 5,
+        "waypoint_count": 4
+      },
+      "observations": "Uncropped schematic explicitly marks north upward: winding taped lanes connect the west no-man's-land corridor to the east start/finish straight and ramp. Four waypoint stars and barrel groups are shown. Dimensions and coordinates are illustrative rather than surveyed.",
+      "reuse": "Reference only; original PDF/image is not redistributed.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "igvc_venue",
+      "title": "IGVC 2027 organizer event page",
+      "url": "https://gl-systems-technology.net/index.html",
+      "role": "Venue confirmation",
+      "observations": "Organizer identifies Oakland University P37, southeast of Squirrel Road and Pioneer Drive.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "oakland_official_address",
+      "title": "Oakland University Police Department campus addresses",
+      "url": "https://www.oakland.edu/police/services/campus-addresses/",
+      "role": "Official P37 address",
+      "observations": "P37 address is 135 Pioneer Drive, Rochester, Michigan 48309-4482.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "oakland_official_map",
+      "title": "Oakland University official interactive campus map: P37",
+      "url": "https://map.concept3d.com/?id=566#!m/51330",
+      "role": "Independent venue location check",
+      "data": {
+        "campus_map_id": 566,
+        "location_id": 77411,
+        "marker_id": 51330,
+        "marker_latitude": 42.66827,
+        "marker_longitude": -83.216995,
+        "west_emergency_phone_marker_id": 305360,
+        "west_emergency_phone_latitude": 42.668488,
+        "west_emergency_phone_longitude": -83.218346
+      },
+      "observations": "Public campus-map API supplies these label/point locations. The parking marker is in the eastern portion of P37; it is not its centroid, a survey monument, or an AutoNav waypoint.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "p37_osm_boundary",
+      "title": "OpenStreetMap P37 parking area, way 43097152",
+      "url": "https://www.openstreetmap.org/way/43097152",
+      "download_url": "https://www.openstreetmap.org/api/0.6/way/43097152/full.json",
+      "role": "Approximate parking-surface boundary and containment check",
+      "version": 8,
+      "last_modified": "2019-11-24T22:01:12Z",
+      "bounds_wgs84": {
+        "latitude": [
+          42.6678098,
+          42.6684839
+        ],
+        "longitude": [
+          -83.2196554,
+          -83.2161025
+        ]
+      },
+      "license": "ODbL 1.0",
+      "license_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+      "attribution": "\u00a9 OpenStreetMap contributors",
+      "attribution_url": "https://www.openstreetmap.org/copyright",
+      "observations": "Crowdsourced mapping, not survey-grade measurements. Full source polygon is in p37_boundary.geojson.",
+      "classification": "public_mapping"
+    },
+    {
+      "id": "bridgeport_2025_report",
+      "title": "University of Bridgeport IGVC 2025 design report",
+      "url": "https://igvc.secs.oakland.edu/design/2025/6.pdf",
+      "pages": [
+        10,
+        11
+      ],
+      "role": "2025 course appearance and historical layout reference",
+      "observations": "Page 10 shows medium-gray aggregate asphalt, faded yellow parking stalls and hatched end areas, bright white course tape, orange construction drums with reflective pale bands, dark barrel tops, grass, trees, and light poles. Its historical course has the start straight on the west and no-man's-land/ramp on the east; that arrangement must not be mistaken for the 2027 schematic.",
+      "reuse": "Visual reference only; original report images are not redistributed.",
+      "classification": "participant_primary"
+    },
+    {
+      "id": "dvids_2025_photo",
+      "title": "DEVCOM GVSC / Christopher Estrada: IGVC 2025, June 2 competition photo",
+      "url": "https://www.dvidshub.net/image/9130985/igvc-advances-future-robotic-mobility-through-student-innovation",
+      "role": "2025 venue materials and outdoor lighting reference",
+      "observations": "Self-Drive scene shows pale weathered asphalt, thin white course lines crossing faded yellow parking markings, green grass and deciduous trees, and daylight shadows. Used for venue appearance only, not AutoNav geometry.",
+      "reuse": "Photo inspected locally but not redistributed. Refer to DVIDS asset rights statement for any future reuse.",
+      "rights_url": "https://www.dvidshub.net/about/copyright",
+      "classification": "official_primary"
+    },
+    {
+      "id": "igvc_2026_video_index",
+      "title": "Organizer's 2026 competition video index",
+      "url": "https://www.gl-systems-technology.net/2026-videos.html",
+      "role": "Optional newer visual reference; year explicitly 2026",
+      "autonav_video_url": "https://youtu.be/NJRW3q9g_lg",
+      "observations": "Organizer labels the linked video Tennessee Tech's winning AutoNav run. Link catalogued; video footage was not downloaded or used as measured geometry.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "organizer_2025_site_image",
+      "title": "Organizer's 2025 P37 site map",
+      "url": "https://www.gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc-2025-on-p37_orig.jpg",
+      "role": "Future site-allocation reference",
+      "verification": "Image was indexed by web search but direct image retrieval failed; not used to claim a precise AutoNav allocation.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "igvc_2021_site_map",
+      "title": "Official IGVC archived P37 venue map (2021)",
+      "url": "https://igvc.secs.oakland.edu/2021map.png",
+      "page_url": "https://igvc.secs.oakland.edu/maps.htm",
+      "role": "Historical venue extent verification",
+      "observations": "Map outlines all of P37 between Squirrel Road, Pioneer Drive and Lonedale Road, but does not locate AutoNav within the lot.",
+      "reuse": "Reference only; original image not redistributed.",
+      "classification": "official_primary"
+    },
+    {
+      "id": "organizer_chicane_video_historical",
+      "classification": "official_primary",
+      "title": "Organizer-linked AutoNav chicane and barrel walk-through",
+      "url": "https://drive.google.com/file/d/1gcjv33Z9A7HrY1tmvFj-k-hQDDzbmnLg/view",
+      "page_url": "https://gl-systems-technology.net/autonav.html",
+      "role": "Historical AutoNav materials and background reference",
+      "video_metadata_creation_time": "2023-06-19T13:11:00Z",
+      "year_note": "File metadata indicates 2023; event capture date was not independently confirmed. Do not label this 2025 or 2026 footage.",
+      "inspected_timestamps_s": [
+        2,
+        15,
+        30
+      ],
+      "observations": "Orange barrels have two broad white reflective bands and dark sandbags on top. Untaped corridor uses plain blue, red, white, black, green and yellow drums. Gray coarse asphalt carries faded yellow parking bays, black sealed cracks and irregular white tape. Background has grass, conifers/deciduous trees and light poles on concrete bases.",
+      "reuse": "Inspected locally; video and frames not redistributed."
+    },
+    {
+      "id": "igvc2026_historical_gps",
+      "title": "Organizer 2026 AutoNav GPS waypoints image",
+      "url": "https://gl-systems-technology.net/uploads/3/4/7/2/34727963/2026-igvc-gps-waypoints-2_orig.jpg",
+      "page_url": "https://gl-systems-technology.net/autonav.html",
+      "classification": "official_primary_historical",
+      "role": "Historic geographic registration for 2027 reconstruction",
+      "local_data": "igvc2026_waypoints_reference.json",
+      "observations": "Seven numbered points: four main and three practice. The punctuation is interpreted as packed degrees/minutes/seconds, validated against P37; the image does not explicitly label coordinate encoding, horizontal datum or accuracy. WGS84 is an explicit simulation assumption.2026 points must not be presented as 2027 surveyed targets.",
+      "reuse": "Numeric facts transcribed; copyrighted source image not redistributed."
+    },
+    {
+      "id": "oakland_2025_orthophoto",
+      "title": "Oakland County 2025 TC/CIR orthophoto image service",
+      "url": "https://gisservices.oakgov.com/arcgis/rest/services/ImageServices/EnterpriseOrthoTC2025ImageService/ImageServer",
+      "metadata_url": "https://www.arcgis.com/sharing/rest/content/items/7553600852c44d748c4f068d328b4fd7?f=pjson",
+      "classification": "official_primary_geospatial",
+      "role": "Real site surface appearance and visible curb, tree, parking marking and light-pole placement",
+      "local_asset": "p37_oakland_2025.png",
+      "georeference": "p37_oakland_2025_georeference.json",
+      "capture_date_range": [
+        "2025-04-27",
+        "2025-05-12"
+      ],
+      "native_resolution_m": 0.0762,
+      "observations": "Leaf-off imagery resolves cracked gray asphalt, faded parking markings, perimeter curb notches, north grass strip and roundabout, south woodland/grass, and light poles. No raised interior parking islands are visible in the principal P37 asphalt area. This predates the 2027 course and supplies site context, not obstacle arrangement.",
+      "reuse": "Oakland County Open Data terms explicitly allow downloading, copying, modifying, adapting, distributing and reusing data for lawful purposes. Source is provided without warranty.",
+      "license_url": "https://www.oakgov.com/open-data-terms",
+      "attribution": "Oakland County, Michigan; orthoimagery produced by Sanborn Map Company."
+    },
+    {
+      "id": "usgs_naip2022",
+      "title": "USGS National Map USDA NAIP imagery",
+      "url": "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer",
+      "classification": "official_primary_geospatial",
+      "role": "Independent leaf-on aerial corroboration of venue and vegetation",
+      "local_asset": "p37_naip_2022.png",
+      "georeference": "p37_naip_2022_georeference.json",
+      "source_raster": "m_4208323_sw_17_060_20220730",
+      "capture_date": "2022-07-30",
+      "native_resolution_m": 0.6,
+      "reuse": "Public-domain NAIP imagery, as stated in the USGS service description.",
+      "attribution": "USDA, USGS, The National Map."
+    },
+    {
+      "id": "usgs_3dep_p37",
+      "title": "USGS 3DEP one-meter Oakland County bare-earth elevation",
+      "url": "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer",
+      "source_raster_url": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/1m/Projects/MI_31Co_Oakland_2016/TIFF/USGS_one_meter_x31y473_MI_31Co_Oakland_2016.tif",
+      "classification": "official_primary_geospatial",
+      "role": "Measured broad site relief; no invented terrain bumps",
+      "local_asset": "p37_usgs_3dep_navd88.tif",
+      "decoded_grid": "p37_elevation_grid.json",
+      "project": "MI_31Co_Oakland_2016",
+      "capture_date_range": [
+        "2017-03-29",
+        "2017-05-03"
+      ],
+      "published_date": "2020-03-30",
+      "native_resolution_m": 1,
+      "vertical_datum": "NAVD88",
+      "reference_elevation_m": 272.1437180431318,
+      "observations": "The public image-service export is explicitly locked to raster ID 138625 and uses raw F32 values with bilinear reprojection. Source resolution is 1 m; exported EPSG:3857 pixel spacing is a projection quantity. Bare-earth data supports parking-lot grade and broad berms but cannot resolve exact curb faces or current pavement condition.",
+      "reuse": "USGS public-domain elevation data.",
+      "attribution": "USGS National Map 3D Elevation Program (3DEP)."
+    },
+    {
+      "id": "polyhaven_daylight_hdri",
+      "title": "Kloofendal 48d Partly Cloudy (Pure Sky)",
+      "url": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+      "classification": "reusable_visual_asset",
+      "role": "Generic midday outdoor environment lighting for Isaac rendering",
+      "local_asset": "kloofendal_48d_partly_cloudy_puresky_1k.hdr",
+      "sha256": "fd94c84997b8a3c353b62c2125a9b44e19509956986a126e472684432a02d798",
+      "observations": "Generic sky lighting, not an Oakland venue capture or historical competition weather reconstruction.",
+      "reuse": "CC0; redistribution allowed.",
+      "license_url": "https://polyhaven.com/license",
+      "attribution": "Greg Zaal (original) and Jarod Guest (sky edits), Poly Haven."
+    }
+  ],
+  "local_research_library": {
+    "path": "/home/lab2005/projects/igvc",
+    "compiled_date": "2026-10-13",
+    "reviewed_files": [
+      "README.md",
+      "IGVC_2027_Analysis.md",
+      "data/website/maps.htm",
+      "data/website/videos.htm",
+      "data/website/photos.htm",
+      "data/website/gl-systems/autonav.html",
+      "data/rules/figures_2027/course_raw-000.jpg"
+    ],
+    "role": "User-provided archive of organizer rules, design reports and website snapshots; source documents take precedence over commentary.",
+    "findings": "Uncropped 2027 schematic includes north arrow, confirming west no-mans-land and east start/ramp. No final 2027 latitude/longitude waypoint pairs or downloaded venue/video imagery were found."
+  },
+  "validation_artifact": "../validation.json"
+}

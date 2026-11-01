@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "motion_m": 0.5245567751059558,
+  "post_watchdog_drift_m": 0.006471616765771669,
+  "max_post_watchdog_encoder_speed_mps": 0.0036911981920540863,
+  "valid_commands_sim_interval_s": [
+    2,
+    3
+  ],
+  "stale_commands_sim_interval_s": [
+    4,
+    5
+  ],
+  "nonfinite_commands_sim_interval_s": [
+    5,
+    6
+  ],
+  "total_sim_seconds": 7.000000365078449,
+  "packets": 419,
+  "exit_code": 0
+}
