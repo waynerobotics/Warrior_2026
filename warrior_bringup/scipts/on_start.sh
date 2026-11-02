@@ -23,7 +23,7 @@ fi
 
 cd "${WARRIOR_REPO}"
 export WARRIOR_DOMAIN_ID
-exec "${PIXI_EXECUTABLE}" run --locked bash -c '
+exec "${PIXI_EXECUTABLE}" run bash -c '
     source install/pixi/setup.bash
     export ROS_DOMAIN_ID="${WARRIOR_DOMAIN_ID}"
     exec ros2 launch warrior_bringup warrior_swerve_teleop.launch.py

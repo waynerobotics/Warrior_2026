@@ -8,7 +8,7 @@ Pixi activation and development helpers. See the
 From the repository root:
 
 ```bash
-pixi install --locked
+pixi install
 pixi run build
 ```
 

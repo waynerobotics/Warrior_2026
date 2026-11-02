@@ -29,7 +29,7 @@ Insta360 (USB-C UVC)
 | cv_bridge | `ros-humble-cv-bridge` |
 
 ROS 2, OpenCV, `vision_msgs`, and `cv_bridge` come from the repository's
-locked Pixi environment. Install it once with `pixi install --locked`. Keep
+locked Pixi environment. Install it once with `pixi install`. Keep
 JetPack's system CUDA and TensorRT installation; those proprietary host
 libraries are intentionally not duplicated inside Pixi.
 

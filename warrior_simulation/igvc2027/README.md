@@ -19,23 +19,23 @@ From the repository root:
 ```bash
 # Build ROS packages, spawn Warrior at the north entrance of no-man's-land,
 # start GPS + IMU + wheel-odometry fusion, and drive the four GPS targets.
-pixi run --locked launch-igvc2027-gazebo
+pixi run launch-igvc2027-gazebo
 
 # Run the robot and GPS mission in the installed Isaac Sim.
-pixi run --locked launch-igvc2027-isaac
+pixi run launch-igvc2027-isaac
 
 # Inspect the Isaac environment without starting the robot mission.
-pixi run --locked inspect-igvc2027-isaac
+pixi run inspect-igvc2027-isaac
 ```
 
 For Gazebo options after the build:
 
 ```bash
-pixi run --locked ros2 launch warrior_bringup igvc2027_autonav.launch.py \
+pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py \
   launch_gui:=false launch_rviz:=false
 
 # Inspect the scene without starting the waypoint mission:
-pixi run --locked ros2 launch warrior_bringup igvc2027_autonav.launch.py \
+pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py \
   autostart_waypoints:=false
 ```
 
@@ -72,7 +72,7 @@ To test a goal beyond the 15 m lidar range, use the diagnostic mission after
 building the packages:
 
 ```bash
-pixi run --locked ros2 launch warrior_bringup igvc2027_autonav.launch.py \
+pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py \
   waypoint_file:="$(pwd)/warrior_navigation/config/igvc2027_autonav_long_leg.yaml"
 ```
 
@@ -198,11 +198,11 @@ Edit `course.yaml`, then regenerate both worlds, meshes, spawn profile and
 waypoint files together:
 
 ```bash
-pixi run --locked build-igvc2027-course
-pixi run --locked python -m pytest warrior_simulation/igvc2027/test warrior_navigation/test
+pixi run build-igvc2027-course
+pixi run python -m pytest warrior_simulation/igvc2027/test warrior_navigation/test
 bash warrior_simulation/warrior_isaac/validate_stage.sh \
   --scene warrior_simulation/igvc2027/scene.json
-pixi run --locked ign sdf -k warrior_simulation/warrior_gazebo/worlds/igvc2027_autonav.world
+pixi run ign sdf -k warrior_simulation/warrior_gazebo/worlds/igvc2027_autonav.world
 ```
 
 Rebuild ROS packages after regeneration to refresh installed assets. Isaac's

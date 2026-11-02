@@ -174,9 +174,9 @@ Joints (from config): `{front,left,right}_steer_joint`, `{front,left,right}_driv
 
 ### Build
 ```bash
-pixi run --locked build
+pixi run build
 # Package-only iteration after the initial build:
-pixi run --locked colcon build --build-base build/pixi --install-base install/pixi \
+pixi run colcon build --build-base build/pixi --install-base install/pixi \
   --symlink-install --packages-select warrior_control
 ```
 

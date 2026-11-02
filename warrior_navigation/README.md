@@ -15,7 +15,7 @@ ament_python. Heavily simulation-oriented (TurtleBot3 Gazebo) — see [Staleness
 From the workspace root:
 
 ```bash
-pixi run --locked launch-nav-sim
+pixi run launch-nav-sim
 ```
 
 RViz opens after Nav2 is active and `/navigate_to_pose` is ready. Its Warrior
@@ -24,7 +24,7 @@ planned path. Use the toolbar's **Nav2 Goal** tool, or send a goal in the
 `odom` frame:
 
 ```bash
-pixi run --locked ros2 action send_goal \
+pixi run ros2 action send_goal \
   /navigate_to_pose nav2_msgs/action/NavigateToPose \
   "{pose: {header: {frame_id: odom}, pose: {position: {x: 2.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}" \
   --feedback
@@ -40,7 +40,7 @@ run a teleop publisher at the same time: the stack has no command mux yet. No
 
 ## Nav2 GPS waypoint flow
 
-For the current Warrior model, use `pixi run --locked launch-gps-sim`; see the
+For the current Warrior model, use `pixi run launch-gps-sim`; see the
 [GPS simulation guide](../warrior_bringup/README.md#gps-waypoints-through-an-open-area).
 This uses `nav2_gps_sim_params.yaml` and the same `waypoints` list of
 `latitude`, `longitude`, and `yaw` fields as `demo_waypoints.yaml`. Yaw is
@@ -72,8 +72,8 @@ when using a rolling global map. The new GPS simulation avoids this manual
 origin configuration by using `/fromLL`.
 
 For the complete P37 environment and its generated four-target mission, use
-`pixi run --locked launch-igvc2027-gazebo` or
-`pixi run --locked launch-igvc2027-isaac`; see the
+`pixi run launch-igvc2027-gazebo` or
+`pixi run launch-igvc2027-isaac`; see the
 [2027 course guide](../warrior_simulation/igvc2027/README.md).
 
 Both simulators use `ground_filter.py` to estimate the nearby road plane and
@@ -112,7 +112,7 @@ flowchart LR
 | [turtlebot3_world_gps.launch.py](launch/turtlebot3_world_gps.launch.py) | sim | TurtleBot3 Gazebo world + spawn. ⚠️ sim-only. |
 | [spawn_turtlebot3_gps.launch.py](launch/spawn_turtlebot3_gps.launch.py) | sim | Spawn TB3 burger + gz bridges. ⚠️ sim-only. |
 
-After `pixi run --locked build`, run ROS commands inside `pixi shell`:
+After `pixi run build`, run ROS commands inside `pixi shell`:
 
 ```bash
 ros2 launch warrior_navigation nav.launch.py use_sim:=false waypoint_file:=<path>

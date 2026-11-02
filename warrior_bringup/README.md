@@ -5,26 +5,26 @@ See the [workspace README](../README.md) for the whole-system picture.
 
 ## Quick Start
 
-Run `pixi run --locked build` once, then enter `pixi shell` before using the
+Run `pixi run build` once, then enter `pixi shell` before using the
 `ros2` commands below. The top-level Pixi tasks cover the common cases directly.
 
 | Goal | Command |
 |---|---|
-| Manual swerve simulation | `pixi run --locked launch-sim` |
-| Autonomous swerve simulation | `pixi run --locked launch-nav-sim` |
-| GPS waypoint simulation | `pixi run --locked launch-gps-sim` |
-| Full 2027 AutoNav course + GPS mission | `pixi run --locked launch-igvc2027-gazebo` |
-| Isaac Warrior + GPS mission | `pixi run --locked launch-igvc2027-isaac` |
-| Real swerve teleop | `pixi run --locked launch-real` |
+| Manual swerve simulation | `pixi run launch-sim` |
+| Autonomous swerve simulation | `pixi run launch-nav-sim` |
+| GPS waypoint simulation | `pixi run launch-gps-sim` |
+| Full 2027 AutoNav course + GPS mission | `pixi run launch-igvc2027-gazebo` |
+| Isaac Warrior + GPS mission | `pixi run launch-igvc2027-isaac` |
+| Real swerve teleop | `pixi run launch-real` |
 | **Drive real swerve (Xbox)** | `ros2 launch warrior_bringup warrior_swerve_teleop.launch.py` |
 | Swerve sim | `ros2 launch warrior_bringup swerve_sim.launch.py` |
 | Swerve sim + Nav2 | `ros2 launch warrior_bringup swerve_nav_sim.launch.py` |
 | Diff-drive sim | `ros2 launch warrior_bringup diff_sim.launch.py` |
 | Real Warrior (ros2_control only) | `ros2 launch warrior_bringup warrior_real.launch.py` |
 
-`--locked` requires the committed `pixi.lock` to remain valid and uses its exact
-dependency resolution. This prevents a routine run from silently resolving a
-different ROS/Gazebo environment.
+These commands reuse the committed `pixi.lock` while it matches `pixi.toml`.
+Pixi can update the lockfile when dependencies change; review and commit those
+changes with the manifest. See the [environment guide](../README.md#quick-start).
 
 ## Simulation workflows
 
@@ -43,13 +43,13 @@ ROS domain because both publish the robot's normal topics and clock.
 Start the base simulation:
 
 ```bash
-pixi run --locked launch-sim
+pixi run launch-sim
 ```
 
 Then, in a second terminal in the repository, run:
 
 ```bash
-pixi run --locked ros2 run teleop_twist_keyboard teleop_twist_keyboard \
+pixi run ros2 run teleop_twist_keyboard teleop_twist_keyboard \
   --ros-args -p stamped:=true -p frame_id:=base_footprint \
   -r cmd_vel:=/cmd_vel_stamped
 ```
@@ -63,7 +63,7 @@ the simulation controller also stops a stale keyboard command within 0.75 s.
 Start the simulation and its odom-relative Nav2 stack:
 
 ```bash
-pixi run --locked launch-nav-sim
+pixi run launch-nav-sim
 ```
 
 RViz intentionally opens only after controller odometry, the `odom` to
@@ -76,7 +76,7 @@ The same goal can be sent from another terminal. This example requests a pose
 2 m forward from the robot's startup origin:
 
 ```bash
-pixi run --locked ros2 action send_goal \
+pixi run ros2 action send_goal \
   /navigate_to_pose nav2_msgs/action/NavigateToPose \
   "{pose: {header: {frame_id: odom}, pose: {position: {x: 2.0, y: 0.0, z: 0.0}, orientation: {w: 1.0}}}}" \
   --feedback
@@ -94,7 +94,7 @@ so two publishers would compete for control.
 ### GPS waypoints through an open area
 
 ```bash
-pixi run --locked launch-gps-sim
+pixi run launch-gps-sim
 ```
 
 This starts the Warrior at world `(0, -2)` facing north in
@@ -138,7 +138,7 @@ waypoints unattempted.
 After building, use a custom world and waypoint file with:
 
 ```bash
-pixi run --locked ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py \
+pixi run ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py \
   world_name:=/absolute/path/to/course.world \
   waypoint_file:=/absolute/path/to/waypoints.yaml \
   spawn_x:=0.0 spawn_y:=-2.0 spawn_yaw:=1.5707963267948966
@@ -244,7 +244,7 @@ Provision the environment and build as the service user before enabling the
 unit; boot should not need to download packages:
 
 ```bash
-sudo -u fire -H bash -lc 'cd /home/fire/Warrior_2026 && ~/.pixi/bin/pixi install --locked && ~/.pixi/bin/pixi run --locked build'
+sudo -u fire -H bash -lc 'cd /home/fire/Warrior_2026 && ~/.pixi/bin/pixi install && ~/.pixi/bin/pixi run build'
 ```
 
 Example unit (`/etc/systemd/system/warrior-2026.service`):
@@ -280,7 +280,7 @@ journalctl -u warrior-2026.service -f
 
 | Symptom | Fix |
 |---|---|
-| `Resource not found: warrior_control` | Run `pixi run --locked build`, then use `pixi shell` or `pixi run --locked …`. |
+| `Resource not found: warrior_control` | Run `pixi run build`, then use `pixi shell` or `pixi run …`. |
 | Teleop sends nothing | controller subscribes `/cmd_vel_stamped` as **TwistStamped** — use `stamped:=true` and remap `cmd_vel:=/cmd_vel_stamped` |
 | RViz never opens | Check the launch terminal for a Nav2 activation error; RViz is gated until `/navigate_to_pose` is ready. |
 | RViz goal is rejected or never starts | Use the **Nav2 Goal** toolbar tool from `launch-nav-sim`; goals use the `odom` frame and need no **2D Pose Estimate**. |

@@ -15,9 +15,9 @@ export PATH="${HOME}/.pixi/bin:${PATH}"
 
 git clone git@github.com:waynerobotics/Warrior_2026.git
 cd Warrior_2026
-pixi install --locked
-pixi run --locked build
-pixi run --locked launch-sim
+pixi install
+pixi run build
+pixi run launch-sim
 ```
 
 The committed [pixi.lock](pixi.lock) contains resolved ROS 2 Humble
@@ -25,23 +25,24 @@ environments for `linux-64` and `linux-aarch64`. Pixi keeps its environment in
 `.pixi/` and the ROS overlay in `install/pixi/`; project setup does not modify
 `/opt/ros` or apt sources.
 
-`--locked` tells Pixi to use the exact dependency versions already recorded in
-`pixi.lock` and fail if the project metadata would require re-solving them. It
-makes developer and CI runs reproducible; omit it only when intentionally
-updating the environment and lock file.
+Everyday commands use `pixi run <task>`. Pixi reuses `pixi.lock` while it
+matches `pixi.toml` and can update it when dependencies change. Keep the
+lockfile in Git so fresh installs share the same resolved versions. Use
+`pixi update` for intentional dependency upgrades; `--locked` is optional
+for CI or checks that must fail when the manifest and lockfile disagree.
 
 | Command | Purpose |
 |---|---|
-| `pixi run --locked build` | Build the base stack, excluding TensorRT perception packages. |
-| `pixi run --locked test` | Rebuild and run the ROS tests. |
-| `pixi run --locked launch-sim` | Build and launch the default swerve simulation for manual driving. |
-| `pixi run --locked launch-nav-sim` | Build and launch the swerve simulation with mapless, odom-relative Nav2. |
-| `pixi run --locked launch-gps-sim` | Build and launch GPS/IMU/odometry navigation with lidar obstacle avoidance and a sample waypoint mission. |
-| `pixi run --locked launch-igvc2027-gazebo` | Launch Warrior's GPS mission in the complete P37 AutoNav approximation. |
-| `pixi run --locked launch-igvc2027-isaac` | Spawn Warrior in Isaac Sim and drive the four GPS targets with simulated sensors. |
-| `pixi run --locked inspect-igvc2027-isaac` | Inspect the matching Isaac course without starting a robot mission. |
-| `pixi run --locked launch-real` | Build and launch real-robot Xbox teleoperation. |
-| `pixi run --locked build-perception` | Build `neural_engine` + `omnivision`; requires host CUDA and TensorRT. |
+| `pixi run build` | Build the base stack, excluding TensorRT perception packages. |
+| `pixi run test` | Rebuild and run the ROS tests. |
+| `pixi run launch-sim` | Build and launch the default swerve simulation for manual driving. |
+| `pixi run launch-nav-sim` | Build and launch the swerve simulation with mapless, odom-relative Nav2. |
+| `pixi run launch-gps-sim` | Build and launch GPS/IMU/odometry navigation with lidar obstacle avoidance and a sample waypoint mission. |
+| `pixi run launch-igvc2027-gazebo` | Launch Warrior's GPS mission in the complete P37 AutoNav approximation. |
+| `pixi run launch-igvc2027-isaac` | Spawn Warrior in Isaac Sim and drive the four GPS targets with simulated sensors. |
+| `pixi run inspect-igvc2027-isaac` | Inspect the matching Isaac course without starting a robot mission. |
+| `pixi run launch-real` | Build and launch real-robot Xbox teleoperation. |
+| `pixi run build-perception` | Build `neural_engine` + `omnivision`; requires host CUDA and TensorRT. |
 | `pixi shell` | Open an activated shell for arbitrary `ros2`/`colcon` commands. |
 
 For keyboard controls and sending a navigation goal from RViz or the command

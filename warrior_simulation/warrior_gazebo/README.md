@@ -40,7 +40,7 @@ and north-facing orientation are simulation choices anchored at WGS84
 `42.66791, -83.21958`, elevation 286 m. Spawn at `(0, -2, 0.1)`, heading north;
 the four visual markers match the companion
 [`igvc2027_no_mans_land_waypoints.yaml`](../../warrior_navigation/config/igvc2027_no_mans_land_waypoints.yaml).
-Run `pixi run --locked launch-gps-sim` from the workspace root; see the
+Run `pixi run launch-gps-sim` from the workspace root; see the
 [GPS simulation guide](../../warrior_bringup/README.md#gps-waypoints-through-an-open-area).
 
 ## Models

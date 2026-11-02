@@ -47,7 +47,7 @@ From [config/joystick.yaml](config/joystick.yaml):
 
 `publish_stamped_twist: true`, `require_enable_button: true`, deadzone 0.15.
 
-After `pixi run --locked build`, run ROS commands inside `pixi shell`:
+After `pixi run build`, run ROS commands inside `pixi shell`:
 
 ```bash
 ros2 launch warrior_joy joy_swerve.launch.py

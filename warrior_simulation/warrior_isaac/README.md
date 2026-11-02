@@ -3,7 +3,7 @@
 Run the robot and the complete IGVC 2027 simulation course from the repository root:
 
 ```bash
-pixi run --locked launch-igvc2027-isaac
+pixi run launch-igvc2027-isaac
 ```
 
 This launches Warrior at the shared no-man's-land spawn, starts physics and
@@ -15,12 +15,12 @@ GPU/driver are required. Set `ISAAC_SIM_PATH` if Isaac is not at `$HOME/isaacsim
 For launch arguments after building:
 
 ```bash
-pixi run --locked ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
+pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
   headless:=true seconds:=150 report:=/tmp/isaac_mission.json \
   capture:=/tmp/isaac_robot.png capture_time:=35
 
 # Open the simulator and sensors without starting waypoint navigation:
-pixi run --locked ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
+pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
   autostart_waypoints:=false launch_rviz:=true
 ```
 

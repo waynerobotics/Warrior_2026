@@ -24,7 +24,7 @@ if [[ ! -f "${WARRIOR_REPO}/install/pixi/setup.bash" ]]; then
 fi
 
 cd "${WARRIOR_REPO}"
-exec "${PIXI_EXECUTABLE}" run --locked bash -c '
+exec "${PIXI_EXECUTABLE}" run bash -c '
     source install/pixi/setup.bash
     export LIBGL_ALWAYS_SOFTWARE=1
     WARRIOR_GAZEBO_SHARE="$(ros2 pkg prefix warrior_gazebo)/share/warrior_gazebo"
