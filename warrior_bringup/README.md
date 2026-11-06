@@ -7,6 +7,14 @@ See the [workspace README](../README.md) for the whole-system picture.
 
 Run `pixi run build` once, then enter `pixi shell` before using the
 `ros2` commands below. The top-level Pixi tasks cover the common cases directly.
+Before the first Isaac launch on a Linux x86_64 NVIDIA RTX workstation, run
+`pixi run install-isaac`, then `pixi run configure-isaac` in a terminal.
+Installation creates `.pixi/envs/isaac/` with Python 3.11 and
+Isaac Sim 5.1.0, separate from the ROS Humble/Python 3.12 environment. The
+launch commands select it automatically. The configure task presents NVIDIA's
+actual EULA prompt; the user must review and accept it before the first ROS
+launch, which cannot handle the interactive prompt. Setup does not accept it
+automatically.
 
 | Goal | Command |
 |---|---|

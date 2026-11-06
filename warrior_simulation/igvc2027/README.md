@@ -21,7 +21,11 @@ From the repository root:
 # start GPS + IMU + wheel-odometry fusion, and drive the four GPS targets.
 pixi run launch-igvc2027-gazebo
 
-# Run the robot and GPS mission in the installed Isaac Sim.
+# One-time setup on a Linux x86_64 NVIDIA RTX workstation:
+pixi run install-isaac
+pixi run configure-isaac
+
+# Run the robot and GPS mission in the isolated Pixi Isaac environment.
 pixi run launch-igvc2027-isaac
 
 # Inspect the Isaac environment without starting the robot mission.
@@ -39,7 +43,11 @@ pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py \
   autostart_waypoints:=false
 ```
 
-Isaac defaults to `$HOME/isaacsim`; set `ISAAC_SIM_PATH` for another installation.
+Isaac uses the repository's `.pixi/envs/isaac/` environment with Python 3.11
+and Isaac Sim 5.1.0. The ROS environment remains separate; no global Isaac
+installation is used. Run `configure-isaac` in a terminal to review and accept
+NVIDIA's EULA before the first ROS launch; ROS cannot answer the interactive
+prompt, and setup does not accept it automatically.
 Its stage contains the environment, physics, cameras and `/World/RobotSpawn`.
 The launch task runs Warrior with the ROS navigation and sensor integration;
 the inspect task opens the environment alone. See the
@@ -216,6 +224,8 @@ packages built, and regeneration reproduced 440 generated artifacts byte for
 byte. Independent geometry checks confirmed that the surrounding terrain has
 one parking-lot hole and zero overlap with the asphalt. Paint, waypoint
 altitudes and spawn clearance were checked against the actual collision mesh.
+The recorded Isaac runs predate the separate Pixi Isaac environment and do not
+validate that installation workflow.
 
 | Runtime check | Result |
 | --- | --- |

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Open the shared IGVC course in Isaac Sim 5.1 or newer.
+"""Open the shared IGVC course in the project's pinned Isaac Sim 5.1 environment.
 
-Run with Isaac Sim's python.sh, not the ROS/Pixi Python interpreter. Importing
+Use launch_course.sh to enter the separate Pixi Isaac runtime. Importing
 SimulationApp precedes every omni/pxr import, as required by Isaac Sim.
 """
 
@@ -9,6 +9,8 @@ import argparse
 from pathlib import Path
 import sys
 import time
+
+from runtime import application_arguments
 
 
 def configure_sky_background(stage):
@@ -54,7 +56,7 @@ def main():
     try:
         from isaacsim import SimulationApp
     except ImportError:
-        parser.exit(2, "Use your Isaac Sim installation's python.sh to run this script.\n")
+        parser.exit(2, "Run launch_course.sh to use this project's isolated Isaac Sim environment.\n")
 
     app = SimulationApp({
         "headless": args.headless,
@@ -63,6 +65,7 @@ def main():
         "height": 1080,
         "multi_gpu": False,
         "sync_loads": True,
+        "extra_args": application_arguments(),
     })
     try:
         import omni.timeline

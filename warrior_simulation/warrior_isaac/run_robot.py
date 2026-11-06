@@ -10,6 +10,8 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 
+from runtime import application_arguments
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
@@ -82,7 +84,8 @@ def main():
     imu_offset, imu_rotation = fixed_mount(args.urdf, args.imu_frame, 'base_link')
     from isaacsim import SimulationApp
     app = SimulationApp({'headless': args.headless, 'renderer': 'RaytracedLighting',
-                         'width': 1280, 'height': 720, 'multi_gpu': False, 'sync_loads': True})
+                         'width': 1280, 'height': 720, 'multi_gpu': False, 'sync_loads': True,
+                         'extra_args': application_arguments()})
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(('127.0.0.1', args.port + 1))
     sock.setblocking(False)

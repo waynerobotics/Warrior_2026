@@ -1,16 +1,44 @@
 # Warrior GPS navigation in Isaac Sim
 
-Run the robot and the complete IGVC 2027 simulation course from the repository root:
+Isaac runs in the repository's separate Pixi `isaac` environment at
+`.pixi/envs/isaac/`, with Python 3.11 and `isaacsim[all,extscache]==5.1.0`.
+The ROS Humble stack keeps its Python 3.12 `default` environment. Install Isaac
+once on a Linux x86_64 (`linux-64`) workstation with a supported NVIDIA RTX GPU
+and driver, then launch the robot in the complete IGVC 2027 course:
 
 ```bash
+pixi run install-isaac
+pixi run configure-isaac
 pixi run launch-igvc2027-isaac
 ```
+
+Run these commands from the repository root. The explicit install task uses
+the committed Pixi lock; normal ROS/Gazebo setup does not install Isaac.
+The Isaac environment does not include the ROS environment's dependencies or
+activation hook. ROS remains available on both `linux-64` and `linux-aarch64`;
+the optional Isaac environment is for the x86_64 GPU workstation.
+
+Run `pixi run configure-isaac` interactively after installation and before the
+first simulator launch. It presents NVIDIA's actual EULA prompt for the user
+to review and accept. ROS starts Isaac through `ExecuteProcess`, which cannot
+answer that interactive prompt, so complete this step in a terminal first.
+An unconfigured ROS launch stops with instructions to run `configure-isaac`.
+NVIDIA records acceptance inside the isolated Isaac package. Neither the
+installer nor the launchers set automatic EULA acceptance. Launchers select
+the repository environment and do not fall back to `$HOME/isaacsim` or
+`ISAAC_SIM_PATH`. An existing shared installation is not modified.
+Kit's portable data, configuration, logs, and cache live under
+`.pixi/isaac-runtime/`, including its texture cache. Warp's kernel cache uses
+`.pixi/isaac-runtime/cache/warp/`. The runner removes inherited ROS, Python,
+and Kit paths before entering the Isaac environment, while retaining
+display/GPU access and the user's normal home directory. Kit can still inspect
+normal host policy and configuration locations during startup.
 
 This launches Warrior at the shared no-man's-land spawn, starts physics and
 sensors, waits for localization and Nav2, then follows the GPS waypoint YAML.
 The default camera follows the robot. Closing Isaac stops the ROS processes;
-Ctrl+C also stops the complete launch. Isaac Sim 5.1 and a supported NVIDIA RTX
-GPU/driver are required. Set `ISAAC_SIM_PATH` if Isaac is not at `$HOME/isaacsim`.
+Ctrl+C also stops the complete launch. The ROS launch commands below select
+the isolated simulator automatically.
 
 For launch arguments after building:
 
@@ -77,8 +105,8 @@ reproduce Xsens' proprietary INS fusion, correction transport, RTK acquisition,
 multipath, correlated biases, or outages. The lidar likewise does not reproduce
 every detail of the Unitree L1 scan pattern.
 
-Isaac 5.1 embeds Python 3.11 and this repository's Pixi ROS environment uses
-Python 3.12. A small localhost UDP adapter keeps these runtimes separate. It
+The Pixi `isaac` environment uses Python 3.11 and the Pixi ROS environment uses
+Python 3.12. A small localhost UDP adapter connects these separate processes. It
 publishes `/clock`, `/joint_states`, `/imu/data`, `/gnss/fix`, `/gnss/velocity`
 and `/navigation/scan`, plus `/odom` when enabled. GNSS velocity is expressed
 in ENU (`gnss_enu`); localization rotates it using measured IMU attitude and
@@ -106,20 +134,30 @@ Review the [native GUI capture](../igvc2027/preview/isaac_gui.png),
 [moving robot render](../igvc2027/preview/isaac_robot.png),
 [bounded mission report](../igvc2027/validation/isaac_robot_report.json) and
 [command watchdog report](../igvc2027/validation/isaac_watchdog_report.json).
-These artifacts predate the new sensor profile. The MTi-680G bridge has separate
-tests for both navigation modes, sensor covariance and sampled noise, and URDF
+These artifacts predate the new sensor profile and isolated installation.
+The MTi-680G bridge has separate tests for both navigation modes, sensor
+covariance and sampled noise, and URDF
 mount composition, runnable without an Isaac GPU:
 
 ```bash
 pixi run python -m unittest discover -s warrior_simulation/warrior_isaac -v
 ```
 
-The ROS tests need access to local DDS/UDP sockets. A separate eight-second
-native headless check of the new profile on an RTX 5090 received 479 IMU
-telemetry packets and 80 GNSS samples, verified the antenna transform, and
-measured 0.301 m/s GNSS speed for a 0.3 m/s physical drive command. This checks
-the native sensor path; a full waypoint mission with the new profile remains
-to be validated.
+The ROS tests need access to local DDS/UDP sockets. An eight-second native
+headless check was repeated in the isolated Pixi environment on an RTX 5090
+after the user accepted NVIDIA's EULA through `configure-isaac`. It completed
+479 simulation frames, received 479 IMU packets and 80 GNSS samples, verified
+the exact antenna transform, and measured 0.3012 m/s GNSS speed for a 0.3 m/s
+physical drive command. This validates the isolated native sensor path.
+
+A separate 30-second ROS launch without wheel odometry completed 1,799 frames,
+initialized localization and Nav2, reached the first waypoint, and began the
+second before a clean bounded shutdown. IMU, GNSS and local/global/GPS odometry
+streams were observed, with zero `/odom` publishers or subscribers. Runtime
+logs confirmed the project Kit and texture-cache paths without watcher
+failures or error messages; a separate Warp initialization check verified its
+project cache path. A full waypoint mission remains unvalidated in the isolated
+environment.
 
 ## Environment asset
 
@@ -148,11 +186,21 @@ bash warrior_simulation/warrior_isaac/validate_stage.sh \
   --scene warrior_simulation/igvc2027/scene.json
 ```
 
-The exporter uses Python's standard library. The validation wrapper locates
-Isaac's OpenUSD bindings without starting the simulator, and checks composition,
-mesh topology, material bindings, textures, physics metadata and agreement with
+The exporter uses Python's standard library. The validation wrapper uses
+the isolated Isaac environment's OpenUSD bindings without starting the simulator,
+and checks composition, mesh topology, material bindings, textures, physics metadata and agreement with
 the shared scene. Environment renders and robot physics were also exercised in
 Isaac Sim 5.1 on an RTX 5090 with driver 580.178.04.
+
+`launch_robot.sh`, `launch_course.sh`, and `validate_stage.sh` delegate to
+`run_isaac.sh` and its `runtime.py` bootstrap. The stage validator loads the
+bundled OpenUSD bindings directly; it does not start Isaac, require a GPU, or
+accept the simulator EULA.
+
+Installation of the isolated environment has been checked with Python 3.11.18
+and Isaac Sim package version 5.1.0.0. Its OpenUSD validator passed for all 942
+meshes, 203 colliders, two cameras and three local textures, with no warnings.
+The native GPU sensor and bounded ROS integration checks are described above.
 
 Implementation references:
 [Isaac Sim 5.1 SimulationApp](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/py/source/extensions/isaacsim.simulation_app/docs/index.html),

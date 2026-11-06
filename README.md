@@ -20,10 +20,12 @@ pixi run build
 pixi run launch-sim
 ```
 
-The committed [pixi.lock](pixi.lock) contains resolved ROS 2 Humble
-environments for `linux-64` and `linux-aarch64`. Pixi keeps its environment in
-`.pixi/` and the ROS overlay in `install/pixi/`; project setup does not modify
-`/opt/ros` or apt sources.
+The committed [pixi.lock](pixi.lock) contains the ROS 2 Humble environment for
+`linux-64` and `linux-aarch64`. Its Python 3.12 packages live in
+`.pixi/envs/default/`, and the ROS overlay lives in `install/pixi/`.
+Isaac Sim uses a separate optional `isaac` environment with Python 3.11 and
+Isaac Sim 5.1.0, available on `linux-64` NVIDIA RTX workstations. Project setup
+does not modify `/opt/ros`, apt sources, or a shared Isaac installation.
 
 Everyday commands use `pixi run <task>`. Pixi reuses `pixi.lock` while it
 matches `pixi.toml` and can update it when dependencies change. Keep the
@@ -39,6 +41,8 @@ for CI or checks that must fail when the manifest and lockfile disagree.
 | `pixi run launch-nav-sim` | Build and launch the swerve simulation with mapless, odom-relative Nav2. |
 | `pixi run launch-gps-sim` | Build and launch MTi-680G GPS/IMU navigation with wheel odometry, lidar avoidance and a waypoint mission. |
 | `pixi run launch-igvc2027-gazebo` | Launch Warrior's GPS mission in the complete P37 AutoNav approximation. |
+| `pixi run install-isaac` | Install the separate, pinned Isaac Sim environment on a Linux x86_64 GPU workstation. |
+| `pixi run configure-isaac` | Open NVIDIA's interactive EULA prompt once before launching Isaac through ROS. |
 | `pixi run launch-igvc2027-isaac` | Spawn Warrior in Isaac Sim and drive the four GPS targets with simulated sensors. |
 | `pixi run inspect-igvc2027-isaac` | Inspect the matching Isaac course without starting a robot mission. |
 | `pixi run launch-real` | Build and launch real-robot Xbox teleoperation. |
@@ -47,6 +51,14 @@ for CI or checks that must fail when the manifest and lockfile disagree.
 
 For keyboard controls and sending a navigation goal from RViz or the command
 line, see the [bringup simulation guide](warrior_bringup/README.md#simulation-workflows).
+
+For Isaac, run `pixi run install-isaac`, then `pixi run configure-isaac` in a
+terminal before the first launch. The configure task presents NVIDIA's actual
+EULA prompt for the user to review and accept; setup does not accept it
+automatically. This separate step is required because ROS launch cannot answer
+the interactive prompt. Launchers select `.pixi/envs/isaac/` automatically;
+a global Isaac installation is not used. See the
+[Isaac setup guide](warrior_simulation/warrior_isaac/README.md) for details.
 
 GPS waypoint navigation supports **with wheel odometry** (default) and
 **without wheel odometry**. After `pixi run build`, launch the full updated
