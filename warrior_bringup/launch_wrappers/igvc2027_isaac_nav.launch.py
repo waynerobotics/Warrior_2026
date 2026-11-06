@@ -3,6 +3,7 @@
 from pathlib import Path
 import subprocess
 import sys
+import yaml
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, EmitEvent, ExecuteProcess, GroupAction, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
@@ -31,11 +32,13 @@ def generate_launch_description():
     def simulation(context):
         urdf = root / 'build/isaac/warrior.urdf'
         subprocess.run([sys.executable, str(isaac / 'prepare_robot.py'), '--output', str(urdf)], check=True)
+        profile = yaml.safe_load(Path(share('warrior_description', 'config', 'mti680g.yaml').perform(context)).read_text())['mti680g_sim']['ros__parameters']
         command = [str(isaac / 'launch_robot.sh'), '--stage', LaunchConfiguration('stage_file').perform(context),
                    '--scene', LaunchConfiguration('scene_file').perform(context), '--urdf', str(urdf),
                    '--port', LaunchConfiguration('port').perform(context),
                    '--capture-time', LaunchConfiguration('capture_time').perform(context),
                    '--seconds', LaunchConfiguration('seconds').perform(context)]
+        command.extend(['--imu-frame', profile['imu_frame'], '--antenna-frame', profile['antenna_frame']])
         if LaunchConfiguration('headless').perform(context).lower() in ('true', '1', 'yes'):
             command.append('--headless')
         for name in ('capture', 'report'):
@@ -55,9 +58,11 @@ def generate_launch_description():
         'scene_file': LaunchConfiguration('scene_file'),
         'port': ParameterValue(LaunchConfiguration('port'), value_type=int),
         'gps_noise_stddev': ParameterValue(LaunchConfiguration('gps_noise_stddev'), value_type=float),
+        'use_wheel_odometry': ParameterValue(LaunchConfiguration('use_wheel_odometry'), value_type=bool),
     }])
     localization = include('warrior_localization', 'gps_sim.launch.py', {
-        'use_sim_time': 'true', 'params_file': share('warrior_localization', 'config', 'gps_sim_ekf.yaml')})
+        'use_sim_time': 'true', 'use_wheel_odometry': LaunchConfiguration('use_wheel_odometry'),
+        'params_file': share('warrior_localization', 'config', 'gps_sim_ekf.yaml')})
     navigation = include('nav2_bringup', 'navigation_launch.py', {
         'use_sim_time': 'true', 'params_file': LaunchConfiguration('params_file'),
         'autostart': 'false', 'use_composition': 'False'})
@@ -93,7 +98,8 @@ def generate_launch_description():
         ('headless', 'false', 'Run without the Isaac GUI'),
         ('seconds', '0', 'Stop after this many simulation seconds; 0 runs until closed'),
         ('port', '17427', 'Local UDP telemetry port; commands use the next port'),
-        ('gps_noise_stddev', '0.03', 'Simulated GPS standard deviation in meters'),
+        ('gps_noise_stddev', '-1.0', 'Optional isotropic GNSS sigma override in meters; -1 uses MTi-680G RTK defaults'),
+        ('use_wheel_odometry', 'true', 'Fuse wheel encoders with GNSS/INS; false uses GNSS/INS alone'),
         ('launch_rviz', 'false', 'Also open the ROS navigation view'),
         ('autostart_waypoints', 'true', 'Begin the GPS mission after sensors and Nav2 are ready'),
         ('nav_ready_timeout', '240.0', 'Sensor/localization startup timeout in wall seconds'),

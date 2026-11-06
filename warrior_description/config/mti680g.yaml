@@ -1,0 +1,26 @@
+# Nominal open-sky, RTK-fixed approximation of the Xsens MTi-680G.
+# Source: https://www.xsens.com/hubfs/Downloads/Leaflets/MTi-680G.pdf
+# Gaussian samples do not reproduce Xsens' proprietary fusion, acquisition,
+# RTK corrections, multipath, correlated bias, or GNSS outages.
+mti680g_sim:
+  ros__parameters:
+    imu_rate_hz: 100.0
+    gnss_rate_hz: 10.0
+    imu_frame: imu_frame
+    antenna_frame: gnss_antenna_frame
+    velocity_frame: gnss_enu
+    imu_xyz: [0.0, 0.0, 0.0]
+    antenna_xyz: [0.04, 0.0, 0.0]
+    roll_pitch_stddev_deg: 0.2
+    yaw_stddev_deg: 0.5
+    gyro_noise_density_deg_s: 0.007
+    accel_noise_density_micro_g: 60.0
+    # 1 cm + 1 ppm CEP; assume a correction source at 1 km. Convert radial
+    # 50% CEP to independent east/north Gaussian sigma using /sqrt(2*ln(2)).
+    rtk_position_cep_m: 0.01
+    rtk_baseline_m: 1000.0
+    rtk_baseline_error_ppm: 1.0
+    # Vertical 1-sigma is an explicit simulation assumption, not a datasheet spec.
+    vertical_position_stddev_m: 0.02
+    velocity_stddev_m_s: 0.05
+    noise_seed: 680

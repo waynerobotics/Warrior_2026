@@ -19,29 +19,12 @@
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
 
-# gps
-- ros_topic_name: "gps1/fix"
-  gz_topic_name: "gps1"
-  ros_type_name: "sensor_msgs/msg/NavSatFix"
-  gz_type_name: "gz.msgs.NavSat"
-  direction: GZ_TO_ROS
-
-- ros_topic_name: "mobile_sensor/gps"
-  gz_topic_name: "gps"
-  ros_type_name: "sensor_msgs/msg/NavSatFix"
-  gz_type_name: "gz.msgs.NavSat"
-  direction: GZ_TO_ROS
+# MTi-680G IMU and NavSat are handled by warrior_mti680g_sim, which preserves
+# GNSS velocity and supplies measurement covariance on the public ROS topics.
 
 # odom
 - ros_topic_name: "odom_gt"
   gz_topic_name: "odom_gt"
   ros_type_name: "nav_msgs/msg/Odometry"
   gz_type_name: "gz.msgs.Odometry"
-  direction: GZ_TO_ROS
-
-# imu — matches /unilidar/imu used by real hardware and EKF
-- ros_topic_name: "mobile_sensor/imu"
-  gz_topic_name: "imu"
-  ros_type_name: "sensor_msgs/msg/Imu"
-  gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS

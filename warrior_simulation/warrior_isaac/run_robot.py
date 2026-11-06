@@ -8,9 +8,50 @@ import socket
 import signal
 import sys
 import time
+import xml.etree.ElementTree as ET
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+
+
+def rotate_vector(quaternion, vector):
+    """Rotate a vector by a normalized scalar-first quaternion."""
+    w, x, y, z = quaternion
+    a, b, c = vector
+    tx, ty, tz = 2 * (y*c-z*b), 2 * (z*a-x*c), 2 * (x*b-y*a)
+    return [a+w*tx+y*tz-z*ty, b+w*ty+z*tx-x*tz, c+w*tz+x*ty-y*tx]
+
+
+def quaternion_product(left, right):
+    w, x, y, z = left
+    a, b, c, d = right
+    return [w*a-x*b-y*c-z*d, w*b+x*a+y*d-z*c,
+            w*c-x*d+y*a+z*b, w*d+x*c-y*b+z*a]
+
+
+def fixed_mount(urdf, child, parent='base_footprint'):
+    """Read the expanded URDF so sensor kinematics agree with ROS static TF."""
+    joints = {joint.find('child').get('link'): joint for joint in ET.parse(urdf).getroot().findall('joint')}
+    translation, orientation = [0.0] * 3, [1.0, 0.0, 0.0, 0.0]
+    visited = set()
+    while child != parent:
+        if child in visited or child not in joints:
+            raise ValueError(f'No fixed sensor transform from {parent} to {child}')
+        visited.add(child)
+        joint = joints[child]
+        if joint.get('type') != 'fixed':
+            raise ValueError(f'Sensor mount {child} must use fixed joints')
+        origin = joint.find('origin')
+        xyz = [float(v) for v in origin.get('xyz', '0 0 0').split()] if origin is not None else [0.0] * 3
+        rpy = [float(v) / 2 for v in origin.get('rpy', '0 0 0').split()] if origin is not None else [0.0] * 3
+        cr, cp, cy = map(math.cos, rpy)
+        sr, sp, sy = map(math.sin, rpy)
+        rotation = [cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
+                    cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy]
+        translation = [a+b for a, b in zip(xyz, rotate_vector(rotation, translation))]
+        orientation = quaternion_product(rotation, orientation)
+        child = joint.find('parent').get('link')
+    return translation, orientation
 
 
 def main():
@@ -18,6 +59,8 @@ def main():
     parser.add_argument('--stage', type=Path, default=HERE / 'worlds/igvc2027_autonav.usda')
     parser.add_argument('--scene', type=Path, default=HERE.parent / 'igvc2027/scene.json')
     parser.add_argument('--urdf', type=Path, default=ROOT / 'build/isaac/warrior.urdf')
+    parser.add_argument('--imu-frame', default='imu_frame', help='IMU link in the expanded robot URDF')
+    parser.add_argument('--antenna-frame', default='gnss_antenna_frame', help='GNSS antenna link in the expanded robot URDF')
     parser.add_argument('--headless', action='store_true')
     parser.add_argument('--seconds', type=float, default=0, help='Bounded simulation duration; 0 runs until closed')
     parser.add_argument('--port', type=int, default=17427, help='ROS adapter telemetry UDP port; commands use port+1')
@@ -35,6 +78,8 @@ def main():
     if not args.urdf.is_file():
         parser.error('Run prepare_robot.py in the Pixi environment before launching Isaac')
     scene = json.loads(args.scene.read_text())
+    gnss_offset, _ = fixed_mount(args.urdf, args.antenna_frame)
+    imu_offset, imu_rotation = fixed_mount(args.urdf, args.imu_frame, 'base_link')
     from isaacsim import SimulationApp
     app = SimulationApp({'headless': args.headless, 'renderer': 'RaytracedLighting',
                          'width': 1280, 'height': 720, 'multi_gpu': False, 'sync_loads': True})
@@ -120,7 +165,8 @@ def main():
         chassis = next(p for p in body_prims if p.GetName() == 'base_link')
         chassis_path = str(chassis.GetPath())
         imu = world.scene.add(IMUSensor(prim_path=chassis_path + '/WarriorImu', name='warrior_imu',
-                                        frequency=60, translation=np.zeros(3)))
+                                        frequency=60, translation=np.array(imu_offset),
+                                        orientation=np.array(imu_rotation)))
         # Match the physical lidar mount, expressed upright in the footprint.
         lidar_offset = np.array([-.172963, .002844, 1.092773])
         lidar_on_chassis = lidar_offset - np.array([-.307963, -.002156, .640773])
@@ -186,6 +232,8 @@ def main():
                 viewport.camera_path = camera_path
         wall_start = time.monotonic()
         previous_q = None
+        previous_antenna = None
+        previous_sensor_stamp = None
         start_position = None
         minimum_range = math.inf
         while app.is_running() and not stopping and (args.seconds <= 0 or world.current_time < args.seconds):
@@ -230,6 +278,12 @@ def main():
             q = robot.get_joint_positions()
             qdot = robot.get_joint_velocities()
             position, quaternion = robot.get_world_pose()
+            antenna_position = position + np.array(rotate_vector(quaternion, gnss_offset))
+            # Ideal receiver-point kinematics stay inside the simulated sensor
+            # path; the ROS adapter adds MTi-680G measurement errors/covariance.
+            antenna_velocity = (np.zeros(3) if previous_antenna is None else
+                                (antenna_position - previous_antenna) / (t - previous_sensor_stamp))
+            previous_antenna, previous_sensor_stamp = antenna_position.copy(), t
             if sequence % 6 == 0:
                 update_camera(position)
             if start_position is None and t >= 2:
@@ -263,13 +317,15 @@ def main():
                     ranges = [float(r) if math.isfinite(r) else None for r in scan]
                     if np.isfinite(scan).any():
                         minimum_range = min(minimum_range, float(np.min(scan)))
-            data = {'version': 1, 'stamp': t, 'sequence': sequence,
+            data = {'version': 2, 'stamp': t, 'sequence': sequence,
                     'joint_names': robot.dof_names, 'joint_position': q.tolist(), 'joint_velocity': qdot.tolist(),
                     'odom': odom.tolist(), 'twist': twist.tolist(),
                     'imu_orientation': imu_data['orientation'].tolist(),
                     'imu_angular_velocity': imu_data['ang_vel'].tolist(),
                     'imu_linear_acceleration': imu_data['lin_acc'].tolist(),
                     'position': position.tolist(), 'orientation': quaternion.tolist(),
+                    'gnss_position': antenna_position.tolist() if sequence % 6 == 0 else None,
+                    'gnss_velocity': antenna_velocity.tolist() if sequence % 6 == 0 else None,
                     'scan': ranges if sequence % 6 == 0 else None}
             sock.sendto(json.dumps(data, allow_nan=False).encode(), ('127.0.0.1', args.port))
             if args.capture and args.capture_time > 0 and t >= args.capture_time and not captured:

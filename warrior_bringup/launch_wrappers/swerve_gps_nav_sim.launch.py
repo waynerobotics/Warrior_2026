@@ -51,6 +51,7 @@ def generate_launch_description():
     }, scoped=False)  # Its delayed GUI/controller callbacks need the sim context.
     localization = include('warrior_localization', 'gps_sim.launch.py', {
         'use_sim_time': use_sim_time,
+        'use_wheel_odometry': LaunchConfiguration('use_wheel_odometry'),
         'params_file': share('warrior_localization', 'config', 'gps_sim_ekf.yaml'),
     })
     navigation = include('nav2_bringup', 'navigation_launch.py', {
@@ -144,6 +145,8 @@ def generate_launch_description():
         ('world_name', 'igvc2027_no_mans_land.world',
          'Gazebo world; the default is a schematic approximation, not a surveyed course'),
         ('use_sim_time', 'true', 'Use the Gazebo clock'),
+        ('use_wheel_odometry', 'true',
+         'Fuse wheel velocities; false uses MTi-680G GNSS velocity and IMU instead'),
         ('launch_gui', 'true', 'Launch the Gazebo graphical client'),
         ('launch_rviz', 'true', 'Launch the GPS navigation RViz view'),
         ('gazebo_gui_delay', '12.0', 'Delay the Gazebo GUI during startup (seconds)'),

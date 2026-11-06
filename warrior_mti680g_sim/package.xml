@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>warrior_mti680g_sim</name>
+  <version>0.1.0</version>
+  <description>MTi-680G measurement model for Gazebo Fortress IMU and GNSS sensors.</description>
+  <maintainer email="alimyust@gmail.com">Wayne Robotics</maintainer>
+  <license>Apache-2.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>ignition-transport11</depend>
+  <depend>ignition-msgs8</depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

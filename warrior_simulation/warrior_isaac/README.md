@@ -22,10 +22,17 @@ pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
 # Open the simulator and sensors without starting waypoint navigation:
 pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
   autostart_waypoints:=false launch_rviz:=true
+
+# Navigate using the MTi-680G GNSS/INS measurements without wheel odometry:
+pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
+  use_wheel_odometry:=false
 ```
 
 `waypoint_file`, `params_file`, `scene_file`, `stage_file`, `port`,
-`gps_noise_stddev`, `launch_rviz`, `headless` and `seconds` are configurable.
+`use_wheel_odometry`, `gps_noise_stddev`, `launch_rviz`, `headless` and `seconds` are configurable.
+Wheel odometry is enabled by default. With `use_wheel_odometry:=false`, the
+bridge does not publish `/odom`, and neither localization filter subscribes to
+wheel odometry. Both modes use the same GPS waypoints and Nav2 controller.
 A zero duration runs until closed. Use a separate ROS domain and UDP port when
 running another robot simulation concurrently. The default telemetry port is
 17427; commands use 17428. Transport binds only to localhost.
@@ -47,23 +54,43 @@ PhysX raycasts at the robot's lidar mount, sampled every 1 degree horizontally
 and 2 degrees vertically. The shared sensor-only ground filter estimates a
 nearby road plane and follows gradual ground curvature through radial sectors.
 Obstacle returns become a 360-degree `/navigation/scan` at 10 Hz. The IMU reads
-the physics IMU sensor. Simulated GPS converts the physical
-antenna position through the shared WGS84 datum, with seeded 3 cm Gaussian
-noise by default. GPS starts after the initial two-second settling period.
-These are simulation sensor models, not calibrated models of every device
-error or the Unitree L1 scan pattern.
+the physics IMU sensor at the URDF's `imu_frame` mount. Simulated GNSS converts
+the physical `gnss_antenna_frame` position through the shared WGS84 datum and
+derives receiver velocity from antenna motion, including rotation about the
+robot. GNSS starts after the initial two-second settling period and runs at
+10 Hz independently of lidar returns.
+
+Both simulators use the [MTi-680G profile](../../warrior_description/config/mti680g.yaml):
+0.2° roll/pitch RMS, 0.5° heading RMS, 0.05 m/s velocity RMS, and horizontal
+RTK accuracy of 1 cm + 1 ppm CEP. The default assumes a 1 km correction-source
+baseline, giving 0.00934 m east/north Gaussian sigma after converting CEP;
+0.02 m vertical sigma is a documented simulation assumption. Seeded noise is
+added to IMU attitude, rates, acceleration, GNSS position and velocity; the
+published covariances describe those errors. Gyroscope and accelerometer
+noise densities are scaled to Isaac's actual 60 Hz sample rate. This is below
+the device's maximum 400 Hz fused output rate. `gps_noise_stddev` defaults to
+`-1`, which selects the profile; a nonnegative value overrides all three
+position standard deviations in meters.
+
+The model approximates nominal open-sky RTK-fixed measurements. It does not
+reproduce Xsens' proprietary INS fusion, correction transport, RTK acquisition,
+multipath, correlated biases, or outages. The lidar likewise does not reproduce
+every detail of the Unitree L1 scan pattern.
 
 Isaac 5.1 embeds Python 3.11 and this repository's Pixi ROS environment uses
 Python 3.12. A small localhost UDP adapter keeps these runtimes separate. It
-publishes `/clock`, `/joint_states`, `/odom`, `/mobile_sensor/imu`, `/gps1/fix`
-and `/navigation/scan`. The existing dual EKFs, navsat `/fromLL` conversion,
-Nav2 parameters and GPS waypoint follower are reused. The physical pose is
+publishes `/clock`, `/joint_states`, `/imu/data`, `/gnss/fix`, `/gnss/velocity`
+and `/navigation/scan`, plus `/odom` when enabled. GNSS velocity is expressed
+in ENU (`gnss_enu`); localization rotates it using measured IMU attitude and
+removes the antenna's rotational velocity using its static TF mount. The dual
+EKFs, navsat `/fromLL` conversion, Nav2 parameters and GPS waypoint follower
+are reused. The physical pose is
 published separately as `/isaac/ground_truth` for validation; neither EKF
-fuses that topic. The original `gps1_frame` antenna transform is preserved.
+fuses that topic. Sensor mounting follows the same expanded URDF as ROS TF.
 Commands require finite values, a current timestamp and an expected body
 frame; a 0.75-second command watchdog stops the joint-drive command.
 
-The final native GUI validation reached all four no-man's-land GPS goals on
+Before the MTi-680G update, native GUI validation reached all four no-man's-land GPS goals on
 the DEM terrain in about 103 simulation seconds and then stopped, with no
 planning failures. The robot-follow viewport and its motion were verified in
 the actual application window. A separate straight-drive check measured
@@ -79,6 +106,20 @@ Review the [native GUI capture](../igvc2027/preview/isaac_gui.png),
 [moving robot render](../igvc2027/preview/isaac_robot.png),
 [bounded mission report](../igvc2027/validation/isaac_robot_report.json) and
 [command watchdog report](../igvc2027/validation/isaac_watchdog_report.json).
+These artifacts predate the new sensor profile. The MTi-680G bridge has separate
+tests for both navigation modes, sensor covariance and sampled noise, and URDF
+mount composition, runnable without an Isaac GPU:
+
+```bash
+pixi run python -m unittest discover -s warrior_simulation/warrior_isaac -v
+```
+
+The ROS tests need access to local DDS/UDP sockets. A separate eight-second
+native headless check of the new profile on an RTX 5090 received 479 IMU
+telemetry packets and 80 GNSS samples, verified the antenna transform, and
+measured 0.301 m/s GNSS speed for a 0.3 m/s physical drive command. This checks
+the native sensor path; a full waypoint mission with the new profile remains
+to be validated.
 
 ## Environment asset
 

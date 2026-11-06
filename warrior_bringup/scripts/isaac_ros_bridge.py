@@ -3,7 +3,8 @@
 
 Isaac 5.1 embeds Python 3.11; this repository's ROS environment uses 3.12.
 Only localhost UDP is used. Wheel odometry is measured from joint encoders;
-physical pose is used solely for simulated GPS and a separate debug topic.
+ideal sensor kinematics are perturbed before publishing MTi-680G measurements.
+Physical pose remains on a separate diagnostic topic.
 """
 import json
 import math
@@ -12,7 +13,8 @@ import random
 import socket
 import time
 
-from geometry_msgs.msg import TwistStamped
+from ament_index_python.packages import get_package_share_directory
+from geometry_msgs.msg import TwistStamped, TwistWithCovarianceStamped
 from nav_msgs.msg import Odometry
 from pyproj import Transformer
 from pyproj.enums import TransformDirection
@@ -21,6 +23,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu, JointState, LaserScan, NavSatFix, NavSatStatus
+import yaml
 
 
 def stamp_message(seconds):
@@ -47,13 +50,39 @@ def covariance(size, values):
     return result
 
 
+def perturb_orientation(values, noise):
+    """Apply small body-axis roll/pitch/yaw errors to a scalar-first quaternion."""
+    cr, cp, cy = [math.cos(angle / 2) for angle in noise]
+    sr, sp, sy = [math.sin(angle / 2) for angle in noise]
+    a, b, c, d = (cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
+                  cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy)
+    w, x, y, z = values
+    return [w*a-x*b-y*c-z*d, w*b+x*a+y*d-z*c,
+            w*c-x*d+y*a+z*b, w*d+x*c-y*b+z*a]
+
+
 class IsaacBridge(Node):
     def __init__(self):
         super().__init__('isaac_ros_bridge')
         self.declare_parameter('port', 17427)
         self.declare_parameter('scene_file', '')
-        self.declare_parameter('gps_noise_stddev', 0.03)
-        self.declare_parameter('random_seed', 2027)
+        self.declare_parameter('use_wheel_odometry', True)
+        self.declare_parameter('sensor_profile', str(Path(get_package_share_directory('warrior_description')) /
+                                                    'config/mti680g.yaml'))
+        profile = yaml.safe_load(Path(self.get_parameter('sensor_profile').value).read_text())['mti680g_sim']['ros__parameters']
+        self.imu_frame = profile['imu_frame']
+        self.antenna_frame = profile['antenna_frame']
+        self.velocity_frame = profile['velocity_frame']
+        # Horizontal CEP is not per-axis Gaussian sigma; apply the profile's
+        # assumed RTK baseline. Vertical accuracy is a simulation assumption.
+        cep = profile['rtk_position_cep_m'] + profile['rtk_baseline_m'] * profile['rtk_baseline_error_ppm'] * 1e-6
+        self.declare_parameter('gps_noise_stddev', -1.0)
+        self.declare_parameter('gnss_horizontal_stddev', cep / math.sqrt(2 * math.log(2)))
+        self.declare_parameter('gnss_vertical_stddev', float(profile['vertical_position_stddev_m']))
+        self.declare_parameter('gnss_velocity_stddev', float(profile['velocity_stddev_m_s']))
+        self.declare_parameter('imu_roll_pitch_stddev_degrees', float(profile['roll_pitch_stddev_deg']))
+        self.declare_parameter('imu_yaw_stddev_degrees', float(profile['yaw_stddev_deg']))
+        self.declare_parameter('random_seed', int(profile['noise_seed']))
         scene = json.loads(Path(self.get_parameter('scene_file').value).read_text())
         datum = scene['datum']
         self.geodesy = Transformer.from_pipeline(
@@ -61,7 +90,21 @@ class IsaacBridge(Node):
             f'+step +proj=topocentric +ellps=WGS84 +lat_0={datum["latitude"]} '
             f'+lon_0={datum["longitude"]} +h_0={datum["elevation"]}')
         self.port = self.get_parameter('port').value
-        self.noise = self.get_parameter('gps_noise_stddev').value
+        self.use_wheel_odometry = self.get_parameter('use_wheel_odometry').value
+        legacy_noise = self.get_parameter('gps_noise_stddev').value
+        horizontal = self.get_parameter('gnss_horizontal_stddev').value
+        vertical = self.get_parameter('gnss_vertical_stddev').value
+        self.position_sigma = ([legacy_noise] * 3 if legacy_noise >= 0 else [horizontal, horizontal, vertical])
+        self.velocity_sigma = self.get_parameter('gnss_velocity_stddev').value
+        self.orientation_sigma = [math.radians(self.get_parameter('imu_roll_pitch_stddev_degrees').value)] * 2
+        self.orientation_sigma.append(math.radians(self.get_parameter('imu_yaw_stddev_degrees').value))
+        # Native Isaac telemetry is 60 Hz. Convert white-noise density using its
+        # Nyquist bandwidth; this does not reproduce proprietary Xsens filtering.
+        self.gyro_sigma = math.radians(profile['gyro_noise_density_deg_s']) * math.sqrt(60.0 / 2)
+        self.accel_sigma = profile['accel_noise_density_micro_g'] * 1e-6 * 9.80665 * math.sqrt(60.0 / 2)
+        sigmas = self.position_sigma + self.orientation_sigma + [self.velocity_sigma, self.gyro_sigma, self.accel_sigma]
+        if not all(math.isfinite(value) and value >= 0 for value in sigmas):
+            raise ValueError('Sensor standard deviations must be finite and nonnegative')
         self.random = random.Random(self.get_parameter('random_seed').value)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind(('127.0.0.1', self.port))
@@ -72,12 +115,14 @@ class IsaacBridge(Node):
         self.publishers_by_key = {
             'clock': self.create_publisher(Clock, '/clock', 10),
             'joints': self.create_publisher(JointState, '/joint_states', 10),
-            'odom': self.create_publisher(Odometry, '/odom', 10),
-            'imu': self.create_publisher(Imu, '/mobile_sensor/imu', qos_profile_sensor_data),
-            'gps': self.create_publisher(NavSatFix, '/gps1/fix', qos_profile_sensor_data),
+            'imu': self.create_publisher(Imu, '/imu/data', qos_profile_sensor_data),
+            'gps': self.create_publisher(NavSatFix, '/gnss/fix', qos_profile_sensor_data),
+            'gnss_velocity': self.create_publisher(TwistWithCovarianceStamped, '/gnss/velocity', qos_profile_sensor_data),
             'scan': self.create_publisher(LaserScan, '/navigation/scan', qos_profile_sensor_data),
             'truth': self.create_publisher(Odometry, '/isaac/ground_truth', 10),
         }
+        if self.use_wheel_odometry:
+            self.publishers_by_key['odom'] = self.create_publisher(Odometry, '/odom', 10)
         self.create_subscription(TwistStamped, '/cmd_vel_stamped', self.command, 10)
         self.create_timer(0.004, self.receive)
         self.create_timer(5.0, self.check_health)
@@ -113,10 +158,14 @@ class IsaacBridge(Node):
             try:
                 packet = json.loads(payload)
                 stamp = float(packet['stamp'])
-                if packet.get('version') != 1 or not math.isfinite(stamp) or stamp <= self.last_stamp:
+                if packet.get('version') != 2 or not math.isfinite(stamp) or stamp <= self.last_stamp:
                     continue
-                fields = ('joint_position', 'joint_velocity', 'odom', 'twist', 'position',
-                          'orientation', 'imu_orientation', 'imu_angular_velocity', 'imu_linear_acceleration')
+                fields = ['joint_position', 'joint_velocity', 'position',
+                          'orientation', 'imu_orientation', 'imu_angular_velocity', 'imu_linear_acceleration']
+                if self.use_wheel_odometry:
+                    fields.extend(['odom', 'twist'])
+                if packet['gnss_position'] is not None:
+                    fields.extend(['gnss_position', 'gnss_velocity'])
                 if not all(math.isfinite(float(v)) for key in fields for v in packet[key]):
                     continue
                 self.publish(packet, stamp)
@@ -134,24 +183,26 @@ class IsaacBridge(Node):
         joints.position = [float(v) for v in packet['joint_position']]
         joints.velocity = [float(v) for v in packet['joint_velocity']]
         self.publishers_by_key['joints'].publish(joints)
-        odom = Odometry()
-        odom.header.stamp, odom.header.frame_id, odom.child_frame_id = stamp, 'odom', 'base_footprint'
-        x, y, yaw = packet['odom']
-        vector(odom.pose.pose.position, [x, y, 0])
-        quaternion(odom.pose.pose.orientation, [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)])
-        vector(odom.twist.twist.linear, [*packet['twist'][:2], 0])
-        odom.twist.twist.angular.z = float(packet['twist'][2])
-        odom.pose.covariance = covariance(6, [.03, .03, 100, 100, 100, .02])
-        odom.twist.covariance = covariance(6, [.0025, .0025, 100, 100, 100, .0025])
-        self.publishers_by_key['odom'].publish(odom)
+        if self.use_wheel_odometry:
+            odom = Odometry()
+            odom.header.stamp, odom.header.frame_id, odom.child_frame_id = stamp, 'odom', 'base_footprint'
+            x, y, yaw = packet['odom']
+            vector(odom.pose.pose.position, [x, y, 0])
+            quaternion(odom.pose.pose.orientation, [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)])
+            vector(odom.twist.twist.linear, [*packet['twist'][:2], 0])
+            odom.twist.twist.angular.z = float(packet['twist'][2])
+            odom.pose.covariance = covariance(6, [.03, .03, 100, 100, 100, .02])
+            odom.twist.covariance = covariance(6, [.0025, .0025, 100, 100, 100, .0025])
+            self.publishers_by_key['odom'].publish(odom)
         imu = Imu()
-        imu.header.stamp, imu.header.frame_id = stamp, 'imu_frame'
-        quaternion(imu.orientation, packet['imu_orientation'])
-        vector(imu.angular_velocity, packet['imu_angular_velocity'])
-        vector(imu.linear_acceleration, packet['imu_linear_acceleration'])
-        imu.orientation_covariance = covariance(3, [.0001] * 3)
-        imu.angular_velocity_covariance = covariance(3, [.0001] * 3)
-        imu.linear_acceleration_covariance = covariance(3, [.01] * 3)
+        imu.header.stamp, imu.header.frame_id = stamp, self.imu_frame
+        quaternion(imu.orientation, perturb_orientation(packet['imu_orientation'],
+                   [self.random.gauss(0, sigma) for sigma in self.orientation_sigma]))
+        vector(imu.angular_velocity, [v+self.random.gauss(0, self.gyro_sigma) for v in packet['imu_angular_velocity']])
+        vector(imu.linear_acceleration, [v+self.random.gauss(0, self.accel_sigma) for v in packet['imu_linear_acceleration']])
+        imu.orientation_covariance = covariance(3, [sigma ** 2 for sigma in self.orientation_sigma])
+        imu.angular_velocity_covariance = covariance(3, [self.gyro_sigma ** 2] * 3)
+        imu.linear_acceleration_covariance = covariance(3, [self.accel_sigma ** 2] * 3)
         self.publishers_by_key['imu'].publish(imu)
         if packet['scan'] is not None:
             scan = LaserScan()
@@ -161,26 +212,30 @@ class IsaacBridge(Node):
             scan.scan_time, scan.range_min, scan.range_max = .1, .9, 15.
             scan.ranges = [float(v) if v is not None else math.inf for v in packet['scan']]
             self.publishers_by_key['scan'].publish(scan)
+        if packet['gnss_position'] is not None:
             # navsat's wall-clock startup delay may expire while Isaac boots.
             # Wait for the drop-to-ground transient and the first IMU samples.
             if seconds < 2.0:
                 return
-            # GPS receiver position includes the same antenna offset as its TF.
-            w, qx, qy, qz = packet['orientation']
-            ax, ay, az = .452037, -.002156, .640773
-            tx, ty, tz = 2*(qy*az-qz*ay), 2*(qz*ax-qx*az), 2*(qx*ay-qy*ax)
-            antenna = [ax + w*tx + qy*tz-qz*ty,
-                       ay + w*ty + qz*tx-qx*tz,
-                       az + w*tz + qx*ty-qy*tx]
-            enu = [p + a + self.random.gauss(0, self.noise) for p, a in zip(packet['position'], antenna)]
+            enu = [p+self.random.gauss(0, sigma) for p, sigma in zip(packet['gnss_position'], self.position_sigma)]
             lon, lat, altitude = self.geodesy.transform(*enu, direction=TransformDirection.INVERSE)
             gps = NavSatFix()
-            gps.header.stamp, gps.header.frame_id = stamp, 'gps1_frame'
-            gps.status.status, gps.status.service = NavSatStatus.STATUS_FIX, NavSatStatus.SERVICE_GPS
+            gps.header.stamp, gps.header.frame_id = stamp, self.antenna_frame
+            # ROS NavSatStatus has no RTK-fixed enum; SBAS/GBAS must not be used
+            # as a substitute for an RTK ambiguity status.
+            gps.status.status = NavSatStatus.STATUS_FIX
+            gps.status.service = (NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS |
+                                  NavSatStatus.SERVICE_COMPASS | NavSatStatus.SERVICE_GALILEO)
             gps.latitude, gps.longitude, gps.altitude = lat, lon, altitude
-            gps.position_covariance = covariance(3, [max(.0001, self.noise ** 2)] * 3)
+            gps.position_covariance = covariance(3, [sigma ** 2 for sigma in self.position_sigma])
             gps.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
             self.publishers_by_key['gps'].publish(gps)
+            velocity = TwistWithCovarianceStamped()
+            velocity.header.stamp, velocity.header.frame_id = stamp, self.velocity_frame
+            vector(velocity.twist.twist.linear,
+                   [v+self.random.gauss(0, self.velocity_sigma) for v in packet['gnss_velocity']])
+            velocity.twist.covariance = covariance(6, [self.velocity_sigma ** 2] * 3 + [1e6] * 3)
+            self.publishers_by_key['gnss_velocity'].publish(velocity)
             truth = Odometry()
             truth.header.stamp, truth.header.frame_id, truth.child_frame_id = stamp, 'isaac_world', 'base_footprint'
             vector(truth.pose.pose.position, packet['position'])
@@ -188,7 +243,8 @@ class IsaacBridge(Node):
             self.publishers_by_key['truth'].publish(truth)
         if not self.ready:
             self.ready = True
-            self.get_logger().info('Isaac clock, encoders, IMU, GPS and lidar telemetry received')
+            mode = 'wheel + GNSS/INS' if self.use_wheel_odometry else 'GNSS/INS without wheel odometry'
+            self.get_logger().info(f'Isaac MTi-680G telemetry received; localization mode: {mode}')
 
     def destroy_node(self):
         try:

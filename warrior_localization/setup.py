@@ -28,7 +28,8 @@ setup(
     entry_points={
         'console_scripts': [
             # map_robot_pose deleted — pose in map frame is published by the localization node.
-            'pc2_echo = warrior_localization.pc2_echo:main'
+            'pc2_echo = warrior_localization.pc2_echo:main',
+            'gnss_velocity_to_body = warrior_localization.gnss_velocity_node:main',
         ],
     },
 )

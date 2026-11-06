@@ -38,6 +38,20 @@ Nav2 mission. Its default view follows the robot. See the
 headless runs and transport details. Run one simulator at a time in the same
 ROS domain because both publish the robot's normal topics and clock.
 
+After `pixi run build`, launch the full updated map without wheel odometry:
+
+```bash
+# Gazebo: full updated IGVC 2027 map
+pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py use_wheel_odometry:=false
+
+# Isaac Sim: full updated IGVC 2027 map
+pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py use_wheel_odometry:=false
+```
+
+Change `false` to `true` in either command to enable wheel odometry.
+The `swerve_gps_nav_sim.launch.py` examples below use the smaller schematic
+no-man's-land map.
+
 ### Manual keyboard driving
 
 Start the base simulation:
@@ -98,7 +112,7 @@ pixi run launch-gps-sim
 ```
 
 This starts the Warrior at world `(0, -2)` facing north in
-`igvc2027_no_mans_land.world`, then runs the GPS YAML mission after wheel/IMU
+`igvc2027_no_mans_land.world`, then runs the GPS YAML mission after sensor
 localization, GPS conversion, lidar, and Nav2 are ready. The separate world
 is a **simulation approximation** of the four-marker pattern on page 11 of
 the [2027 rules](https://gl-systems-technology.net/uploads/3/4/7/2/34727963/igvc_2027_rules_version_7_july_26.pdf).
@@ -113,10 +127,31 @@ lidar's 15 m range. Barrel rows require obstacle avoidance between targets.
 The original `competition.world` and a separate three-point
 `no_mans_land_waypoints.yaml` smoke route are retained.
 
-The local EKF fuses `/odom` wheel velocities and `/mobile_sensor/imu`; the global
-EKF adds `/gps1/fix` through navsat. The controller publishes wheel odometry
-with its TF disabled so the EKFs own `map -> odom -> base_footprint`. Ground
-truth `/odom_gt` is available for comparison but is not used for navigation.
+The simulated Xsens MTi-680G publishes `/imu/data`, `/gnss/fix`, and
+`/gnss/velocity`. Select either localization mode after building:
+
+```bash
+# Wheel velocities + MTi-680G IMU and GNSS position (default).
+pixi run ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py use_wheel_odometry:=true
+
+# MTi-680G GNSS velocity + IMU and GNSS position; neither EKF consumes /odom.
+pixi run ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py use_wheel_odometry:=false
+```
+
+The same switch is forwarded by `igvc2027_autonav.launch.py` and
+`igvc2027_isaac_nav.launch.py`. In the mode without wheel odometry,
+GNSS velocity is rotated from ENU into the base frame using measured IMU
+attitude and corrected for the antenna lever arm before fusion. Nav2 always
+uses `/odometry/local`; GPS waypoints still use `/fromLL`. The Gazebo controller
+may publish `/odom` for diagnostics in either mode, with its TF disabled so
+the EKFs own `map -> odom -> base_footprint`. Ground truth `/odom_gt` is
+available for comparison but is not used for navigation.
+
+The [MTi-680G profile](../warrior_description/config/mti680g.yaml) defines the
+simulated rates and measurement uncertainty. Defaults assume an RTK fix in
+open sky. Mount positions are provisional and should be updated to match the
+installed module and single antenna. See the [localization guide](../warrior_localization/README.md)
+for sensor topics, frame conventions, and model limitations.
 Lidar `/unilidar/cloud` is transformed to the base frame. `ground_obstacle_scan`
 fits a bounded local road plane from nearby low lidar returns, then follows
 gradual height changes in radial sectors using low measured returns. Obstacles
@@ -145,8 +180,9 @@ pixi run ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py \
 ```
 
 Replace the example spawn with coordinates in that world's open area. The
-world must supply WGS84 spherical coordinates and the IMU/navsat systems, as
-`competition.world` does. External models must be on Gazebo's resource path.
+world must supply WGS84 spherical coordinates, ENU axes with `heading_deg=0`,
+and the IMU/navsat systems, as `competition.world` does. Fortress's NavSat
+velocity output requires this world-axis convention. External models must be on Gazebo's resource path.
 Use `launch_gui:=false launch_rviz:=false` for a server-only run, or
 `autostart_waypoints:=false` to inspect sensors before sending goals. RViz shows
 the GPS targets and route in `map`.
@@ -156,8 +192,9 @@ dimension minus footprint/inflation margin. Subgoals do not provide global
 route search around barriers outside the rolling map. Unknown obstacles can
 still invalidate a goal after it is sent; add route waypoints when a mission
 requires a particular corridor. Painted course lines
-are not lidar obstacles, and simulation GPS has no configured noise; this
-test does not establish field accuracy or full-course lane compliance.
+are not lidar obstacles. The MTi-680G sensor model adds measurement noise,
+but does not model RTK corrections, multipath, outages, or proprietary INS
+behavior; this test does not establish field accuracy or full-course lane compliance.
 
 ## Launch files
 
@@ -226,7 +263,7 @@ flowchart LR
 
 | File | Used by |
 |---|---|
-| [config/warrior_bridge.yaml](config/warrior_bridge.yaml) | swerve gazebo gz↔ros bridge (clock, lidar, gps, camera, imu, odom) |
+| [config/warrior_bridge.yaml](config/warrior_bridge.yaml) | swerve Gazebo bridge (clock, lidar, diagnostic ground truth); `warrior_mti680g_sim` handles GNSS/IMU |
 | [config/diff_gz_bridge.yaml](config/diff_gz_bridge.yaml) | diff-drive gz bridge |
 | [config/swerve_gz_bridge.yaml](config/swerve_gz_bridge.yaml) / [swerve_rosgz_bridge.yaml](config/swerve_rosgz_bridge.yaml) | per-joint gz cmd_vel bridges (legacy) |
 

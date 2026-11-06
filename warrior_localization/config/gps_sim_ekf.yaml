@@ -1,6 +1,8 @@
-# Sensor-only localization for the Warrior Gazebo bridge. The controller must
+# MTi-680G GNSS/INS localization for the Warrior simulators. The controller must
 # have enable_odom_tf=false: only ekf_node_odom publishes odom -> base_footprint.
 # /odom_gt is deliberately excluded from both filters.
+# gps_sim.launch.py uses odom0 as the wheel slot. use_wheel_odometry:=false
+# removes it, renumbers remaining GPS inputs, and adds /gnss/velocity_body.
 ekf_node_odom:
   ros__parameters:
     frequency: 30.0
@@ -26,7 +28,7 @@ ekf_node_odom:
 
     # The local frame starts at the robot and remains continuous through GPS
     # corrections; absolute ENU heading belongs to the global filter below.
-    imu0: /mobile_sensor/imu
+    imu0: /imu/data
     imu0_config: [false, false, false,
                   false, false, false,
                   false, false, false,
@@ -69,7 +71,7 @@ ekf_node_map:
     odom1_differential: false
     odom1_relative: false
 
-    imu0: /mobile_sensor/imu
+    imu0: /imu/data
     imu0_config: [false, false, false,
                   false, false, true,
                   false, false, false,
@@ -95,3 +97,10 @@ navsat_transform:
     publish_filtered_gps: true
     use_odometry_yaw: false
     wait_for_datum: false
+
+gnss_velocity_to_body:
+  ros__parameters:
+    antenna_frame: gnss_antenna_frame
+    enu_frame: gnss_enu
+    max_imu_age: 0.2
+    max_velocity_age: 0.5

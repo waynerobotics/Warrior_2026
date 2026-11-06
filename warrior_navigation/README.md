@@ -76,6 +76,13 @@ For the complete P37 environment and its generated four-target mission, use
 `pixi run launch-igvc2027-isaac`; see the
 [2027 course guide](../warrior_simulation/igvc2027/README.md).
 
+Both GPS mission launchers accept `use_wheel_odometry:=true` (default) or
+`use_wheel_odometry:=false`. The latter uses MTi-680G GNSS velocity and IMU
+measurements for local motion, with GNSS position correcting the global pose.
+The waypoint follower and Nav2 keep using the same filtered odometry and
+`/fromLL` interface in either mode. See the
+[bringup examples](../warrior_bringup/README.md#gps-waypoints-through-an-open-area).
+
 Both simulators use `ground_filter.py` to estimate the nearby road plane and
 follow gradual curvature using radial profiles of low lidar returns.
 Gazebo's `ground_obstacle_scan` node first applies the full
@@ -93,11 +100,16 @@ flowchart LR
     WF -->|PoseStamped converted by /fromLL| N2[Nav2<br/>navigate_to_pose]
     N2 -->|/cmd_vel → stamper → /cmd_vel_stamped| BASE[robot base]
     LOC[warrior_localization<br/>dual EKF + navsat] -->|map→odom TF| N2
-    GPS[Gazebo GPS] -->|/gps1/fix| LOC
+    GPS[MTi-680G GNSS/INS] -->|/gnss/fix, /imu/data| LOC
+    GPS -->|/gnss/velocity when wheel odometry is disabled| LOC
     WF -.->|/gps_waypoints MarkerArray<br/>/gps_waypoint_trajectory Path| RVIZ[RViz]
 ```
 
 ## Launch — [launch/](launch/)
+
+The Warrior MTi-680G simulation entrypoints are the bringup wrappers listed
+above. The older GPS/complex-path launchers below spawn a separate TurtleBot
+model and retain its legacy sensor configuration.
 
 | File | Stack | Notes |
 |---|---|---|

@@ -4,10 +4,12 @@ from launch.actions import (
     IncludeLaunchDescription,
     TimerAction,
     OpaqueFunction,
+    GroupAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetRemap
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 
@@ -17,6 +19,7 @@ import os
 def launch_setup(context, *args, **kwargs):
 
     use_sim = LaunchConfiguration('use_sim')
+    simulation = use_sim.perform(context).lower() == 'true'
     waypoint_file = LaunchConfiguration('waypoint_file').perform(context)
 
     warrior_nav_pkg = get_package_share_directory('warrior_navigation')
@@ -74,9 +77,10 @@ def launch_setup(context, *args, **kwargs):
         name='nav2_gps_waypoint_follower',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim.perform(context).lower() == 'true',
+            'use_sim_time': simulation,
             'waypoint_file': selected_waypoint_file,
             'action_name': 'navigate_to_pose',
+            'conversion_mode': 'from_ll' if simulation else 'projection',
         }],
     )
 
@@ -96,6 +100,11 @@ def generate_launch_description():
         'use_sim',
         default_value='false',
         description='Run in simulation or on real robot'
+    )
+
+    declare_use_wheel_odometry = DeclareLaunchArgument(
+        'use_wheel_odometry', default_value='true', choices=['true', 'false'],
+        description='Simulation only: fuse wheel odometry; false uses MTi GNSS/INS velocity',
     )
 
     declare_waypoint_file = DeclareLaunchArgument(
@@ -126,6 +135,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         output='screen',
         parameters=[{
+            'use_sim_time': use_sim,
             'min_height': 0.5,
             'range_min': 0.2,
             'target_frame': 'base_footprint',
@@ -145,9 +155,21 @@ def generate_launch_description():
                 'dual_ekf_navsat.launch.py'
             ])
         ),
+        condition=UnlessCondition(use_sim),
         launch_arguments={
             'use_sim_time': use_sim
         }.items()
+    )
+
+    simulation_ekf_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(PathJoinSubstitution([
+            FindPackageShare('warrior_localization'), 'launch', 'gps_sim.launch.py',
+        ])),
+        condition=IfCondition(use_sim),
+        launch_arguments={
+            'use_sim_time': use_sim,
+            'use_wheel_odometry': LaunchConfiguration('use_wheel_odometry'),
+        }.items(),
     )
 
     slam_launch = IncludeLaunchDescription(
@@ -185,11 +207,18 @@ def generate_launch_description():
 
     return LaunchDescription([
         declare_use_sim,
+        declare_use_wheel_odometry,
         declare_waypoint_file,
         pc2ls_node,
         ekf_launch,
+        simulation_ekf_launch,
         # slam_launch,
-        nav2_bringup_launch,
+        # Remap all Nav2 odometry subscribers, including nodes using the
+        # upstream default topic; the real-robot configuration is untouched.
+        GroupAction(actions=[
+            SetRemap(src='/odom', dst='/odometry/local', condition=IfCondition(use_sim)),
+            nav2_bringup_launch,
+        ]),
 
         OpaqueFunction(function=launch_setup),
     ])

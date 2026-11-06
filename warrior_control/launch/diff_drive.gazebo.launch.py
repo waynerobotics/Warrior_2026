@@ -12,6 +12,7 @@ import os
 from launch import LaunchDescription
 from launch.actions import TimerAction, IncludeLaunchDescription, RegisterEventHandler, DeclareLaunchArgument
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.substitutions import FindPackageShare
@@ -42,7 +43,7 @@ def generate_launch_description():
         [pkg_warrior_bringup, "rviz", "warrior.rviz"]
     )
 
-    robot_description = Command(["xacro ", xacro_file])
+    robot_description = ParameterValue(Command(["xacro ", xacro_file]), value_type=str)
 
     # ----------------- nodes -----------------
     robot_state_publisher = Node(
@@ -145,6 +146,13 @@ def generate_launch_description():
             description='Name of the world file to load'),
         gazebo,
         robot_state_publisher,
+        Node(
+            package='warrior_mti680g_sim', executable='mti680g_sim',
+            name='mti680g_sim', output='screen', parameters=[
+                PathJoinSubstitution([pkg_warrior_description, 'config', 'mti680g.yaml']),
+                {'use_sim_time': use_sim_time},
+            ],
+        ),
 
         RegisterEventHandler(
             event_handler=OnProcessExit(

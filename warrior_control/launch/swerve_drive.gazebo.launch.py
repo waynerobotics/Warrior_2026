@@ -11,6 +11,7 @@ from launch.actions import (
     Shutdown,
 )
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch.substitutions import Command, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
@@ -76,10 +77,10 @@ def generate_launch_description():
         [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
     )
 
-    robot_description = Command([
+    robot_description = ParameterValue(Command([
         "xacro ", xacro_file,
         " controllers_file:=", controller_params_file,
-    ])
+    ]), value_type=str)
 
     # ----------------- nodes -----------------
     robot_state_publisher = Node(
@@ -88,6 +89,13 @@ def generate_launch_description():
         output="screen",
         parameters=[{"robot_description": robot_description}, 
                     {"use_sim_time": use_sim_time}],
+    )
+    mti680g = Node(
+        package='warrior_mti680g_sim', executable='mti680g_sim',
+        name='mti680g_sim', output='screen', parameters=[
+            PathJoinSubstitution([pkg_warrior_description, 'config', 'mti680g.yaml']),
+            {'use_sim_time': use_sim_time},
+        ],
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -272,6 +280,7 @@ def generate_launch_description():
         gazebo_server,
         TimerAction(period=gui_delay, actions=[gazebo_gui]),
         robot_state_publisher,
+        mti680g,
         # joint_state_publisher,
         # ros2_control_node,
         gz_bridge,

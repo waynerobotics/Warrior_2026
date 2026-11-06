@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Full P37 course with Warrior's GPS/IMU/odometry no-man's-land mission."""
+"""Full P37 course with MTi-680G navigation and optional wheel odometry."""
 
 from pathlib import Path
 
@@ -16,6 +16,7 @@ def generate_launch_description():
     bringup = Path(get_package_share_directory('warrior_bringup')) / 'launch'
     profile = yaml.safe_load((navigation / 'igvc2027_autonav_sim.yaml').read_text())
     profile['waypoint_file'] = str(navigation / profile['waypoint_file'])
+    profile['use_wheel_odometry'] = 'true'
     return LaunchDescription([
         *[DeclareLaunchArgument(name, default_value=str(value))
           for name, value in profile.items()],

@@ -46,6 +46,7 @@
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
   <exec_depend>warrior_gazebo</exec_depend>
+  <exec_depend>warrior_mti680g_sim</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

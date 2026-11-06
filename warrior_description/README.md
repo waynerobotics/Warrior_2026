@@ -36,8 +36,7 @@ graph TD
     SM --> CON[swerve_module/constant.xacro]
     R --> LID[sensors/lidar.xacro]
     R --> CAM[sensors/camera.xacro]
-    R --> IMU[sensors/imu.xacro]
-    R --> GPS[sensors/gps.xacro]
+    R --> MTI[sensors/mti680g.xacro]
 ```
 
 > [xacro/inertial_macros.xacro](xacro/inertial_macros.xacro) (inertial_box /
@@ -63,10 +62,16 @@ graph TD
 |---|---|---|---|
 | LiDAR | `gpu_lidar` | `L1_lidar/scan` | `L1_lidar_link` |
 | Camera | `camera` | `/camera/image_raw` (+ `/camera/camera_info`) | `camera_link` |
-| IMU | `imu` | `imu` (+ odom `/odom_gt`) | `imu_link` |
-| GPS | `navsat` | `navsat` | `navsat_link` |
+| MTi-680G IMU | `imu` | `/mti680g/imu` | `imu_frame` |
+| MTi-680G single GNSS antenna | `navsat` | `/mti680g/navsat` | `gnss_antenna_frame` |
 
-gz↔ROS bridging is owned by `warrior_bringup` bridge yamls, not here.
+The [MTi-680G profile](config/mti680g.yaml) configures mounting, rates, and the
+measurement model. The native [MTi-680G adapter](../warrior_mti680g_sim/README.md)
+publishes `/imu/data`, `/gnss/fix`, and `/gnss/velocity` with noise and covariance.
+The body dimensions and mass match the MTi-680G; mounting offsets remain
+provisional. `/odom_gt` remains available only for evaluation.
+
+Other gz↔ROS bridging is owned by `warrior_bringup` bridge yamls.
 [config/gazebo_bridge.yaml](config/gazebo_bridge.yaml) (clock + `/odom`) is the
 local copy.
 
@@ -87,8 +92,7 @@ local copy.
 - `gzsim.urdf.xacro` accepts `controllers_file`, defaulting to
   `$(find warrior_control)/config/warrior_controllers_sim.yaml`. GPS simulation
   uses this to disable controller TF while its local EKF owns that transform.
-- [CMakeLists.txt](CMakeLists.txt) installs `launch urdf meshes xacro rviz` but
-  **not** `config/` or `docs/` — `config/gazebo_bridge.yaml` isn't installed
-  (the live bridge yamls live in `warrior_bringup`, so this is harmless).
+- [CMakeLists.txt](CMakeLists.txt) installs `launch urdf meshes xacro rviz config`.
+  The live generic bridge yamls remain in `warrior_bringup`.
 - `urdf/robot/*.urdf`, `urdf/warrior*.urdf`, `urdf/turtlebot3_burger_gps.urdf`
   are pre-generated / legacy static URDFs, not produced by the current xacro tree.

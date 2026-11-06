@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Shared profile controls rates and mounting; the native adapter applies
+       measurement noise and matching covariance to these raw sensor outputs. -->
+  <xacro:property name="mti680g" value="${xacro.load_yaml('$(find warrior_description)/config/mti680g.yaml')['mti680g_sim']['ros__parameters']}"/>
+  <xacro:property name="mti_length" value="0.0565"/>
+  <xacro:property name="mti_width" value="0.0409"/>
+  <xacro:property name="mti_height" value="0.03675"/>
+  <xacro:property name="mti_mass" value="0.098"/>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="${mti680g['imu_frame']}"/>
+    <origin xyz="${' '.join(str(v) for v in mti680g['imu_xyz'])}" rpy="0 0 0"/>
+  </joint>
+  <link name="${mti680g['imu_frame']}">
+    <visual>
+      <geometry><box size="${mti_length} ${mti_width} ${mti_height}"/></geometry>
+      <material name="space_gray"/>
+    </visual>
+    <inertial>
+      <mass value="${mti_mass}"/>
+      <inertia ixx="${mti_mass*(mti_width*mti_width+mti_height*mti_height)/12}"
+               iyy="${mti_mass*(mti_length*mti_length+mti_height*mti_height)/12}"
+               izz="${mti_mass*(mti_length*mti_length+mti_width*mti_width)/12}"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+  <gazebo reference="${mti680g['imu_frame']}">
+    <sensor name="mti680g_imu" type="imu">
+      <update_rate>${mti680g['imu_rate_hz']}</update_rate>
+      <always_on>true</always_on>
+      <imu>
+        <orientation_reference_frame><localization>ENU</localization></orientation_reference_frame>
+      </imu>
+      <topic>/mti680g/imu</topic>
+      <gz_frame_id>${mti680g['imu_frame']}</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+  <!-- One external antenna; the MTi-680G is not a dual-antenna heading unit.
+       Mount offsets are provisional until measured on the physical robot. -->
+  <joint name="gnss_antenna_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="${mti680g['antenna_frame']}"/>
+    <origin xyz="${' '.join(str(v) for v in mti680g['antenna_xyz'])}" rpy="0 0 0"/>
+  </joint>
+  <link name="${mti680g['antenna_frame']}"/>
+  <gazebo reference="${mti680g['antenna_frame']}">
+    <sensor name="mti680g_gnss" type="navsat">
+      <always_on>true</always_on>
+      <update_rate>${mti680g['gnss_rate_hz']}</update_rate>
+      <topic>/mti680g/navsat</topic>
+      <gz_frame_id>${mti680g['antenna_frame']}</gz_frame_id>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+    <!-- Evaluation only; never consumed by the localization filters. -->
+    <plugin filename="ignition-gazebo-odometry-publisher-system"
+            name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <odom_topic>/odom_gt</odom_topic>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+  </gazebo>
+</robot>
