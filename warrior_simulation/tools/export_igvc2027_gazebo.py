@@ -317,11 +317,12 @@ def export_course(scene, output_world=DEFAULT_WORLD, asset_dir=DEFAULT_ASSETS, s
     physics = element(world, "physics", name="1ms", type="ode")
     element(physics, "max_step_size", "0.001")
     element(physics, "real_time_factor", "1.0")
-    for filename, classname in (("gz-sim-physics-system", "gz::sim::systems::Physics"),
-                                 ("gz-sim-user-commands-system", "gz::sim::systems::UserCommands"),
-                                 ("gz-sim-scene-broadcaster-system", "gz::sim::systems::SceneBroadcaster"),
-                                 ("gz-sim-contact-system", "gz::sim::systems::Contact"),
-                                 ("gz-sim-imu-system", "gz::sim::systems::Imu"),
+    # Use native Fortress names; gz-sim filename aliases require Gazebo 6.16+.
+    for filename, classname in (("ignition-gazebo-physics-system", "ignition::gazebo::systems::Physics"),
+                                 ("ignition-gazebo-user-commands-system", "ignition::gazebo::systems::UserCommands"),
+                                 ("ignition-gazebo-scene-broadcaster-system", "ignition::gazebo::systems::SceneBroadcaster"),
+                                 ("ignition-gazebo-contact-system", "ignition::gazebo::systems::Contact"),
+                                 ("ignition-gazebo-imu-system", "ignition::gazebo::systems::Imu"),
                                  ("ignition-gazebo-navsat-system", "ignition::gazebo::systems::NavSat")):
         element(world, "plugin", filename=filename, name=classname)
     scene_element = element(world, "scene")

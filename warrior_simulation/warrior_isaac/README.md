@@ -40,6 +40,11 @@ The default camera follows the robot. Closing Isaac stops the ROS processes;
 Ctrl+C also stops the complete launch. The ROS launch commands below select
 the isolated simulator automatically.
 
+The timeline's Pause/Play controls suspend and resume physics and sensor
+publication. Queued motion commands are discarded while paused. Stop or a
+timeline reset ends the run with a relaunch instruction: restart the complete
+ROS launch so the simulator, bridge and localization share a fresh clock.
+
 For launch arguments after building:
 
 ```bash

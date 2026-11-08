@@ -62,3 +62,43 @@ def test_warrior_navigation_selects_compatible_localization_and_odometry(
     follower = captured[0]['parameters'][0]
     assert follower['use_sim_time'] == (simulation == 'true')
     assert follower['conversion_mode'] == ('from_ll' if simulation == 'true' else 'projection')
+
+
+@pytest.mark.parametrize('simulation', ['true', 'false'])
+def test_standalone_nav_preserves_ekf_localization_and_swerve_commands(
+        simulation, monkeypatch):
+    """Keep AMCL out of the EKF TF tree and connect Nav2 to the swerve base."""
+    path = Path(__file__).resolve().parents[1] / 'launch/nav.launch.py'
+    spec = importlib.util.spec_from_file_location('warrior_nav_launch', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    context = LaunchContext()
+    context.launch_configurations['use_sim'] = simulation
+    captured = []
+    node_type = module.Node
+
+    def capture_node(**kwargs):
+        captured.append(kwargs)
+        return node_type(**kwargs)
+
+    monkeypatch.setattr(module, 'Node', capture_node)
+    entities = module.generate_launch_description().entities
+    navigation_group = next(action for action in entities if isinstance(action, GroupAction))
+    navigation = next(action for action in navigation_group.get_sub_entities()
+                      if isinstance(action, IncludeLaunchDescription))
+    # Humble's bringup_launch.py always includes another localizer when SLAM
+    # is disabled, even if the caller passes use_localization=False.
+    navigation.launch_description_source.get_launch_description(context)
+    assert navigation.launch_description_source.location.endswith('/navigation_launch.py')
+    assert 'use_localization' not in dict(navigation.launch_arguments)
+
+    stampers = [node for node in captured if node['package'] == 'twist_stamper']
+    assert len(stampers) == 1
+    stamper = stampers[0]
+    assert stamper['executable'] == 'twist_stamper'
+    assert dict(stamper['remappings']) == {
+        'cmd_vel_in': '/cmd_vel', 'cmd_vel_out': '/cmd_vel_stamped',
+    }
+    parameters = stamper['parameters'][0]
+    assert parameters['frame_id'] == 'base_footprint'
+    assert parameters['use_sim_time'].perform(context) == simulation

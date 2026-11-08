@@ -8,12 +8,53 @@ import socket
 import signal
 import sys
 import time
+import traceback
 import xml.etree.ElementTree as ET
 
 from runtime import application_arguments
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+
+
+def report_simulation_failure(app):
+    """Preserve Python failures before Kit's fast shutdown exits the process."""
+    if sys.exc_info()[1] is not None:
+        traceback.print_exc()
+        sys.stderr.flush()
+        app.app.post_quit(1)
+
+
+class SimulationTime:
+    """Keep sensor sampling and wall pacing aligned through a GUI pause."""
+
+    def __init__(self, stamp, wall_time):
+        self.last_stamp = stamp
+        self.wall_start = wall_time - stamp
+        self.was_paused = False
+
+    def running(self, stamp, wall_time, *, playing, stopped):
+        if stopped or stamp < self.last_stamp:
+            # The ROS bridge and localization filters share this clock epoch.
+            # Resetting only the articulation would leave stale ROS state.
+            raise RuntimeError('Isaac timeline stopped or reset; relaunch the ROS simulation '
+                               'to reset the robot, sensors, and localization together.')
+        if not playing:
+            self.was_paused = True
+            return False
+        if self.was_paused:
+            self.wall_start = wall_time - stamp
+            self.was_paused = False
+        return True
+
+    def sample_interval(self, stamp):
+        if stamp < self.last_stamp:
+            raise RuntimeError('Isaac simulation clock moved backward; relaunch the ROS simulation.')
+        interval = stamp - self.last_stamp
+        if interval == 0:
+            return None
+        self.last_stamp = stamp
+        return interval
 
 
 def rotate_vector(quaternion, vector):
@@ -77,6 +118,9 @@ def main():
     args = parser.parse_args()
     if not 1024 <= args.port < 65535:
         parser.error('--port must be between 1024 and 65534')
+    stage_path = args.stage.resolve()
+    if not stage_path.is_file():
+        parser.error(f'Course stage does not exist: {stage_path}')
     if not args.urdf.is_file():
         parser.error('Run prepare_robot.py in the Pixi environment before launching Isaac')
     scene = json.loads(args.scene.read_text())
@@ -131,7 +175,8 @@ def main():
             raise RuntimeError('Warrior URDF import failed')
         print('Imported Warrior articulation:', articulation_path, flush=True)
         root_path = '/' + articulation_path.strip('/').split('/')[0]
-        omni.usd.get_context().open_stage(str(args.stage.resolve()))
+        if not omni.usd.get_context().open_stage(str(stage_path)):
+            raise RuntimeError(f'Isaac Sim could not open {stage_path}')
         app.update()
         stage = omni.usd.get_context().get_stage()
         from run_course import configure_sky_background
@@ -233,13 +278,28 @@ def main():
             viewport = get_active_viewport()
             if viewport:
                 viewport.camera_path = camera_path
-        wall_start = time.monotonic()
+        timing = SimulationTime(world.current_time, time.monotonic())
         previous_q = None
         previous_antenna = None
         previous_sensor_stamp = None
         start_position = None
         minimum_range = math.inf
         while app.is_running() and not stopping and (args.seconds <= 0 or world.current_time < args.seconds):
+            if not timing.running(world.current_time, time.monotonic(),
+                                  playing=world.is_playing(), stopped=world.is_stopped()):
+                command.fill(0)
+                smooth.fill(0)
+                last_command_wall = -math.inf
+                # Commands stamped at the frozen simulation time must not be
+                # replayed as fresh commands after a long pause.
+                while True:
+                    try:
+                        sock.recvfrom(4096)
+                    except BlockingIOError:
+                        break
+                # Keep processing GUI events so Play can resume the simulation.
+                world.step(render=True)
+                continue
             while True:
                 try:
                     packet, address = sock.recvfrom(4096)
@@ -277,7 +337,18 @@ def main():
             robot.apply_action(ArticulationAction(joint_positions=np.array(steer_targets), joint_indices=steer_indices))
             robot.apply_action(ArticulationAction(joint_velocities=np.array(wheel_targets), joint_indices=drive_indices))
             world.step(render=True)
+            if stopping or not app.is_running():
+                break
             t = world.current_time
+            # Pause/Stop can arrive while the step processes GUI events.
+            if not timing.running(t, time.monotonic(), playing=world.is_playing(), stopped=world.is_stopped()):
+                command.fill(0)
+                smooth.fill(0)
+                last_command_wall = -math.inf
+                continue
+            sample_dt = timing.sample_interval(t)
+            if sample_dt is None:
+                continue
             q = robot.get_joint_positions()
             qdot = robot.get_joint_velocities()
             position, quaternion = robot.get_world_pose()
@@ -295,7 +366,7 @@ def main():
                 wheel_rates = np.zeros(3)
             else:
                 delta_q = q[drive_indices] - previous_q[drive_indices]
-                wheel_rates = np.arctan2(np.sin(delta_q), np.cos(delta_q)) * 60
+                wheel_rates = np.arctan2(np.sin(delta_q), np.cos(delta_q)) / sample_dt
             previous_q = q.copy()
             matrix, readings = [], []
             for i, angle in enumerate(q[steer_indices]):
@@ -306,7 +377,7 @@ def main():
                 readings.extend([wheel_radius*wheel_rates[i]*c, wheel_radius*wheel_rates[i]*s])
             twist = np.linalg.lstsq(np.array(matrix), np.array(readings), rcond=None)[0]
             c, s = math.cos(odom[2]), math.sin(odom[2])
-            odom += np.array([c*twist[0]-s*twist[1], s*twist[0]+c*twist[1], twist[2]]) / 60
+            odom += np.array([c*twist[0]-s*twist[1], s*twist[0]+c*twist[1], twist[2]]) * sample_dt
             imu_data = imu.get_current_frame()
             if sequence % 6 == 0:
                 points = np.array(lidar_interface.get_point_cloud_data(lidar_path)).reshape(-1, 3)
@@ -338,7 +409,7 @@ def main():
                 print(f'Warrior t={t:.1f} pose={position.round(3).tolist()} wheel_odom={odom.round(3).tolist()} cmd={smooth.round(2).tolist()}', flush=True)
                 positions.append({'t': t, 'position': position.tolist(), 'odom': odom.tolist()})
             if args.realtime:
-                delay = wall_start + t - time.monotonic()
+                delay = timing.wall_start + t - time.monotonic()
                 if delay > 0:
                     time.sleep(min(delay, .02))
         if args.capture and not captured:
@@ -360,6 +431,7 @@ def main():
         world.stop()
     finally:
         sock.close()
+        report_simulation_failure(app)
         app.close()
 
 

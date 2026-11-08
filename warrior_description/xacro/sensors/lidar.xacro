@@ -38,7 +38,7 @@
     <!-- Gazebo Sensor Plugin -->
     <gazebo reference="${lidar_name}_link">
 
-      <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
         <render_engine>ogre</render_engine>
       </plugin>
 

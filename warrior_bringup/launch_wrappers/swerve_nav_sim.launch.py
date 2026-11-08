@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Launch the Warrior swerve simulation with odom-relative Nav2."""
 
+import math
+
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
@@ -67,6 +69,27 @@ def generate_launch_description():
         ],
     )
 
+    obstacle_scan = Node(
+        package='warrior_navigation',
+        executable='ground_obstacle_scan',
+        name='navigation_obstacle_scan',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            # The inverted lidar's raw LaserScan selects a downward beam.
+            # Remove measured ground before projecting obstacles for Nav2.
+            'target_frame': 'base_footprint',
+            'ground_height': 0.0,
+            'min_height': 0.15, 'max_height': 1.5,
+            'range_min': 0.9, 'range_max': 15.0,
+            'angle_min': -math.pi, 'angle_max': math.pi,
+            'angle_increment': math.pi / 180.0,
+            'scan_time': 0.1,
+            'use_inf': True,
+        }],
+        remappings=[('cloud_in', '/unilidar/cloud'), ('scan', '/navigation/scan')],
+    )
+
     navigation = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution(
@@ -105,6 +128,7 @@ def generate_launch_description():
             'odom_topic': '/odom',
             'global_frame': 'odom',
             'robot_base_frame': 'base_footprint',
+            'scan_topic': '/navigation/scan',
             'timeout_sec': ParameterValue(nav_ready_timeout, value_type=float),
         }],
     )
@@ -189,6 +213,7 @@ def generate_launch_description():
         SetLaunchConfiguration('launch_nav_rviz', launch_rviz),
         sim,
         twist_stamper,
+        obstacle_scan,
         RegisterEventHandler(
             OnProcessExit(
                 target_action=activate_nav2,

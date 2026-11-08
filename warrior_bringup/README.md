@@ -27,8 +27,7 @@ automatically.
 | **Drive real swerve (Xbox)** | `ros2 launch warrior_bringup warrior_swerve_teleop.launch.py` |
 | Swerve sim | `ros2 launch warrior_bringup swerve_sim.launch.py` |
 | Swerve sim + Nav2 | `ros2 launch warrior_bringup swerve_nav_sim.launch.py` |
-| Diff-drive sim | `ros2 launch warrior_bringup diff_sim.launch.py` |
-| Real Warrior (ros2_control only) | `ros2 launch warrior_bringup warrior_real.launch.py` |
+| Real Warrior (ros2_control only) | `ros2 launch warrior_control swerve_drive.real.launch.py` |
 
 These commands reuse the committed `pixi.lock` while it matches `pixi.toml`.
 Pixi can update the lockfile when dependencies change; review and commit those
@@ -219,12 +218,24 @@ All `*_sim` / `*_real` wrappers just pre-set `robot_type` on `main.launch.py`.
 | [warrior_real.launch.py](launch/warrior_real.launch.py) | `main` w/ `robot_type:=warrior_real` | real |
 | [turtlebot_sim.launch.py](launch/turtlebot_sim.launch.py) | `main` w/ `robot_type:=turtlebot_sim` | sim |
 | [turtlebot_real.launch.py](launch/turtlebot_real.launch.py) | `main` w/ `robot_type:=turtlebot_real` | real |
-| [warrior.launch.py](launch/warrior.launch.py) | standalone: RSP + `ros2_control_node` + **diff_drive_controller** + rviz + keyboard teleop (loads `warrior_controllers.yaml` — see staleness note) | real |
+| [warrior.launch.py](launch/warrior.launch.py) | legacy differential-drive bringup; controller parameters are disabled (see limitations below) | real |
 | [warrior.gazebo.launch.py](launch/warrior.gazebo.launch.py) | DEPRECATED — controller launch + joy + teleop_twist_joy | sim |
 | [warrior.real.launch.py](launch/warrior.real.launch.py) | unused variant of teleop (driver include commented out) | real |
 
 > `warrior_real` (via `main`) calls `warrior.launch.py` — **not** the teleop
 > file. For Xbox swerve driving use `warrior_swerve_teleop.launch.py` directly.
+
+### Legacy launcher limitations
+
+These older entry points still need migration and are not covered by the
+current swerve/GPS simulation runtime checks:
+
+| Entry point | Known problem |
+|---|---|
+| `warrior_auto.launch.py` | Unfinished stub: returns `None` instead of a `LaunchDescription`. Use the dedicated Nav2/GPS wrappers. |
+| `diff_sim.launch.py` | Its controller launcher searches for worlds in `warrior_description/worlds`, which does not exist, and references a missing RViz file. |
+| `warrior_real.launch.py` / `warrior.launch.py` | Controller YAML is disabled, so controller types cannot load; the RViz path is also missing. Use the swerve entry points in the quick-start table. |
+| `turtlebot_sim.launch.py` | The spawner requires `TURTLEBOT3_MODEL=burger` in the environment. Its syntax conflict is repaired, but the legacy simulation has not been validated end to end. |
 
 ### main.launch.py dispatch
 

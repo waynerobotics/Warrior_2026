@@ -33,7 +33,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     # The local EKF owns odom -> base_footprint; wheel odometry is still published.
     controllers = RewrittenYaml(
-        source_file=share('warrior_control', 'config', 'warrior_controllers_sim.yaml'),
+        source_file=LaunchConfiguration('controller_params_file'),
         param_rewrites={
             'swerve_drive_controller.ros__parameters.enable_odom_tf': 'false',
         },
@@ -163,6 +163,8 @@ def generate_launch_description():
          'YAML containing waypoints: latitude, longitude, yaw (ENU radians)'),
         ('params_file', share('warrior_navigation', 'config', 'nav2_gps_sim_params.yaml'),
          'Nav2 mapless GPS simulation parameters'),
+        ('controller_params_file', share('warrior_control', 'config', 'warrior_controllers_sim.yaml'),
+         'Controller YAML; odometry TF is disabled so the local EKF owns it'),
     ]
     return LaunchDescription([
         *[DeclareLaunchArgument(name, default_value=default, description=description)

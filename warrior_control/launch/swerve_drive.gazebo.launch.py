@@ -1,7 +1,8 @@
 
 import os
+import shlex
 from ament_index_python import get_package_share_directory
-from launch import LaunchDescription
+from launch import LaunchDescription, Substitution
 from launch.actions import (
     TimerAction,
     RegisterEventHandler,
@@ -16,6 +17,34 @@ from launch.substitutions import Command, PathJoinSubstitution, LaunchConfigurat
 from launch_ros.substitutions import FindPackageShare
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
+from launch.logging import get_logger
+from launch.utilities import normalize_to_list_of_substitutions, perform_substitutions
+
+
+class QuotedCommandArgument(Substitution):
+    """Keep one substituted argument intact when Command parses its command line."""
+
+    def __init__(self, value):
+        super().__init__()
+        self.value = normalize_to_list_of_substitutions(value)
+
+    def perform(self, context):
+        return shlex.quote(perform_substitutions(context, self.value))
+
+
+def start_after_success(next_action, stage):
+    """Advance startup only after the previous process completed successfully."""
+    def on_exit(event, context):
+        if context.is_shutdown:
+            return []
+        if event.returncode == 0:
+            return [next_action]
+        reason = f'{stage} failed with exit code {event.returncode}'
+        get_logger('launch.user').error(reason)
+        return [Shutdown(reason=reason)]
+
+    return on_exit
+
 
 def generate_launch_description():
     # Launch Arguments
@@ -78,8 +107,8 @@ def generate_launch_description():
     )
 
     robot_description = ParameterValue(Command([
-        "xacro ", xacro_file,
-        " controllers_file:=", controller_params_file,
+        'xacro ', QuotedCommandArgument(xacro_file), ' ',
+        QuotedCommandArgument(['controllers_file:=', controller_params_file]),
     ]), value_type=str)
 
     # ----------------- nodes -----------------
@@ -289,20 +318,22 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
-                on_exit=[joint_state_broadcaster_spawner],
+                on_exit=start_after_success(
+                    joint_state_broadcaster_spawner, 'Gazebo robot creation'),
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=joint_state_broadcaster_spawner,
-                on_exit=[swerve_drive_controller_spawner],
+                on_exit=start_after_success(
+                    swerve_drive_controller_spawner, 'Joint state broadcaster startup'),
             )
         ),
         
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=swerve_drive_controller_spawner,
-                on_exit=[rviz2],
+                on_exit=start_after_success(rviz2, 'Swerve drive controller startup'),
             )
         ),
 

@@ -30,9 +30,11 @@ pixi run ros2 action send_goal \
   --feedback
 ```
 
-This profile uses `/scan`, rolling local and global costmaps, and wheel
-odometry. Regulated Pure Pursuit uses forward/yaw motion for predictable Humble
-simulation behavior; the base remains holonomic during manual teleoperation.
+This profile uses ground-filtered `/navigation/scan`, rolling local and global
+costmaps, and wheel odometry. The raw `/scan` includes ground returns from the
+inverted lidar and is kept for diagnostics. Regulated Pure Pursuit uses
+forward/yaw motion for predictable Humble simulation behavior; the base remains
+holonomic during manual teleoperation.
 The profile has no map, AMCL, GPS correction, or persistent world frame, so a
 goal is relative to the startup pose and accumulated odometry can drift. Do not
 run a teleop publisher at the same time: the stack has no command mux yet. No
@@ -115,7 +117,7 @@ model and retain its legacy sensor configuration.
 |---|---|---|
 | [swerve_nav_sim.launch.py](../warrior_bringup/launch_wrappers/swerve_nav_sim.launch.py) | **Nav2** | Recommended Warrior simulation entry point; base simulation + Twist stamper + odom-relative Nav2 + RViz. |
 | [swerve_gps_nav_sim.launch.py](../warrior_bringup/launch_wrappers/swerve_gps_nav_sim.launch.py) | **Nav2 GPS** | Four-waypoint 2027 schematic simulation, fused localization, filtered lidar, and GPS mission. |
-| [nav.launch.py](launch/nav.launch.py) | **Nav2** | Main entry. EKF + SLAM + `nav2_bringup` + `nav2_gps_waypoint_follower`. Defaults to `real_waypoints.yaml`, map origin args (lat/lon/yaw, UTM zone/hemisphere). |
+| [nav.launch.py](launch/nav.launch.py) | **Nav2** | Standalone navigation for an already running Warrior base: dual EKF localization + Nav2 navigation servers + Twist stamper + GPS follower. Defaults to `real_waypoints.yaml`; AMCL and SLAM stay disabled because the EKF owns `map → odom`. |
 | [nav2_gps_waypoint_follower.launch.py](launch/nav2_gps_waypoint_follower.launch.py) | **Nav2** | Gazebo + EKF + SLAM + nav2_bringup + follower. |
 | [gps_waypoint_follower.launch.py](launch/gps_waypoint_follower.launch.py) | **custom A\*** | Gazebo + EKF + SLAM + costmap + `path_to_pose_server` + `recovery_manager` + `follow_path` + `gps_waypoint_manager`. |
 | [complex_path.launch.py](launch/complex_path.launch.py) | **custom A\*** | Gazebo + EKF + SLAM + costmap + RViz + planner/recovery/follow_path. |
@@ -127,7 +129,7 @@ model and retain its legacy sensor configuration.
 After `pixi run build`, run ROS commands inside `pixi shell`:
 
 ```bash
-ros2 launch warrior_navigation nav.launch.py use_sim:=false waypoint_file:=<path>
+ros2 launch warrior_navigation nav.launch.py use_sim:=false waypoint_file:=real_nav
 ```
 
 ## Nodes — [warrior_navigation/](warrior_navigation/)
@@ -147,7 +149,7 @@ Shared helper: [utils/gps_utils.py](utils/gps_utils.py) (`latLonYaw2Geopose`, qu
 - `/a_star_path` (Path) — planner output → `follow_path`.
 - `/costmap` (OccupancyGrid) — planner input.
 - `/cmd_vel_stamped` (TwistStamped) — `follow_path` and swerve-controller command topic.
-- `/cmd_vel` (Twist) — Nav2 controller output; converted to `/cmd_vel_stamped` by the simulation launch.
+- `/cmd_vel` (Twist) — Nav2 output; converted to `/cmd_vel_stamped` by the Warrior simulation wrappers and `nav.launch.py`.
 - `/gps_waypoints` (MarkerArray), `/gps_waypoint_trajectory` (Path) — RViz viz.
 - `ComputePathToPose`, `NavigateToPose` — Nav2 actions.
 

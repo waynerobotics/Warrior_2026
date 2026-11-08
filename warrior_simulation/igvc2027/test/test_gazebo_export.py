@@ -21,6 +21,42 @@ def numbers(node, path):
     return [float(v) for v in node.findtext(path).split()]
 
 
+@pytest.mark.parametrize("source", ["exporter", "checked_in_world"])
+def test_course_uses_native_fortress_world_systems(source, tmp_path):
+    """Older Fortress releases cannot load the newer gz-sim filename aliases."""
+    if source == "exporter":
+        scene = {"datum": {"latitude": 42.0, "longitude": -83.0}, "objects": []}
+        world = exporter.export_course(
+            scene, tmp_path / "course.sdf", tmp_path / "assets")
+    else:
+        world = ROOT / "warrior_simulation/warrior_gazebo/worlds/igvc2027_autonav.world"
+    plugins = {node.attrib["filename"]: node.attrib["name"]
+               for node in ET.parse(world).findall("world/plugin")}
+    assert plugins == {
+        "ignition-gazebo-physics-system": "ignition::gazebo::systems::Physics",
+        "ignition-gazebo-user-commands-system": "ignition::gazebo::systems::UserCommands",
+        "ignition-gazebo-scene-broadcaster-system": "ignition::gazebo::systems::SceneBroadcaster",
+        "ignition-gazebo-contact-system": "ignition::gazebo::systems::Contact",
+        "ignition-gazebo-imu-system": "ignition::gazebo::systems::Imu",
+        "ignition-gazebo-navsat-system": "ignition::gazebo::systems::NavSat",
+    }
+
+
+@pytest.mark.parametrize("xacro", ["ros2_control/gzsim.ros2_control.xacro", "sensors/lidar.xacro"])
+def test_robot_sensor_systems_use_native_fortress_plugins(xacro):
+    """Robot-side sensor plugins must load on the same Fortress versions."""
+    document = ET.parse(ROOT / "warrior_description/xacro" / xacro)
+    systems = []
+    for plugin in document.findall(".//plugin"):
+        filename = plugin.get("filename")
+        if filename is None or filename == "libgz_ros2_control-system.so":
+            continue
+        assert filename.startswith("ignition-gazebo-")
+        assert plugin.attrib["name"].startswith("ignition::gazebo::systems::")
+        systems.append(plugin.attrib["name"])
+    assert "ignition::gazebo::systems::Sensors" in systems
+
+
 def test_sloped_terrain_keeps_registered_uv_orientation_and_upward_normals(tmp_path):
     # Geographic imagery is registered to these corners; swapping U/V or
     # flipping V would silently move photographed markings across the terrain.

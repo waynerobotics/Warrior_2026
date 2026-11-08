@@ -43,6 +43,14 @@ pixi run ros2 launch warrior_bringup igvc2027_autonav.launch.py \
   autostart_waypoints:=false
 ```
 
+The world and robot sensor plugins use Fortress's native
+`ignition-gazebo-*` library names. The newer `gz-sim-*` aliases require
+[Fortress 6.16 or later](https://github.com/gazebosim/gz-sim/blob/ign-gazebo6/Changelog.md#gazebo-sim-6160-2024-01-12);
+using them prevents older Fortress installations from loading the required
+physics and sensor systems. After updating this checkout, run
+`pixi run launch-igvc2027-gazebo` to rebuild and launch the corrected world,
+or run `pixi run build` before using the direct `ros2 launch` commands above.
+
 Isaac uses the repository's `.pixi/envs/isaac/` environment with Python 3.11
 and Isaac Sim 5.1.0. The ROS environment remains separate; no global Isaac
 installation is used. Run `configure-isaac` in a terminal to review and accept

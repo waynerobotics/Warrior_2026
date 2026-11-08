@@ -123,12 +123,6 @@ def generate_launch_description():
         'nav2_params.yaml'
     ])
     
-    map_file = os.path.join(
-        get_package_share_directory('warrior_navigation'),
-        'maps',
-        'gz_world_save.yaml'
-    )
-
     pc2ls_node = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
@@ -172,32 +166,32 @@ def generate_launch_description():
         }.items(),
     )
 
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                FindPackageShare('warrior_localization'),
-                'launch',
-                'online_async_launch.py'
-            ])
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim
-        }.items()
+    # Humble Nav2 publishes Twist; the Warrior swerve controller expects
+    # TwistStamped on /cmd_vel_stamped.
+    twist_stamper = Node(
+        package='twist_stamper',
+        executable='twist_stamper',
+        name='nav2_twist_stamper',
+        output='screen',
+        parameters=[{'frame_id': 'base_footprint', 'use_sim_time': use_sim}],
+        remappings=[
+            ('cmd_vel_in', '/cmd_vel'),
+            ('cmd_vel_out', '/cmd_vel_stamped'),
+        ],
     )
 
-    nav2_bringup_launch = IncludeLaunchDescription(
+    # Both localization modes above already own map -> odom. Humble's
+    # bringup_launch.py ignores use_localization and also starts AMCL.
+    nav2_navigation_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
                 nav2_bringup,
                 'launch',
-                'bringup_launch.py'
+                'navigation_launch.py'
             ])
         ),
         launch_arguments={
-            'slam': 'False',
-            'use_localization': 'False',
             'use_sim_time': use_sim,
-            'map': map_file,
             'params_file': nav2_params_file,
             'autostart': 'True',
             'use_composition': 'False',
@@ -212,12 +206,12 @@ def generate_launch_description():
         pc2ls_node,
         ekf_launch,
         simulation_ekf_launch,
-        # slam_launch,
+        twist_stamper,
         # Remap all Nav2 odometry subscribers, including nodes using the
         # upstream default topic; the real-robot configuration is untouched.
         GroupAction(actions=[
             SetRemap(src='/odom', dst='/odometry/local', condition=IfCondition(use_sim)),
-            nav2_bringup_launch,
+            nav2_navigation_launch,
         ]),
 
         OpaqueFunction(function=launch_setup),

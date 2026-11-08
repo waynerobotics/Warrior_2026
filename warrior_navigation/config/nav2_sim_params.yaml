@@ -90,7 +90,7 @@ local_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /navigation/scan
           clearing: true
           marking: true
           data_type: LaserScan
@@ -126,7 +126,7 @@ global_costmap:
         enabled: true
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /navigation/scan
           clearing: true
           marking: true
           data_type: LaserScan
