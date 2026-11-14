@@ -40,7 +40,7 @@ def generate_launch_description():
     gazebo_bridge_yaml = PathJoinSubstitution([pkg_warrior_bringup, "config", "diff_gz_bridge.yaml"])
 
     rviz2_config_file = PathJoinSubstitution(
-        [pkg_warrior_bringup, "rviz", "warrior.rviz"]
+        [pkg_warrior_bringup, "rviz", "warrior.gazebo.rviz"]
     )
 
     robot_description = ParameterValue(Command(["xacro ", xacro_file]), value_type=str)

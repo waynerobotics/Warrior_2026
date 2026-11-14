@@ -3,6 +3,7 @@
 from pathlib import Path
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 import yaml
 
 from launch import LaunchDescription
@@ -15,6 +16,16 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
+
+
+def ros_robot_description(urdf):
+    """Restore file URIs for RViz after Isaac's preparation strips the scheme."""
+    robot = ET.parse(urdf).getroot()
+    for mesh in robot.iter('mesh'):
+        path = Path(mesh.get('filename', ''))
+        if path.is_absolute():
+            mesh.set('filename', path.as_uri())
+    return ET.tostring(robot, encoding='unicode')
 
 
 def generate_launch_description():
@@ -50,7 +61,7 @@ def generate_launch_description():
             command.extend(['--debug-cloud', debug_cloud])
         process = ExecuteProcess(cmd=command, output='screen', sigterm_timeout='15', sigkill_timeout='10')
         state = Node(package='robot_state_publisher', executable='robot_state_publisher',
-                     parameters=[{'robot_description': urdf.read_text(), 'use_sim_time': True}], output='screen')
+                     parameters=[{'robot_description': ros_robot_description(urdf), 'use_sim_time': True}], output='screen')
         return [state, RegisterEventHandler(OnProcessExit(target_action=process,
                  on_exit=[EmitEvent(event=Shutdown(reason='Isaac simulator closed'))])), process]
 
