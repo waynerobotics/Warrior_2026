@@ -116,7 +116,7 @@ class IsaacBridge(Node):
             'clock': self.create_publisher(Clock, '/clock', 10),
             'joints': self.create_publisher(JointState, '/joint_states', 10),
             'imu': self.create_publisher(Imu, '/imu/data', qos_profile_sensor_data),
-            'gps': self.create_publisher(NavSatFix, '/gnss/fix', qos_profile_sensor_data),
+            'gps': self.create_publisher(NavSatFix, '/gnss', qos_profile_sensor_data),
             'gnss_velocity': self.create_publisher(TwistWithCovarianceStamped, '/gnss/velocity', qos_profile_sensor_data),
             'scan': self.create_publisher(LaserScan, '/navigation/scan', qos_profile_sensor_data),
             'truth': self.create_publisher(Odometry, '/isaac/ground_truth', 10),
