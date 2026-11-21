@@ -38,7 +38,7 @@ def _localization_nodes(context):
                 ('imu', '/imu/data'),
                 # Accommodate robot_localization releases using imu/data.
                 ('imu/data', '/imu/data'),
-                ('gps/fix', '/gnss/fix'),
+                ('gps/fix', '/gnss'),
                 ('gps/filtered', '/gps/filtered'),
                 ('odometry/gps', '/odometry/gps'),
                 ('odometry/filtered', '/odometry/global'),

@@ -41,7 +41,7 @@ public:
     imu_rng_.seed(seed);
     gnss_rng_.seed(seed + 1);
     imu_publisher_ = create_publisher<sensor_msgs::msg::Imu>("/imu/data", rclcpp::SensorDataQoS());
-    fix_publisher_ = create_publisher<sensor_msgs::msg::NavSatFix>("/gnss/fix", rclcpp::SensorDataQoS());
+    fix_publisher_ = create_publisher<sensor_msgs::msg::NavSatFix>("/gnss", rclcpp::SensorDataQoS());
     velocity_publisher_ = create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
       "/gnss/velocity", rclcpp::SensorDataQoS());
     if (!transport_.Subscribe("/mti680g/imu", &Mti680gSim::on_imu, this) ||

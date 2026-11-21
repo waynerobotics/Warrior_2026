@@ -9,8 +9,8 @@ mti680g_sim:
     imu_frame: imu_frame
     antenna_frame: gnss_antenna_frame
     velocity_frame: gnss_enu
-    imu_xyz: [0.0, 0.0, 0.0]
-    antenna_xyz: [0.04, 0.0, 0.0]
+    imu_xyz: [0.47, 0.0, -0.1]
+    antenna_xyz: [0.71, 0.0, 0.0]
     roll_pitch_stddev_deg: 0.2
     yaw_stddev_deg: 0.5
     gyro_noise_density_deg_s: 0.007
