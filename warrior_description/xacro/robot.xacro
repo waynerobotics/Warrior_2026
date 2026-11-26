@@ -1,11 +1,18 @@
 <?xml version="1.0"?>
 <robot name="warrior_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Gazebo sensor renderer. ogre2 renders the PBR (albedo_map) course
+       textures correctly; ogre1 washes the aerial ground out to white with
+       rainbow shadow artefacts, which breaks camera perception. Pass
+       sensor_render_engine:=ogre only as a fallback (e.g. WSL2 OGRE crashes). -->
+  <xacro:arg name="sensor_render_engine" default="ogre2"/>
+
   <!-- ========== Includes ========== -->
   <xacro:include filename="$(find warrior_description)/xacro/material.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/swerve_module/swerve_module.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/sensors/lidar.xacro"/>
-  <xacro:include filename="$(find warrior_description)/xacro/sensors/camera.xacro"/>
+  <!-- camera.xacro (Insta360) is kept for reference; RealSense replaces it. -->
+  <xacro:include filename="$(find warrior_description)/xacro/sensors/realsense.xacro"/>
   <xacro:include filename="$(find warrior_description)/xacro/sensors/mti680g.xacro"/>
 
   <!-- ========== Properties ========== -->
@@ -43,7 +50,13 @@
   <xacro:property name="lidar_offset" value="0.135 -0.005 0.075"/>
 
   <!-- camera properties -->
-  <xacro:property name="camera_offset" value="0.425 0.0 -0.015"/>
+  <!-- RealSense mount, expressed in base_link (x forward, z up). This is the
+       former Insta360 position (pole_link offset 0.425 0 -0.015, pole_link is
+       flipped about x), i.e. ~1.18 m above base_footprint. -->
+  <xacro:property name="camera_xyz" value="0.425 0.0 ${pole_height + 0.015}"/>
+  <!-- Nose-down pitch so the 42 deg vertical FOV covers the ground from
+       ~1.1 m ahead of the camera out to the horizon, for lane detection. -->
+  <xacro:property name="camera_pitch" value="${25*pi/180}"/>
 
   <!-- ========== Base Footprint Link ========== -->
   <link name="base_footprint"/>
@@ -170,8 +183,11 @@
   </link> -->
 
   <!-- ========== Camera Sensor ========== -->
-  <xacro:camera_macro parent="pole_link" camera_name="insta360_camera" 
-                      xyz="${camera_offset}" rpy="${pi} 0 0" mass="0.5"/>
+  <!-- update_rate only affects Gazebo. 15 Hz: lane_segmentation keeps up
+       at ~2-8 Hz, and rendering 30 Hz RGB-D slowed the whole simulation. -->
+  <xacro:realsense_macro parent="base_link" name="camera" topic="camera"
+                         xyz="${camera_xyz}" rpy="0 ${camera_pitch} 0"
+                         update_rate="15"/>
 
   <!-- ========== Beacon Light ========== -->
   <link name="beacon_light_link">

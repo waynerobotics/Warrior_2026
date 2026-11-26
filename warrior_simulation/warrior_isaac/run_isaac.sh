@@ -10,7 +10,7 @@ if [[ -z "${runtime_pixi}" ]]; then
 fi
 
 # An enclosing `pixi run` may have sourced the Python 3.12 ROS workspace. Its
-# paths and activation markers must not reach the separate Python 3.11 runtime.
+# paths and activation markers must not reach the separate Python 3.12 runtime (no ROS paths).
 # Keep display, GPU-selection, and caller-provided NVIDIA EULA settings intact.
 while IFS= read -r runtime_variable; do
     case "${runtime_variable}" in

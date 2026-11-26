@@ -104,7 +104,7 @@ def test_offsite_placement_is_rejected(config, boundary):
         compiler.build(offsite, boundary)
 
 
-@pytest.mark.parametrize("role", ["barrel", "ramp", "gate"])
+@pytest.mark.parametrize("role", ["barrel", "ramp"])
 def test_heading_rotates_obstacles_and_ramp_with_the_course(config, boundary, scene, role):
     rotated_config = copy.deepcopy(config)
     rotated_config["placement"]["heading_deg"] += 90
@@ -263,10 +263,9 @@ def test_rule_dimensions_and_ramp_collision_are_physical(scene):
             diameter = max(math.dist(a[:2], b[:2]) for a in obj["vertices"] for b in obj["vertices"])
             assert diameter == pytest.approx(0.6096)
             assert not obj["collision"], "White potholes must not become lidar walls"
-    gates = {o["id"]: o for o in scene["objects"] if o["role"] == "gate"}
-    def center(obj):
-        return [sum(v[i] for v in obj["vertices"]) / len(obj["vertices"]) for i in (0, 1)]
-    assert math.dist(center(gates["south_start"]), center(gates["speed_gate"])) == pytest.approx(13.4112)
+    # The real course has no painted start/finish or speed-check lines; white
+    # paint across the lane would read as a lane boundary to the camera.
+    assert not [o["id"] for o in scene["objects"] if o["role"] == "gate"]
 
 
 def test_spawn_and_every_nml_target_are_connected_for_the_configured_robot(scene):
@@ -422,3 +421,29 @@ def test_painted_lines_remain_above_the_actual_ground_mesh(scene):
                      obj["pose"][2] + z]
             gap = point[2] - surface(point)
             assert 0.001 <= gap <= 0.03, (obj["id"], point, gap)
+
+
+def test_reference_lap_targets_are_reachable_by_the_robot_body(scene):
+    """Blind centreline sampling once put lap target 15 inside a no-man's-land
+    drum and others against curve drums; Nav2 then failed with no valid path."""
+    params = yaml.safe_load((ROOT / "warrior_navigation/config/nav2_gps_sim_params.yaml").read_text())
+    radius = params["global_costmap"]["global_costmap"]["ros__parameters"]["robot_radius"]
+    assert compiler.ROBOT_RADIUS_M == radius
+    course = scene["course"]
+    drums, nml = course["barrel_centers_enu"], course["nml_waypoints_enu"]
+    need = radius + compiler.DRUM_RADIUS_M + compiler.LAP_CLEARANCE_M
+    # Check the committed YAML, not only the function, so a stale file fails.
+    lap_file = ROOT / "warrior_navigation/config/igvc2027_autonav_reference_lap.yaml"
+    converter = compiler.geographic_transform(scene["datum"])
+    lap = [list(converter.transform(w["longitude"], w["latitude"], w["altitude"])[:2])
+           for w in yaml.safe_load(lap_file.read_text())["waypoints"]]
+    expected = compiler.reference_lap(scene)
+    assert len(lap) == len(expected)
+    for got, want in zip(lap, expected):
+        assert got == pytest.approx(want, abs=1e-3)
+    for i, p in enumerate(lap[:-1], 1):
+        assert min(math.dist(p, d) for d in drums) >= need - 1e-6, f"lap target {i} too close to a drum"
+    # The no-man's-land is crossed through its four official GPS targets, in order.
+    first = next(i for i, p in enumerate(lap) if p == pytest.approx(nml[0], abs=1e-3))
+    for got, want in zip(lap[first:first + 4], nml):
+        assert got == pytest.approx(want, abs=1e-3)

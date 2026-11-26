@@ -35,7 +35,7 @@ graph TD
     R --> SM[swerve_module/swerve_module.xacro]
     SM --> CON[swerve_module/constant.xacro]
     R --> LID[sensors/lidar.xacro]
-    R --> CAM[sensors/camera.xacro]
+    R --> CAM[sensors/realsense.xacro]
     R --> MTI[sensors/mti680g.xacro]
 ```
 
@@ -49,7 +49,7 @@ graph TD
 - 3× [swerve_module](xacro/swerve_module/swerve_module.xacro) via `xacro:swerve_module` macro at front / left / right plates (120° apart):
   - links: `${p}_slewing_plate_link` → `${p}_steer_assembly_link` → drive wheel.
   - joints: `${p}_steer_joint` (continuous, z-axis), `${p}_drive_joint` (continuous).
-- Sensors mounted on `pole_link` (see table below).
+- LiDAR and beacon mount on `pole_link`; the RealSense mounts on `base_link` (see table below).
 
 ## Joints exposed to ros2_control
 
@@ -61,7 +61,7 @@ graph TD
 | Sensor | gz type | gz topic | frame |
 |---|---|---|---|
 | LiDAR | `gpu_lidar` | `L1_lidar/scan` | `L1_lidar_link` |
-| Camera | `camera` | `/camera/image_raw` (+ `/camera/camera_info`) | `camera_link` |
+| RealSense D435 (RGB-D) | `rgbd_camera` | `camera/image`, `camera/depth_image`, `camera/points`, `camera/camera_info` → ROS `/camera/image_raw`, `/camera/depth/image_raw`, `/camera/points`, `/camera/camera_info` | `camera_color_optical_frame` |
 | MTi-680G IMU | `imu` | `/mti680g/imu` | `imu_frame` |
 | MTi-680G single GNSS antenna | `navsat` | `/mti680g/navsat` | `gnss_antenna_frame` |
 
@@ -70,6 +70,26 @@ measurement model. The native [MTi-680G adapter](../warrior_mti680g_sim/README.m
 publishes `/imu/data`, `/gnss/fix`, and `/gnss/velocity` with noise and covariance.
 The body dimensions and mass match the MTi-680G; mounting offsets remain
 provisional. `/odom_gt` remains available only for evaluation.
+
+The [RealSense](xacro/sensors/realsense.xacro) replaced the Insta360
+([camera.xacro](xacro/sensors/camera.xacro) is kept but no longer included).
+It sits at the former Insta360 position, ~1.18 m above `base_footprint`,
+pitched 25° down (`camera_xyz` / `camera_pitch` in
+[robot.xacro](xacro/robot.xacro)) so the ground is visible from ~1.1 m ahead
+for lane detection. Frames follow the `realsense2_camera` convention
+(`camera_link`, `camera_{color,depth}_frame`, `camera_{color,depth}_optical_frame`).
+Depth is rendered from the colour viewpoint, i.e. already colour-aligned.
+Intrinsics (K and P) are set explicitly from `hfov`, because Fortress's
+`rgbd_camera` otherwise publishes 320×240 defaults in `camera_info`.
+
+Gazebo sensors render with **ogre2** (`sensor_render_engine`, see
+[robot.xacro](xacro/robot.xacro)); ogre1 washes the aerial course texture
+out to white. Under ogre2 the `gpu_lidar` would also render its own housing
+mesh, whose inner faces sit inside `range.min` around the ray origin, and
+drop those beams: a 25-50° blind wedge straight ahead. The housing visual is
+therefore tagged `visibility_flags` 0x2 and the lidar's `visibility_mask`
+excludes that bit ([lidar.xacro](xacro/sensors/lidar.xacro)); cameras still
+see it.
 
 Other gz↔ROS bridging is owned by `warrior_bringup` bridge yamls.
 [config/gazebo_bridge.yaml](config/gazebo_bridge.yaml) (clock + `/odom`) is the

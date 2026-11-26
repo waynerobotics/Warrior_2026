@@ -71,8 +71,9 @@ def test_goals_are_clear_and_barrel_rows_can_be_bypassed():
     params = yaml.safe_load(
         (ROOT / 'warrior_navigation' / 'config' /
          'nav2_gps_sim_params.yaml').read_text())
-    robot_radius = params['local_costmap']['local_costmap']['ros__parameters'][
-        'robot_radius']
+    footprint = yaml.safe_load(params['local_costmap']['local_costmap'][
+        'ros__parameters']['footprint'])
+    robot_radius = max(math.hypot(x, y) for x, y in footprint)   # circumscribed
     barrel = ET.parse(GAZEBO / 'models' / 'construction_barrel' / 'model.sdf')
     barrel_radius = float(barrel.getroot().findtext(
         './/collision/geometry/cylinder/radius'))

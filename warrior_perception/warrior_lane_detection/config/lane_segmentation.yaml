@@ -1,0 +1,40 @@
+lane_segmentation:
+  ros__parameters:
+    image_topic: /camera/image_raw
+    depth_topic: /camera/depth/image_raw
+    camera_info_topic: /camera/camera_info
+    mask_topic: /perception/lane_mask
+    debug_topic: /perception/lane_debug
+    # Flat clouds in base_frame for the Nav2 lane_layer (nav2_gps_sim_params.yaml)
+    points_topic: /perception/lane_points       # lane-line paint, marking (hard)
+    pothole_topic: /perception/pothole_points   # compact white blobs, marking (soft)
+    free_topic: /perception/lane_free_points    # visible ground, clearing
+    points_resolution: 0.05
+    free_resolution: 0.2
+    base_frame: base_footprint
+    use_depth: true
+    publish_debug: true
+
+    # White test
+    min_brightness: 170
+    max_saturation: 0.25
+    min_contrast: 30
+    tophat_kernel: 101   # must exceed a near pothole disc in pixels
+    # Background floor = plain-pavement brightness per row band, so shadows
+    # cannot drag the top-hat background down and fake paint beside them.
+    band_rows: 16
+    floor_window: 3      # bands sampled per floor
+    floor_percentile: 75.0
+
+    # Ground test (metres, in base_footprint)
+    ground_tolerance: 0.12
+    min_range: 0.5
+    max_range: 8.0
+
+    # Clean-up
+    min_area: 40
+    open_kernel: 1       # 1 = off; opening erases 1-2 px far lines
+
+    # Pothole vs lane line, by blob shape on the ground (metres)
+    pothole_max_length: 1.0   # IGVC pothole is a 0.6 m disc
+    pothole_min_width: 0.25   # a lane line is ~0.1 m wide

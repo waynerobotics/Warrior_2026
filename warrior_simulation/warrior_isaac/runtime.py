@@ -44,9 +44,9 @@ def application_arguments():
 
 def isolated_isaac_root():
     """Locate the wheel without importing it or implicitly accepting NVIDIA's EULA."""
-    if Path(sys.prefix).resolve() != PREFIX.resolve() or sys.version_info[:2] != (3, 11):
+    if Path(sys.prefix).resolve() != PREFIX.resolve() or sys.version_info[:2] != (3, 12):
         raise RuntimeError('Use launch_robot.sh, launch_course.sh or validate_stage.sh; '
-                           'Isaac requires this project\'s .pixi/envs/isaac Python 3.11 environment.')
+                           'Isaac requires this project\'s .pixi/envs/isaac Python 3.12 environment.')
     spec = importlib.util.find_spec('isaacsim')
     if spec is None or not spec.origin:
         raise RuntimeError('Isaac Sim is not installed. Run "pixi run install-isaac" in this project.')

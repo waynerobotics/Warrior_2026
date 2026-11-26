@@ -13201,66 +13201,6 @@
             </friction>
           </surface>
         </collision>
-        <visual name="north_start">
-          <pose>0 0 1.62819414e-05 0 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <mesh>
-              <uri>model://igvc2027_assets/meshes/north_start.dae</uri>
-            </mesh>
-          </geometry>
-          <material>
-            <ambient>0.94 0.94 0.9 1</ambient>
-            <diffuse>0.94 0.94 0.9 1</diffuse>
-            <specular>0.12 0.12 0.12 1</specular>
-            <pbr>
-              <metal>
-                <roughness>0.5</roughness>
-                <metalness>0</metalness>
-              </metal>
-            </pbr>
-          </material>
-        </visual>
-        <visual name="south_start">
-          <pose>0 0 1.62819414e-05 0 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <mesh>
-              <uri>model://igvc2027_assets/meshes/south_start.dae</uri>
-            </mesh>
-          </geometry>
-          <material>
-            <ambient>0.94 0.94 0.9 1</ambient>
-            <diffuse>0.94 0.94 0.9 1</diffuse>
-            <specular>0.12 0.12 0.12 1</specular>
-            <pbr>
-              <metal>
-                <roughness>0.5</roughness>
-                <metalness>0</metalness>
-              </metal>
-            </pbr>
-          </material>
-        </visual>
-        <visual name="speed_gate">
-          <pose>0 0 1.62819414e-05 0 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-            <mesh>
-              <uri>model://igvc2027_assets/meshes/speed_gate.dae</uri>
-            </mesh>
-          </geometry>
-          <material>
-            <ambient>0.94 0.94 0.9 1</ambient>
-            <diffuse>0.94 0.94 0.9 1</diffuse>
-            <specular>0.12 0.12 0.12 1</specular>
-            <pbr>
-              <metal>
-                <roughness>0.5</roughness>
-                <metalness>0</metalness>
-              </metal>
-            </pbr>
-          </material>
-        </visual>
         <visual name="tree_trunk_0">
           <pose>-21.1147121 101.68463 5.10773952 0 0 0</pose>
           <cast_shadows>true</cast_shadows>

@@ -30,6 +30,7 @@
   <exec_depend>nav2_msgs</exec_depend>
   <exec_depend>nav2_rviz_plugins</exec_depend>
   <exec_depend>twist_stamper</exec_depend>
+  <exec_depend>warrior_lane_detection</exec_depend>
   <exec_depend>lifecycle_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>

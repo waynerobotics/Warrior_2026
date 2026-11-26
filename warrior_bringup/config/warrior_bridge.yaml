@@ -19,6 +19,33 @@
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
 
+# RealSense RGB-D (warrior_description/xacro/sensors/realsense.xacro).
+# Colour keeps the legacy /camera/image_raw name used by neural_engine.
+- ros_topic_name: "camera/image_raw"
+  gz_topic_name: "camera/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/camera_info"
+  gz_topic_name: "camera/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+
+# Depth is rendered from the colour viewpoint, i.e. already colour-aligned.
+- ros_topic_name: "camera/depth/image_raw"
+  gz_topic_name: "camera/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "camera/points"
+  gz_topic_name: "camera/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "gz.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS
+
 # MTi-680G IMU and NavSat are handled by warrior_mti680g_sim, which preserves
 # GNSS velocity and supplies measurement covariance on the public ROS topics.
 

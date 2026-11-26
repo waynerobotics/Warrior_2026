@@ -63,7 +63,7 @@ pyyaml = "*"
 [pypi-dependencies]
 pupil-apriltags = ">=1.0.4.post11"
 
-# Isaac Sim 5.1 requires Python 3.11 and its own native libraries. Keep it out
+# Isaac Sim 6.2 requires Python 3.12 and its own native libraries. Keep it out
 # of the ROS/Python 3.12 environment, including on the robot's aarch64 platform.
 [feature.isaac]
 platforms = ["linux-64"]
@@ -72,13 +72,14 @@ platforms = ["linux-64"]
 libc = { family = "glibc", version = "2.35" }
 
 [feature.isaac.dependencies]
-python = "3.11.*"
+python = "3.12.*"
 
 [feature.isaac.pypi-options]
 extra-index-urls = ["https://pypi.nvidia.com"]
+index-strategy = "unsafe-best-match"
 
 [feature.isaac.pypi-dependencies]
-isaacsim = { version = "==5.1.0", extras = ["all", "extscache"] }
+isaacsim = { version = "==6.2.0", extras = ["all", "extscache"] }
 
 [environments]
 default = { features = [] }
@@ -96,7 +97,7 @@ ROS_DISTRO = "humble"
 ROS_DOMAIN_ID = "0"
 
 [tasks]
-install-isaac = { cmd = "pixi install --environment isaac --locked", description = "Install the isolated Isaac Sim 5.1 environment (Linux x86_64)" }
+install-isaac = { cmd = "pixi install --environment isaac --locked", description = "Install the isolated Isaac Sim 6.2 environment (Linux x86_64)" }
 configure-isaac = { cmd = "bash warrior_simulation/warrior_isaac/run_isaac.sh configure", description = "Review NVIDIA's EULA interactively for the isolated Isaac installation" }
 build = { cmd = "colcon --log-base log/pixi build --build-base build/pixi --install-base install/pixi --symlink-install --packages-skip neural_engine omnivision unitree_lidar_sdk --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPython_FIND_VIRTUALENV=ONLY -DPython3_FIND_VIRTUALENV=ONLY", description = "Build the base stack, excluding the TensorRT perception packages" }
 build-perception = { cmd = "bash -c 'source install/pixi/setup.bash && colcon --log-base log/pixi build --build-base build/pixi --install-base install/pixi --symlink-install --packages-select neural_engine omnivision --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPython_FIND_VIRTUALENV=ONLY -DPython3_FIND_VIRTUALENV=ONLY'", depends-on = ["build"], description = "Build the TensorRT perception packages (requires host CUDA and TensorRT)" }
@@ -106,6 +107,7 @@ launch-nav-sim = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 l
 launch-gps-sim = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup swerve_gps_nav_sim.launch.py'", depends-on = ["build"], description = "Build and launch the no-man's-land GPS waypoint simulation" }
 build-igvc2027-course = { cmd = "python warrior_simulation/tools/build_igvc2027.py", description = "Regenerate the shared 2027 course, Gazebo and Isaac worlds, and GPS waypoints" }
 launch-igvc2027-gazebo = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup igvc2027_autonav.launch.py'", depends-on = ["build"], description = "Launch Warrior's GPS mission in the complete P37 AutoNav course" }
+launch-igvc2027-lane-mission = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup igvc2027_lane_mission.launch.py'", depends-on = ["build"], description = "Full P37 AutoNav lap with no lane waypoints: lane following plus the four no-man's-land GPS targets" }
 launch-igvc2027-isaac = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py'", depends-on = ["build"], description = "Spawn Warrior in Isaac Sim and drive the P37 GPS mission using simulated sensors" }
 inspect-igvc2027-isaac = { cmd = "bash warrior_simulation/warrior_isaac/launch_course.sh", description = "Inspect the P37 course without spawning the robot or starting navigation" }
 launch-real = { cmd = "bash -c 'source install/pixi/setup.bash && exec ros2 launch warrior_bringup warrior_swerve_teleop.launch.py'", depends-on = ["build"], description = "Build and launch the real robot teleoperation stack" }

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>warrior_lane_detection</name>
+  <version>0.1.0</version>
+  <description>
+    Classical white-lane segmentation for an RGB-D camera. Combines a local
+    brightness/contrast test with a depth-based ground check so that only
+    white paint lying on the ground is labelled. Publishes a mono8 mask and
+    flat ground point clouds for a Nav2 costmap lane layer.
+  </description>
+  <maintainer email="yihaocai007@gmail.com">Charlescai123</maintainer>
+  <license>Apache-2.0</license>
+
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>sensor_msgs_py</depend>
+  <depend>std_msgs</depend>
+  <depend>message_filters</depend>
+  <depend>cv_bridge</depend>
+  <depend>tf2_ros</depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

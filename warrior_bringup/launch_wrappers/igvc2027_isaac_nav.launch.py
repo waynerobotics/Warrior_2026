@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Run Warrior's physical Isaac articulation and the sensor-only GPS mission."""
+"""Run Warrior's physical Isaac articulation and the sensor-only GPS mission.
+
+With use_lane_detection (default), Isaac also renders the RealSense RGB-D camera,
+warrior_lane_detection segments white paint, and Nav2's lane_layer keeps the
+robot off the lines.
+"""
 from pathlib import Path
 import subprocess
 import sys
@@ -7,12 +12,12 @@ import xml.etree.ElementTree as ET
 import yaml
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, EmitEvent, ExecuteProcess, GroupAction, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, EmitEvent, SetEnvironmentVariable, ExecuteProcess, GroupAction, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
 from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -52,6 +57,8 @@ def generate_launch_description():
         command.extend(['--imu-frame', profile['imu_frame'], '--antenna-frame', profile['antenna_frame']])
         if LaunchConfiguration('headless').perform(context).lower() in ('true', '1', 'yes'):
             command.append('--headless')
+        if LaunchConfiguration('use_lane_detection').perform(context).lower() in ('true', '1', 'yes'):
+            command.append('--rgbd')
         for name in ('capture', 'report'):
             value = LaunchConfiguration(name).perform(context)
             if value:
@@ -70,7 +77,14 @@ def generate_launch_description():
         'port': ParameterValue(LaunchConfiguration('port'), value_type=int),
         'gps_noise_stddev': ParameterValue(LaunchConfiguration('gps_noise_stddev'), value_type=float),
         'use_wheel_odometry': ParameterValue(LaunchConfiguration('use_wheel_odometry'), value_type=bool),
+        'use_camera': ParameterValue(LaunchConfiguration('use_lane_detection'), value_type=bool),
     }])
+    lanes = GroupAction(condition=IfCondition(LaunchConfiguration('use_lane_detection')), actions=[
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(share('warrior_lane_detection', 'launch', 'lane_segmentation.launch.py')),
+            # Explicit: the parent's Nav2 params_file would otherwise leak in.
+            launch_arguments={'use_sim_time': 'true', 'params_file': share(
+                'warrior_lane_detection', 'config', 'lane_segmentation.yaml')}.items())])
     localization = include('warrior_localization', 'gps_sim.launch.py', {
         'use_sim_time': 'true', 'use_wheel_odometry': LaunchConfiguration('use_wheel_odometry'),
         'params_file': share('warrior_localization', 'config', 'gps_sim_ekf.yaml')})
@@ -112,6 +126,7 @@ def generate_launch_description():
         ('gps_noise_stddev', '-1.0', 'Optional isotropic GNSS sigma override in meters; -1 uses MTi-680G RTK defaults'),
         ('use_wheel_odometry', 'true', 'Fuse wheel encoders with GNSS/INS; false uses GNSS/INS alone'),
         ('launch_rviz', 'false', 'Also open the ROS navigation view'),
+        ('use_lane_detection', 'true', 'Render the RGB-D camera and add detected white lanes to the Nav2 costmaps'),
         ('autostart_waypoints', 'true', 'Begin the GPS mission after sensors and Nav2 are ready'),
         ('nav_ready_timeout', '240.0', 'Sensor/localization startup timeout in wall seconds'),
         ('waypoint_file', share('warrior_navigation', 'config', 'igvc2027_autonav_nml_waypoints.yaml'), 'GPS waypoint YAML'),
@@ -122,8 +137,13 @@ def generate_launch_description():
         ('debug_cloud', '', 'Optional final measured lidar cloud NPZ path'),
     ]
     return LaunchDescription([
+        # 2 MB RGB-D frames need Fast DDS shared memory; over UDP they are
+        # dropped by the default 208 KB socket buffers. Keeps a user's profile.
+        SetEnvironmentVariable('FASTRTPS_DEFAULT_PROFILES_FILE', EnvironmentVariable(
+            'FASTRTPS_DEFAULT_PROFILES_FILE',
+            default_value=share('warrior_bringup', 'config', 'fastdds_large_data.xml'))),
         *[DeclareLaunchArgument(name, default_value=value, description=description) for name, value, description in arguments],
-        bridge, localization, stamper,
+        bridge, localization, stamper, lanes,
         RegisterEventHandler(OnProcessExit(target_action=bridge, on_exit=[EmitEvent(event=Shutdown(reason='Isaac ROS adapter closed'))])),
         RegisterEventHandler(OnProcessExit(target_action=readiness, on_exit=start_navigation)),
         RegisterEventHandler(OnProcessExit(target_action=activate, on_exit=start_mission)),

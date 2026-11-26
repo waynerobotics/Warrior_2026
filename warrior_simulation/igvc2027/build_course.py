@@ -332,10 +332,9 @@ def build(config, boundary):
     obj('start_finish_ramp','mesh',pose(rx,ry,yaw=heading), 'ramp',True,'ramp',
         vertices=ramp_vertices,triangles=triangles,
         uvs=[[v[0],v[1]] for v in ramp_vertices])
-    for label,yy in [('north_start',3),('south_start',-3),
-                     ('speed_gate',-3-course['minimum_speed_check_m'])]:
-        ribbon(label,[physical_offset([rx,ry],-width/2,yy),physical_offset([rx,ry],width/2,yy)],
-               .15,'tape',role='gate')
+    # No painted start/finish or speed-check lines across the lane: the real
+    # course does not have them, and white paint across the lane reads as a
+    # lane boundary to the camera lane layer.
 
     # Tree positions are manually read from the 2025 aerial; crown shape and
     # height remain procedural approximations of summer vegetation.
@@ -478,6 +477,54 @@ def build(config, boundary):
                             barrel_centers_enu=barrel_centers,parking_boundary_enu=pavement))
 
 
+LAP_SPACING = 24          # centreline samples between lap targets (~5.9 m)
+LAP_CLEARANCE_M = 0.3     # free space kept between robot body and any drum
+ROBOT_RADIUS_M = 0.75     # nav2_gps_sim_params.yaml robot_radius
+DRUM_RADIUS_M = 0.30
+
+
+def reference_lap(scene):
+    """Diagnostic full-lap targets that the robot can physically reach.
+
+    Blind centreline sampling put targets inside the no-man's-land drum rows
+    (which sit on the centreline) and against the curve drums 0.95 m off it.
+    In the no-man's-land the official four GPS targets are used instead; in
+    the lanes each sample slides along the centreline to the nearest point
+    with LAP_CLEARANCE_M of body clearance from every drum.
+    """
+    course = scene['course']
+    path, drums, nml = course['centerline'], course['barrel_centers_enu'], course['nml_waypoints_enu']
+    need = ROBOT_RADIUS_M + DRUM_RADIUS_M + LAP_CLEARANCE_M
+
+    def clear(p):
+        return min(math.dist(p, d) for d in drums) >= need
+
+    # The no-man's-land is the corridor between its entrance and exit targets.
+    ax, ay = nml[0]
+    bx, by = nml[-1]
+    length = math.hypot(bx-ax, by-ay)
+
+    def in_nml(p):
+        t = ((p[0]-ax)*(bx-ax) + (p[1]-ay)*(by-ay)) / length
+        lateral = abs((p[0]-ax)*(by-ay) - (p[1]-ay)*(bx-ax)) / length
+        return -2.0 <= t <= length + 2.0 and lateral <= 4.0
+
+    lap, nml_done = [], False
+    for i in range(0, len(path), LAP_SPACING):
+        if in_nml(path[i]):
+            if not nml_done:
+                lap.extend(nml)
+                nml_done = True
+            continue
+        for shift in sorted(range(-LAP_SPACING//2, LAP_SPACING//2), key=abs):
+            p = path[(i+shift) % len(path)]
+            if not in_nml(p) and clear(p):
+                lap.append(p)
+                break
+    lap.append(path[0])
+    return lap
+
+
 def write_waypoints(scene, filename, points):
     converter=geographic_transform(scene['datum'])
     site=SiteModel(HERE/'reference',converter)
@@ -520,8 +567,7 @@ def main():
     markers=scene['course']['nml_waypoints_enu']
     write_waypoints(scene,nav/'igvc2027_autonav_long_leg.yaml',[markers[0],markers[-1]])
     # Reference-only full lap for testing; this is not a replacement for lane perception.
-    path=scene['course']['centerline']
-    write_waypoints(scene,nav/'igvc2027_autonav_reference_lap.yaml',path[::24]+[path[0]])
+    write_waypoints(scene,nav/'igvc2027_autonav_reference_lap.yaml',reference_lap(scene))
     print(json.dumps({key:scene['course'][key] for key in
                       ['centerline_length_m','actual_envelope_m','ramp_grade']},indent=2))
 

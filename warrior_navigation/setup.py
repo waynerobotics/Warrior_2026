@@ -44,6 +44,8 @@ setup(
             'gps_waypoint_manager = warrior_navigation.gps_waypoint_manager:main',
             'nav2_gps_waypoint_follower = warrior_navigation.nav2_gps_waypoint_follower:main',
             'ground_obstacle_scan = warrior_navigation.ground_obstacle_scan:main',
+            'lane_follower = warrior_navigation.lane_follower:main',
+            'lane_mission = warrior_navigation.lane_mission:main',
         ],
     },
 )

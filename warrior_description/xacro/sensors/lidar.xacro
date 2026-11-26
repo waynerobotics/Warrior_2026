@@ -38,8 +38,17 @@
     <!-- Gazebo Sensor Plugin -->
     <gazebo reference="${lidar_name}_link">
 
+      <!-- The ray origin sits inside the housing mesh. With ogre2, gpu_lidar
+           renders the housing's inner faces closer than range.min and drops
+           those beams, leaving ~25-50 deg blind wedges (straight ahead
+           included). Tag the housing with visibility bit 0x2 and leave that
+           bit out of the lidar's visibility_mask; cameras still see it. -->
+      <visual>
+        <visibility_flags>2</visibility_flags>
+      </visual>
+
       <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
-        <render_engine>ogre</render_engine>
+        <render_engine>$(arg sensor_render_engine)</render_engine>
       </plugin>
 
       <sensor name="${lidar_name}" type="gpu_lidar">
@@ -62,6 +71,9 @@
               <max_angle>0.501799</max_angle>
             </vertical>
           </scan>
+
+          <!-- All bits except 0x2 (the housing, see above). -->
+          <visibility_mask>4294967293</visibility_mask>
 
           <range>
             <min>0.05</min>

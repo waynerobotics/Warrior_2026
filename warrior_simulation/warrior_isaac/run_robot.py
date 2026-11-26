@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 import socket
+import shutil
 import signal
 import sys
 import time
@@ -115,6 +116,14 @@ def main():
     parser.add_argument('--debug-cloud', type=Path, help='Optional final measured cloud as compressed NumPy data')
     parser.add_argument('--camera', choices=('follow', 'overview', 'eye'), default='follow')
     parser.add_argument('--realtime', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--rgbd', action='store_true',
+                        help='Render the RealSense RGB-D camera and stream it to the ROS adapter (port+2)')
+    parser.add_argument('--rgbd-frame', default='camera_color_optical_frame',
+                        help='Optical frame (z forward, y down) of the camera in the expanded URDF')
+    parser.add_argument('--rgbd-width', type=int, default=640)
+    parser.add_argument('--rgbd-height', type=int, default=480)
+    parser.add_argument('--rgbd-hfov', type=float, default=1.2112, help='Horizontal FOV in radians (realsense.xacro)')
+    parser.add_argument('--rgbd-max-depth', type=float, default=10.0, help='Depth beyond this reads as no return')
     args = parser.parse_args()
     if not 1024 <= args.port < 65535:
         parser.error('--port must be between 1024 and 65534')
@@ -125,7 +134,6 @@ def main():
         parser.error('Run prepare_robot.py in the Pixi environment before launching Isaac')
     scene = json.loads(args.scene.read_text())
     gnss_offset, _ = fixed_mount(args.urdf, args.antenna_frame)
-    imu_offset, imu_rotation = fixed_mount(args.urdf, args.imu_frame, 'base_link')
     from isaacsim import SimulationApp
     app = SimulationApp({'headless': args.headless, 'renderer': 'RaytracedLighting',
                          'width': 1280, 'height': 720, 'multi_gpu': False, 'sync_loads': True,
@@ -153,28 +161,34 @@ def main():
         from isaacsim.core.utils.extensions import enable_extension
         from isaacsim.core.utils.types import ArticulationAction
         from isaacsim.core.utils.rotations import euler_angles_to_quat
-        from isaacsim.sensors.physics import IMUSensor
         from pxr import Gf, PhysxSchema, Usd, UsdGeom, UsdPhysics, UsdShade
+        # Isaac Sim 6.x deprecated isaacsim.sensors.physics; its IMU now lives in
+        # the experimental extension, which wraps an authored IMU prim.
+        enable_extension('isaacsim.sensors.experimental.physics')
+        from isaacsim.sensors.experimental.physics import IMU, IMUSensor
         enable_extension('isaacsim.asset.importer.urdf')
         enable_extension('isaacsim.sensors.physx')
         from isaacsim.sensors.physx import _range_sensor
-        # Import into an isolated asset: the 5.1 URDF importer saves its target
-        # stage even when the active USD edit target is the session layer.
-        robot_asset = args.urdf.with_suffix('.usd').resolve()
-        _, config = omni.kit.commands.execute('URDFCreateImportConfig')
-        config.merge_fixed_joints = True
-        config.fix_base = False
-        config.import_inertia_tensor = False
-        config.convex_decomp = False
-        config.self_collision = False
-        config.distance_scale = 1.0
-        ok, articulation_path = omni.kit.commands.execute(
-            'URDFParseAndImportFile', urdf_path=str(args.urdf.resolve()),
-            import_config=config, dest_path=str(robot_asset), get_articulation_root=True)
-        if not ok:
-            raise RuntimeError('Warrior URDF import failed')
-        print('Imported Warrior articulation:', articulation_path, flush=True)
-        root_path = '/' + articulation_path.strip('/').split('/')[0]
+        # Import into an isolated asset folder next to the expanded URDF. The 6.x
+        # importer (urdf-usd-converter) writes <dir>/<robot>/<robot>.usda with
+        # physics in a "Physics" variant set that has no default selection.
+        from isaacsim.asset.importer.urdf import URDFImporter, URDFImporterConfig
+        # The importer auto-numbers (warrior_1, warrior_2, ...) instead of
+        # overwriting, so start each launch from an empty generated folder.
+        asset_dir = args.urdf.parent.resolve() / 'usd'
+        shutil.rmtree(asset_dir, ignore_errors=True)
+        config = URDFImporterConfig(
+            urdf_path=str(args.urdf.resolve()), usd_path=str(asset_dir),
+            merge_fixed_joints=True, fix_base=False, allow_self_collision=False,
+            collision_type='Convex Hull')
+        robot_asset = Path(URDFImporter().import_urdf(config))
+        asset_stage = Usd.Stage.Open(str(robot_asset))
+        root_name = asset_stage.GetDefaultPrim().GetName()
+        del asset_stage
+        if not root_name:
+            raise RuntimeError(f'Warrior URDF import produced no default prim: {robot_asset}')
+        root_path = '/' + root_name
+        print('Imported Warrior asset:', robot_asset, flush=True)
         if not omni.usd.get_context().open_stage(str(stage_path)):
             raise RuntimeError(f'Isaac Sim could not open {stage_path}')
         app.update()
@@ -182,8 +196,16 @@ def main():
         from run_course import configure_sky_background
         configure_sky_background(stage)
         stage.SetEditTarget(stage.GetSessionLayer())
-        stage.DefinePrim(root_path, 'Xform').GetReferences().AddReference(str(robot_asset), root_path)
+        robot_prim = stage.DefinePrim(root_path, 'Xform')
+        robot_prim.GetReferences().AddReference(str(robot_asset))
+        robot_prim.GetVariantSets().GetVariantSet('Physics').SetVariantSelection('physx')
         app.update()
+        articulation_path = next((str(p.GetPath()) for p in stage.Traverse()
+                                  if str(p.GetPath()).startswith(root_path + '/')
+                                  and p.HasAPI(UsdPhysics.ArticulationRootAPI)), None)
+        if articulation_path is None:
+            raise RuntimeError('Warrior URDF import has no articulation root')
+        print('Imported Warrior articulation:', articulation_path, flush=True)
         body_prims = [p for p in stage.Traverse() if str(p.GetPath()).startswith(root_path + '/')
                       and p.HasAPI(UsdPhysics.RigidBodyAPI)]
         print('Robot bodies:', [str(p.GetPath()) for p in body_prims], flush=True)
@@ -210,14 +232,20 @@ def main():
         orientation = euler_angles_to_quat(np.array(spawn[3:6]))
         robot.set_world_pose(position=np.array(spawn[:3]), orientation=orientation)
         robot.set_default_state(position=np.array(spawn[:3]), orientation=orientation)
-        chassis = next(p for p in body_prims if p.GetName() == 'base_link')
+        # With merge_fixed_joints the 6.x importer folds base_link into the
+        # base_footprint root body; older importers kept base_link separate.
+        chassis = next((p for p in body_prims if p.GetName() == 'base_link'), None) or \
+            next(p for p in body_prims if p.GetName() == 'base_footprint')
         chassis_path = str(chassis.GetPath())
-        imu = world.scene.add(IMUSensor(prim_path=chassis_path + '/WarriorImu', name='warrior_imu',
-                                        frequency=60, translation=np.array(imu_offset),
-                                        orientation=np.array(imu_rotation)))
+        imu_offset, imu_rotation = fixed_mount(args.urdf, args.imu_frame, chassis.GetName())
+        # Reads every physics step; the telemetry loop below sets the sample rate.
+        imu = IMUSensor(IMU.create(chassis_path + '/WarriorImu',
+                                   translations=[list(imu_offset)],
+                                   orientations=[list(imu_rotation)]))
         # Match the physical lidar mount, expressed upright in the footprint.
         lidar_offset = np.array([-.172963, .002844, 1.092773])
-        lidar_on_chassis = lidar_offset - np.array([-.307963, -.002156, .640773])
+        lidar_on_chassis = lidar_offset - (np.array([-.307963, -.002156, .640773])
+                                           if chassis.GetName() == 'base_link' else 0)
         ok, lidar = omni.kit.commands.execute('RangeSensorCreateLidar', path='/WarriorLidar',
             parent=chassis_path, translation=Gf.Vec3d(*lidar_on_chassis.tolist()),
             min_range=.9, max_range=15.0, draw_points=False, draw_lines=False,
@@ -227,6 +255,43 @@ def main():
             raise RuntimeError('Could not create PhysX lidar')
         lidar_path = str(lidar.GetPath())
         lidar_interface = _range_sensor.acquire_lidar_sensor_interface()
+        rgbd = None
+        if args.rgbd:
+            import omni.replicator.core as rep
+            from rgbd_stream import FrameSender, pack
+            # The URDF optical frame looks along +z with +y down; a USD camera
+            # looks along -z with +y up, i.e. a half turn about x.
+            camera_offset, camera_rotation = fixed_mount(args.urdf, args.rgbd_frame, chassis.GetName())
+            camera_rotation = quaternion_product(camera_rotation, [0.0, 1.0, 0.0, 0.0])
+            rgbd_camera = UsdGeom.Camera.Define(stage, chassis_path + '/WarriorRgbd')
+            aperture = 20.955
+            rgbd_camera.CreateHorizontalApertureAttr(aperture)
+            rgbd_camera.CreateVerticalApertureAttr(aperture * args.rgbd_height / args.rgbd_width)
+            rgbd_camera.CreateFocalLengthAttr(aperture / 2 / math.tan(args.rgbd_hfov / 2))
+            rgbd_camera.CreateClippingRangeAttr(Gf.Vec2f(.1, 100.0))
+            rgbd_camera.AddTranslateOp().Set(Gf.Vec3d(*camera_offset))
+            rgbd_camera.AddOrientOp(UsdGeom.XformOp.PrecisionDouble).Set(
+                Gf.Quatd(camera_rotation[0], Gf.Vec3d(*camera_rotation[1:])))
+            rgbd_product = rep.create.render_product(str(rgbd_camera.GetPath()), (args.rgbd_width, args.rgbd_height))
+            rgbd_color = rep.AnnotatorRegistry.get_annotator('rgb')
+            rgbd_depth = rep.AnnotatorRegistry.get_annotator('distance_to_image_plane')
+            rgbd_color.attach(rgbd_product)
+            rgbd_depth.attach(rgbd_product)
+            focal_px = args.rgbd_width / 2 / math.tan(args.rgbd_hfov / 2)
+            rgbd_intrinsics = (focal_px, focal_px, args.rgbd_width / 2, args.rgbd_height / 2)
+            rgbd = FrameSender(args.port + 2)
+            print(f'RGB-D camera {args.rgbd_frame} at {[round(v, 3) for v in camera_offset]} on '
+                  f'{chassis.GetName()}, {args.rgbd_width}x{args.rgbd_height} -> localhost:{args.port + 2}', flush=True)
+
+        def send_rgbd(stamp):
+            color = rgbd_color.get_data()
+            depth = rgbd_depth.get_data()
+            if not getattr(color, 'size', 0) or not getattr(depth, 'size', 0):
+                return
+            color = np.ascontiguousarray(np.asarray(color)[..., :3])
+            depth = np.asarray(depth, dtype=np.float32).reshape(color.shape[:2]).copy()
+            depth[~(depth > 0) | (depth > args.rgbd_max_depth)] = np.inf
+            rgbd.submit(pack(stamp, color, depth, rgbd_intrinsics))
         world.reset()
         print('DOFs:', robot.dof_names, flush=True)
         prefixes = ['front', 'left', 'right']
@@ -378,7 +443,7 @@ def main():
             twist = np.linalg.lstsq(np.array(matrix), np.array(readings), rcond=None)[0]
             c, s = math.cos(odom[2]), math.sin(odom[2])
             odom += np.array([c*twist[0]-s*twist[1], s*twist[0]+c*twist[1], twist[2]]) * sample_dt
-            imu_data = imu.get_current_frame()
+            imu_data = imu.get_data()
             if sequence % 6 == 0:
                 points = np.array(lidar_interface.get_point_cloud_data(lidar_path)).reshape(-1, 3)
                 if points.size:
@@ -395,18 +460,21 @@ def main():
                     'joint_names': robot.dof_names, 'joint_position': q.tolist(), 'joint_velocity': qdot.tolist(),
                     'odom': odom.tolist(), 'twist': twist.tolist(),
                     'imu_orientation': imu_data['orientation'].tolist(),
-                    'imu_angular_velocity': imu_data['ang_vel'].tolist(),
-                    'imu_linear_acceleration': imu_data['lin_acc'].tolist(),
+                    'imu_angular_velocity': imu_data['angular_velocity'].tolist(),
+                    'imu_linear_acceleration': imu_data['linear_acceleration'].tolist(),
                     'position': position.tolist(), 'orientation': quaternion.tolist(),
                     'gnss_position': antenna_position.tolist() if sequence % 6 == 0 else None,
                     'gnss_velocity': antenna_velocity.tolist() if sequence % 6 == 0 else None,
                     'scan': ranges if sequence % 6 == 0 else None}
             sock.sendto(json.dumps(data, allow_nan=False).encode(), ('127.0.0.1', args.port))
+            if rgbd is not None and sequence % 6 == 0:
+                send_rgbd(t)
             if args.capture and args.capture_time > 0 and t >= args.capture_time and not captured:
                 captured = capture_frame()
             sequence += 1
             if sequence % 120 == 0:
-                print(f'Warrior t={t:.1f} pose={position.round(3).tolist()} wheel_odom={odom.round(3).tolist()} cmd={smooth.round(2).tolist()}', flush=True)
+                print(f'Warrior t={t:.1f} pose={position.round(3).tolist()} wheel_odom={odom.round(3).tolist()} cmd={smooth.round(2).tolist()}'
+                      + (f' rgbd_sent={rgbd.sent}' if rgbd is not None else ''), flush=True)
                 positions.append({'t': t, 'position': position.tolist(), 'odom': odom.tolist()})
             if args.realtime:
                 delay = timing.wall_start + t - time.monotonic()

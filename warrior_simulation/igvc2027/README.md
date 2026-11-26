@@ -3,7 +3,7 @@
 The full AutoNav environment is generated for **Gazebo Fortress** and **Isaac
 Sim 5.1** from one [course definition](course.yaml). It includes the west
 no-man's-land section, four GPS targets, both winding taped runs, the east
-start/finish straight and ramp, speed-check gates, drums, potholes, and the
+start/finish straight and ramp, drums, potholes, and the
 surrounding P37 parking surface. Coordinates are metres, east/north/up.
 
 The 2027 course follows the official schematic, geographically registered
@@ -69,7 +69,11 @@ The GPS mission uses the same `waypoints` YAML schema as `demo_waypoints.yaml`:
 - [Generated spawn profile](../../warrior_navigation/config/igvc2027_autonav_sim.yaml)
 - [Full-lap reference targets](../../warrior_navigation/config/igvc2027_autonav_reference_lap.yaml)
 
-The full-lap file records the nominal centerline for diagnostics. Lidar cannot
+The full-lap file is a diagnostic lap, not a competition mission: in the
+lanes it samples the centerline every ~5.9 m, sliding each target along it
+until the robot body keeps 0.3 m from every drum; in the no-man's-land it
+uses the four official GPS targets (the centerline there runs through the
+drum rows). Lidar cannot
 recognize flat white tape or pothole disks, so GPS plus lidar alone does not
 provide full AutoNav lane and pothole compliance. The launch runs the four
 no-man's-land targets. See the [navigation setup](../../warrior_bringup/README.md#gps-waypoints-through-an-open-area)

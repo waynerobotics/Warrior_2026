@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ========== Intel RealSense D435-class RGB-D camera ==========
+       Frames follow the realsense2_camera driver convention:
+         ${name}_link                   body, x forward / z up (REP-103)
+         ${name}_color_frame            colour sensor, body-aligned
+         ${name}_color_optical_frame    z forward / x right / y down (REP-103 optical)
+         ${name}_depth_frame            depth sensor, body-aligned
+         ${name}_depth_optical_frame    z forward / x right / y down
+       The simulated RGB-D sensor renders colour and depth from one viewpoint,
+       so both images are stamped with ${name}_color_optical_frame (aligned
+       depth), which is what the realsense driver's align_depth mode produces.
+
+       Gazebo (Fortress rgbd_camera) publishes, for topic:=camera:
+         camera/image  camera/depth_image  camera/points  camera/camera_info
+       warrior_bringup/config/warrior_bridge.yaml maps them to ROS.
+
+       Default intrinsics approximate a D435 colour stream at 640x480:
+       69.4 deg horizontal FOV, 0.1-10 m usable depth. -->
+  <xacro:macro name="realsense_macro"
+               params="parent name:=camera xyz rpy:='0 0 0' topic:=camera
+                       width:=640 height:=480 hfov:=1.2112 update_rate:=30
+                       near:=0.1 far:=10.0 mass:=0.072">
+
+    <!-- D435 enclosure: 90 x 25 x 25 mm. -->
+    <link name="${name}_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.090 0.025"/>
+        </geometry>
+        <material name="realsense_grey">
+          <color rgba="0.55 0.55 0.58 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.025 0.090 0.025"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${mass}"/>
+        <inertia ixx="${mass*(0.090*0.090+0.025*0.025)/12}" ixy="0" ixz="0"
+                 iyy="${mass*(0.025*0.025+0.025*0.025)/12}" iyz="0"
+                 izz="${mass*(0.090*0.090+0.025*0.025)/12}"/>
+      </inertial>
+    </link>
+
+    <joint name="${name}_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}_link"/>
+      <origin xyz="${xyz}" rpy="${rpy}"/>
+    </joint>
+
+    <!-- Colour imager sits ~15 mm left of the body centre on a D435. -->
+    <link name="${name}_color_frame"/>
+    <joint name="${name}_color_joint" type="fixed">
+      <parent link="${name}_link"/>
+      <child link="${name}_color_frame"/>
+      <origin xyz="0 0.015 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_color_optical_frame"/>
+    <joint name="${name}_color_optical_joint" type="fixed">
+      <parent link="${name}_color_frame"/>
+      <child link="${name}_color_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <link name="${name}_depth_frame"/>
+    <joint name="${name}_depth_joint" type="fixed">
+      <parent link="${name}_link"/>
+      <child link="${name}_depth_frame"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <link name="${name}_depth_optical_frame"/>
+    <joint name="${name}_depth_optical_joint" type="fixed">
+      <parent link="${name}_depth_frame"/>
+      <child link="${name}_depth_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <!-- Gazebo renders along the +x axis of the link the sensor is attached
+         to, so the sensor lives on the body-aligned colour frame while the
+         published header uses the optical frame. -->
+    <gazebo reference="${name}_color_frame">
+      <sensor name="${name}" type="rgbd_camera">
+        <pose>0 0 0 0 0 0</pose>
+        <always_on>1</always_on>
+        <update_rate>${update_rate}</update_rate>
+        <visualize>false</visualize>
+        <topic>${topic}</topic>
+        <gz_frame_id>${name}_color_optical_frame</gz_frame_id>
+        <ignition_frame_id>${name}_color_optical_frame</ignition_frame_id>
+        <camera name="${name}">
+          <horizontal_fov>${hfov}</horizontal_fov>
+          <image>
+            <width>${width}</width>
+            <height>${height}</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>${near}</near>
+            <far>${far}</far>
+          </clip>
+          <!-- Fortress rgbd_camera publishes camera_info with default
+               (320x240, 60 deg) intrinsics unless they are given explicitly.
+               Derived from hfov so image and camera_info always agree. -->
+          <lens>
+            <intrinsics>
+              <fx>${width/2/tan(hfov/2)}</fx>
+              <fy>${width/2/tan(hfov/2)}</fy>
+              <cx>${width/2}</cx>
+              <cy>${height/2}</cy>
+              <s>0</s>
+            </intrinsics>
+            <!-- Fortress leaves P at defaults too; image_geometry reads P. -->
+            <projection>
+              <p_fx>${width/2/tan(hfov/2)}</p_fx>
+              <p_fy>${width/2/tan(hfov/2)}</p_fy>
+              <p_cx>${width/2}</p_cx>
+              <p_cy>${height/2}</p_cy>
+              <tx>0</tx>
+              <ty>0</ty>
+            </projection>
+          </lens>
+          <depth_camera>
+            <clip>
+              <near>${near}</near>
+              <far>${far}</far>
+            </clip>
+          </depth_camera>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+      </sensor>
+    </gazebo>
+
+  </xacro:macro>
+
+</robot>

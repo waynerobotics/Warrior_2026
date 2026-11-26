@@ -1,7 +1,7 @@
 # Warrior GPS navigation in Isaac Sim
 
 Isaac runs in the repository's separate Pixi `isaac` environment at
-`.pixi/envs/isaac/`, with Python 3.11 and `isaacsim[all,extscache]==5.1.0`.
+`.pixi/envs/isaac/`, with Python 3.12 and `isaacsim[all,extscache]==6.2.0`.
 The ROS Humble stack keeps its Python 3.12 `default` environment. Install Isaac
 once on a Linux x86_64 (`linux-64`) workstation with a supported NVIDIA RTX GPU
 and driver, then launch the robot in the complete IGVC 2027 course:
@@ -62,13 +62,36 @@ pixi run ros2 launch warrior_bringup igvc2027_isaac_nav.launch.py \
 ```
 
 `waypoint_file`, `params_file`, `scene_file`, `stage_file`, `port`,
-`use_wheel_odometry`, `gps_noise_stddev`, `launch_rviz`, `headless` and `seconds` are configurable.
+`use_wheel_odometry`, `use_lane_detection`, `gps_noise_stddev`, `launch_rviz`, `headless` and `seconds` are configurable.
 Wheel odometry is enabled by default. With `use_wheel_odometry:=false`, the
 bridge does not publish `/odom`, and neither localization filter subscribes to
 wheel odometry. Both modes use the same GPS waypoints and Nav2 controller.
 A zero duration runs until closed. Use a separate ROS domain and UDP port when
 running another robot simulation concurrently. The default telemetry port is
-17427; commands use 17428. Transport binds only to localhost.
+17427; commands use 17428; RGB-D frames use 17429 (TCP). Transport binds only to localhost.
+
+### Lane detection
+
+`use_lane_detection:=true` (default) renders the RealSense from
+`realsense.xacro` at its URDF mount (`camera_color_optical_frame`, 640x480,
+10 Hz) and streams colour + depth to the ROS adapter
+([rgbd_stream.py](rgbd_stream.py)), which publishes `/camera/image_raw`,
+`/camera/depth/image_raw` and `/camera/camera_info`.
+`warrior_lane_detection` turns white ground paint into two flat clouds:
+`/perception/lane_points` marks and `/perception/lane_free_points` clears the
+`lane_layer` in both Nav2 costmaps
+([nav2_gps_sim_params.yaml](../../warrior_navigation/config/nav2_gps_sim_params.yaml)).
+Clearing raytraces from the camera starting 1.2 m out, so lines that have
+slipped below the camera's field of view stay in the map.
+Debug view: `/perception/lane_debug` (green = lane, dimmed = not ground).
+
+The launch sets `FASTRTPS_DEFAULT_PROFILES_FILE` to
+`warrior_bringup/config/fastdds_large_data.xml` unless you already set one:
+2 MB frames over Fast DDS UDP are dropped by the stock 208 KB socket buffers
+(measured ~0.2 Hz instead of 10 Hz). Tools that need the images (RViz,
+`ros2 topic hz`) must be started with the same variable.
+`use_lane_detection:=false` skips the camera render and the node; the empty
+`lane_layer` then changes nothing.
 
 ## Robot and sensor implementation
 
@@ -110,8 +133,8 @@ reproduce Xsens' proprietary INS fusion, correction transport, RTK acquisition,
 multipath, correlated biases, or outages. The lidar likewise does not reproduce
 every detail of the Unitree L1 scan pattern.
 
-The Pixi `isaac` environment uses Python 3.11 and the Pixi ROS environment uses
-Python 3.12. A small localhost UDP adapter connects these separate processes. It
+The Pixi `isaac` and ROS environments both use Python 3.12, but Isaac bundles its
+own native libraries, so the two run as separate processes. A small localhost UDP adapter connects these separate processes. It
 publishes `/clock`, `/joint_states`, `/imu/data`, `/gnss/fix`, `/gnss/velocity`
 and `/navigation/scan`, plus `/odom` when enabled. GNSS velocity is expressed
 in ENU (`gnss_enu`); localization rotates it using measured IMU attitude and
@@ -195,20 +218,28 @@ The exporter uses Python's standard library. The validation wrapper uses
 the isolated Isaac environment's OpenUSD bindings without starting the simulator,
 and checks composition, mesh topology, material bindings, textures, physics metadata and agreement with
 the shared scene. Environment renders and robot physics were also exercised in
-Isaac Sim 5.1 on an RTX 5090 with driver 580.178.04.
+Isaac Sim 5.1 on an RTX 5090 with driver 580.178.04, and after the move to 6.2
+the full P37 GPS mission (all four waypoints) completed on an RTX 4090 with
+driver 595.71.05. Isaac Sim 5.1 segfaults in `rtx.scenedb` on its first RTX
+frame with the 595 driver, which is why the environment now pins 6.2.
 
 `launch_robot.sh`, `launch_course.sh`, and `validate_stage.sh` delegate to
 `run_isaac.sh` and its `runtime.py` bootstrap. The stage validator loads the
 bundled OpenUSD bindings directly; it does not start Isaac, require a GPU, or
 accept the simulator EULA.
 
-Installation of the isolated environment has been checked with Python 3.11.18
-and Isaac Sim package version 5.1.0.0. Its OpenUSD validator passed for all 942
+Installation of the isolated environment has been checked with Python 3.12
+and Isaac Sim package version 6.2.0.0. The 6.x URDF importer writes
+`build/isaac/usd/<robot>/` with physics in a `Physics` variant set, which
+`run_robot.py` sets to `physx`; it also folds `base_link` into the
+`base_footprint` root body. The IMU uses
+`isaacsim.sensors.experimental.physics`, because 6.x deprecated
+`isaacsim.sensors.physics`. Its OpenUSD validator passed for all 942
 meshes, 203 colliders, two cameras and three local textures, with no warnings.
 The native GPU sensor and bounded ROS integration checks are described above.
 
 Implementation references:
-[Isaac Sim 5.1 SimulationApp](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/py/source/extensions/isaacsim.simulation_app/docs/index.html),
-[URDF import configuration](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/py/api/structisaacsim_1_1asset_1_1importer_1_1urdf_1_1_import_config.html),
-[physics IMU sensor](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/sensors/isaacsim_sensors_physics_imu.html),
+[Isaac Sim SimulationApp](https://docs.isaacsim.omniverse.nvidia.com/6.2.0/py/source/extensions/isaacsim.simulation_app/docs/index.html),
+[URDF import configuration (5.1, superseded)](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/py/api/structisaacsim_1_1asset_1_1importer_1_1urdf_1_1_import_config.html),
+[physics IMU sensor (5.1, superseded)](https://docs.isaacsim.omniverse.nvidia.com/5.1.0/sensors/isaacsim_sensors_physics_imu.html),
 [USD physics schema](https://openusd.org/release/api/usd_physics_page_front.html).

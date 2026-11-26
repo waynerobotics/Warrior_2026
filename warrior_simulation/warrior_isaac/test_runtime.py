@@ -88,9 +88,9 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(manifest['environments']['isaac']['features'], ['isaac'])
         feature = manifest['feature']['isaac']
         self.assertEqual(feature['platforms'], ['linux-64'])
-        self.assertEqual(feature['dependencies']['python'], '3.11.*')
+        self.assertEqual(feature['dependencies']['python'], '3.12.*')
         self.assertEqual(manifest['dependencies']['python'], '3.12.*')
-        self.assertEqual(feature['pypi-dependencies']['isaacsim']['version'], '==5.1.0')
+        self.assertEqual(feature['pypi-dependencies']['isaacsim']['version'], '==6.2.0')
         self.assertEqual(set(feature['pypi-dependencies']['isaacsim']['extras']), {'all', 'extscache'})
 
     def test_shared_interpreter_is_rejected(self):
@@ -103,7 +103,7 @@ class BootstrapTest(unittest.TestCase):
             prefix = Path(directory) / 'environment'
             spec = types.SimpleNamespace(origin=str(Path(directory) / 'shared/isaacsim/__init__.py'))
             with (patch.object(runtime, 'PREFIX', prefix), patch.object(sys, 'prefix', str(prefix)),
-                  patch.object(sys, 'version_info', (3, 11, 0)),
+                  patch.object(sys, 'version_info', (3, 12, 0)),
                   patch.object(runtime.importlib.util, 'find_spec', return_value=spec)):
                 with self.assertRaisesRegex(RuntimeError, 'outside the project'):
                     runtime.isolated_isaac_root()
@@ -111,7 +111,7 @@ class BootstrapTest(unittest.TestCase):
     def test_validator_uses_only_bundled_usd_and_environment_libraries(self):
         with tempfile.TemporaryDirectory() as directory:
             prefix = Path(directory)
-            package = prefix / 'lib/python3.11/site-packages/isaacsim'
+            package = prefix / 'lib/python3.12/site-packages/isaacsim'
             usd = package / 'extscache/omni.usd.libs-test'
             for part in (usd / 'pxr', usd / 'bin/deps'):
                 part.mkdir(parents=True)

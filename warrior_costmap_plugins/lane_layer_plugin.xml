@@ -1,0 +1,9 @@
+<library path="warrior_costmap_plugins">
+  <class type="warrior_costmap_plugins::LaneLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>
+      White lane paint from warrior_lane_detection as a high but passable cost
+      (below INSCRIBED_INFLATED_OBSTACLE) decaying linearly with distance, so
+      lane boundaries repel the planner while start/finish lines stay crossable.
+    </description>
+  </class>
+</library>

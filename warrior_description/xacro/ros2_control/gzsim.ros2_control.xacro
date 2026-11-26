@@ -62,7 +62,7 @@
         </plugin>
 
         <plugin filename="ignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
-        <render_engine>ogre</render_engine>
+        <render_engine>$(arg sensor_render_engine)</render_engine>
         </plugin>
 
     </gazebo>

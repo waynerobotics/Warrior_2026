@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Open the shared IGVC course in the project's pinned Isaac Sim 5.1 environment.
+"""Open the shared IGVC course in the project's pinned Isaac Sim 6.2 environment.
 
 Use launch_course.sh to enter the separate Pixi Isaac runtime. Importing
 SimulationApp precedes every omni/pxr import, as required by Isaac Sim.

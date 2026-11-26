@@ -141,6 +141,7 @@ flowchart LR
 |---|---|---|
 | [warrior_bringup](warrior_bringup/) | Top-level launchers (sim, real, turtlebot variants) + systemd unit | [README](warrior_bringup/README.md) |
 | [warrior_control](warrior_control/) | Swerve / diff drive controllers, kinematics | [README](warrior_control/README.md) |
+| [warrior_costmap_plugins](warrior_costmap_plugins/) | Nav2 costmap layers: `LaneLayer` (camera lane lines at the highest passable cost, potholes at a lower one, so the planner drives over a pothole before crossing a line) | [README](warrior_costmap_plugins/README.md) |
 | [warrior_description](warrior_description/) | URDF / xacro / meshes | [README](warrior_description/README.md) |
 | [warrior_gps](warrior_gps/) | GPS + AprilTag fusion nodes | [README](warrior_gps/README.md) |
 | [warrior_gps_dual](warrior_gps_dual/) | Dual u-blox NMEA GPS → two NavSatFix topics for EKF | [README](warrior_gps_dual/README.md) |
@@ -150,7 +151,7 @@ flowchart LR
 | [warrior_mti680g_sim](warrior_mti680g_sim/) | MTi-680G IMU/GNSS noise, covariance, and Gazebo sensor adapter | [README](warrior_mti680g_sim/README.md) |
 | [warrior_msgs](warrior_msgs/) | Custom message definitions | [README](warrior_msgs/README.md) |
 | [warrior_navigation](warrior_navigation/) | Costmaps, path planning, Nav2 integration | [README](warrior_navigation/README.md) |
-| [warrior_perception](warrior_perception/) | Perception model harness, Lidar SDK, Omnivision | [README](warrior_perception/README.md) |
+| [warrior_perception](warrior_perception/) | Perception model harness, Lidar SDK, Omnivision, RGB-D white-lane segmentation (`warrior_lane_detection`) | [README](warrior_perception/README.md) |
 | [warrior_scripts](warrior_scripts/) | Pixi activation + dev helpers | [README](warrior_scripts/README.md) |
 | [warrior_simulation](warrior_simulation/) | Gazebo worlds + SDF models | [README](warrior_simulation/README.md) |
 

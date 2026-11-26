@@ -1,7 +1,22 @@
 # Warrior GPS simulation: map from gps_sim.launch.py, local motion in odom.
-# No static map or camera/lane layer. Unobserved global cells may be planned
-# through; /navigation/scan marks height-filtered lidar obstacles and the local
+# No static map. Unobserved global cells may be planned through;
+# /navigation/scan marks height-filtered lidar obstacles and the local
 # controller checks collisions. The raw multi-ring /scan includes ground returns.
+# lane_layer (warrior_costmap_plugins/LaneLayer) turns white lane-line paint
+# from warrior_lane_detection into the highest passable cost (252) out to the
+# robot's half-width. pothole_layer, a second LaneLayer on the potholes that
+# lane_segmentation splits off by shape, costs only 120, so the planner
+# always drives over a pothole rather than cross a line. lethal: true makes
+# lines a hard wall, but the robot then gets stuck (planning fails as soon as
+# its centre is inside the band) - see warrior_costmap_plugins/README.md. Lidar never
+# clears it; only the camera's own visible-ground cloud does. With no camera
+# running the layer stays empty and changes nothing.
+#
+# Footprint = the real body + swerve plates (convex hull of the meshes in
+# warrior_description, base_footprint frame): 1.12 m long, 1.29 m wide. The
+# old 0.75 m circle (1.5 m wide) could not fit the 1.47 m between a centred
+# IGVC pothole and the lane line. Resolution 0.05 m: that gap leaves ~9 cm
+# per side, below a 0.1 m cell.
 # Keep waypoint intermediate_goal_distance (20 m) below half this 80 m window
 # minus footprint/inflation margin. Larger missions use successive local goals.
 
@@ -52,7 +67,10 @@ controller_server:
       # predictable field navigation. Holonomic MPPI remains a future tuning
       # option, but its free lateral/reverse motion was unreliable in Humble.
       plugin: nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController
-      desired_linear_vel: 0.40
+      # 0.7 m/s: above the IGVC 1 mph (0.447 m/s) minimum-speed check with
+      # margin, below the swerve controller's 1.0 m/s limit. velocity_smoother
+      # max_velocity[0] must stay >= this or it silently caps the speed.
+      desired_linear_vel: 0.70
       lookahead_dist: 0.80
       min_lookahead_dist: 0.40
       max_lookahead_dist: 1.20
@@ -82,10 +100,11 @@ local_costmap:
       rolling_window: true
       width: 12
       height: 12
-      resolution: 0.1
-      robot_radius: 0.75
+      resolution: 0.05
+      footprint: "[[0.69, 0.13], [-0.23, 0.66], [-0.46, 0.53], [-0.46, -0.53], [-0.23, -0.66], [0.69, -0.13]]"
+      footprint_padding: 0.01
       track_unknown_space: false
-      plugins: [obstacle_layer, inflation_layer]
+      plugins: [obstacle_layer, lane_layer, pothole_layer, inflation_layer]
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
@@ -101,6 +120,33 @@ local_costmap:
           obstacle_min_range: 0.1
           max_obstacle_height: 2.0
           inf_is_valid: true
+      lane_layer:
+        # Lane lines (warrior_costmap_plugins/LaneLayer): lane_cost 252, the
+        # highest passable cost, out to keepout_radius (footprint half-width
+        # 0.66 m), then 0 over falloff_radius to keep the robot centred.
+        # Clears only ground the camera saw.
+        plugin: warrior_costmap_plugins::LaneLayer
+        enabled: true
+        mark_topic: /perception/lane_points
+        clear_topic: /perception/lane_free_points
+        lethal: false
+        keepout_radius: 0.66
+        lane_cost: 252
+        falloff_radius: 0.5
+        clear_resolution: 0.2  # = lane_segmentation free_resolution
+      pothole_layer:
+        # Potholes: avoided when there is room, driven over rather than
+        # crossing a line (cost 120 < the lines' 252). A centred IGVC pothole
+        # leaves 1.47 m to the line for a 1.29 m robot.
+        plugin: warrior_costmap_plugins::LaneLayer
+        enabled: true
+        mark_topic: /perception/pothole_points
+        clear_topic: /perception/lane_free_points
+        lethal: false
+        keepout_radius: 0.6
+        lane_cost: 120
+        falloff_radius: 0.3
+        clear_resolution: 0.2
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 3.0
@@ -118,10 +164,11 @@ global_costmap:
       rolling_window: true
       width: 80
       height: 80
-      resolution: 0.1
-      robot_radius: 0.75
+      resolution: 0.05
+      footprint: "[[0.69, 0.13], [-0.23, 0.66], [-0.46, 0.53], [-0.46, -0.53], [-0.23, -0.66], [0.69, -0.13]]"
+      footprint_padding: 0.01
       track_unknown_space: true
-      plugins: [obstacle_layer, inflation_layer]
+      plugins: [obstacle_layer, lane_layer, pothole_layer, inflation_layer]
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer
         enabled: true
@@ -137,6 +184,33 @@ global_costmap:
           obstacle_min_range: 0.1
           max_obstacle_height: 2.0
           inf_is_valid: true
+      lane_layer:
+        # Lane lines (warrior_costmap_plugins/LaneLayer): lane_cost 252, the
+        # highest passable cost, out to keepout_radius (footprint half-width
+        # 0.66 m), then 0 over falloff_radius to keep the robot centred.
+        # Clears only ground the camera saw.
+        plugin: warrior_costmap_plugins::LaneLayer
+        enabled: true
+        mark_topic: /perception/lane_points
+        clear_topic: /perception/lane_free_points
+        lethal: false
+        keepout_radius: 0.66
+        lane_cost: 252
+        falloff_radius: 0.5
+        clear_resolution: 0.2  # = lane_segmentation free_resolution
+      pothole_layer:
+        # Potholes: avoided when there is room, driven over rather than
+        # crossing a line (cost 120 < the lines' 252). A centred IGVC pothole
+        # leaves 1.47 m to the line for a 1.29 m robot.
+        plugin: warrior_costmap_plugins::LaneLayer
+        enabled: true
+        mark_topic: /perception/pothole_points
+        clear_topic: /perception/lane_free_points
+        lethal: false
+        keepout_radius: 0.6
+        lane_cost: 120
+        falloff_radius: 0.3
+        clear_resolution: 0.2
       inflation_layer:
         plugin: nav2_costmap_2d::InflationLayer
         cost_scaling_factor: 3.0
@@ -152,6 +226,9 @@ planner_server:
       plugin: nav2_smac_planner/SmacPlanner2D
       tolerance: 0.5
       allow_unknown: true
+      # Weighs the lane cost: a line (252 over ~1.4 m) costs several metres
+      # of detour more than a pothole (120), so potholes are driven over first.
+      cost_travel_multiplier: 4.0
 
 smoother_server:
   ros__parameters:
@@ -205,7 +282,7 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: OPEN_LOOP
-    max_velocity: [0.50, 0.50, 1.50]
+    max_velocity: [0.80, 0.50, 1.50]  # x above RPP desired_linear_vel (0.70)
     min_velocity: [-0.35, -0.50, -1.50]
     max_accel: [1.0, 1.0, 2.0]
     max_decel: [-2.0, -2.0, -3.0]

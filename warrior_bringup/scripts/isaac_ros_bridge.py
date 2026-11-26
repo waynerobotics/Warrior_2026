@@ -5,12 +5,18 @@ Isaac 5.1 embeds Python 3.11; this repository's ROS environment uses 3.12.
 Only localhost UDP is used. Wheel odometry is measured from joint encoders;
 ideal sensor kinematics are perturbed before publishing MTi-680G measurements.
 Physical pose remains on a separate diagnostic topic.
+
+With use_camera, RGB-D frames arrive on a localhost TCP stream at port + 2
+(format in warrior_simulation/warrior_isaac/rgbd_stream.py) and are
+published as a RealSense-style aligned colour/depth pair.
 """
 import json
 import math
 from pathlib import Path
 import random
 import socket
+import struct
+import threading
 import time
 
 from ament_index_python.packages import get_package_share_directory
@@ -22,7 +28,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rosgraph_msgs.msg import Clock
-from sensor_msgs.msg import Imu, JointState, LaserScan, NavSatFix, NavSatStatus
+from sensor_msgs.msg import CameraInfo, Image, Imu, JointState, LaserScan, NavSatFix, NavSatStatus
 import yaml
 
 
@@ -30,6 +36,23 @@ def stamp_message(seconds):
     from builtin_interfaces.msg import Time
     nanoseconds = round(seconds * 1e9)
     return Time(sec=nanoseconds // 1000000000, nanosec=nanoseconds % 1000000000)
+
+
+# Must match warrior_simulation/warrior_isaac/rgbd_stream.py.
+RGBD_HEADER = struct.Struct('<4sdIIffff')
+RGBD_MAGIC = b'WRGB'
+
+
+def receive_exactly(connection, size):
+    buffer = bytearray(size)
+    view = memoryview(buffer)
+    received = 0
+    while received < size:
+        count = connection.recv_into(view[received:])
+        if not count:
+            raise ConnectionError('Isaac RGB-D stream closed')
+        received += count
+    return bytes(buffer)
 
 
 def quaternion(message, values):
@@ -67,6 +90,8 @@ class IsaacBridge(Node):
         self.declare_parameter('port', 17427)
         self.declare_parameter('scene_file', '')
         self.declare_parameter('use_wheel_odometry', True)
+        self.declare_parameter('use_camera', False)
+        self.declare_parameter('camera_frame', 'camera_color_optical_frame')
         self.declare_parameter('sensor_profile', str(Path(get_package_share_directory('warrior_description')) /
                                                     'config/mti680g.yaml'))
         profile = yaml.safe_load(Path(self.get_parameter('sensor_profile').value).read_text())['mti680g_sim']['ros__parameters']
@@ -124,6 +149,20 @@ class IsaacBridge(Node):
         if self.use_wheel_odometry:
             self.publishers_by_key['odom'] = self.create_publisher(Odometry, '/odom', 10)
         self.create_subscription(TwistStamped, '/cmd_vel_stamped', self.command, 10)
+        if self.get_parameter('use_camera').value:
+            self.camera_frame = self.get_parameter('camera_frame').value
+            self.camera_publishers = {
+                'color': self.create_publisher(Image, '/camera/image_raw', 2),
+                'depth': self.create_publisher(Image, '/camera/depth/image_raw', 2),
+                'info': self.create_publisher(CameraInfo, '/camera/camera_info', 2),
+            }
+            self.rgbd_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.rgbd_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.rgbd_server.bind(('127.0.0.1', self.port + 2))
+            self.rgbd_server.listen(1)
+            self.rgbd_frames = 0
+            threading.Thread(target=self.receive_rgbd, name='rgbd-receiver', daemon=True).start()
+            self.get_logger().info(f'Isaac RGB-D stream on localhost:{self.port + 2} -> /camera/*')
         self.create_timer(0.004, self.receive)
         self.create_timer(5.0, self.check_health)
         self.get_logger().info(f'Isaac adapter listening on localhost:{self.port}; commands on {self.port + 1}')
@@ -141,6 +180,44 @@ class IsaacBridge(Node):
             return
         self.socket.sendto(json.dumps({'stamp': stamp, 'twist': values}).encode(),
                            ('127.0.0.1', self.port + 1))
+
+    def receive_rgbd(self):
+        while rclpy.ok():
+            try:
+                connection, _ = self.rgbd_server.accept()
+            except OSError:
+                return
+            with connection:
+                try:
+                    while rclpy.ok():
+                        magic, stamp, width, height, fx, fy, cx, cy = RGBD_HEADER.unpack(
+                            receive_exactly(connection, RGBD_HEADER.size))
+                        if magic != RGBD_MAGIC or not 0 < width * height <= 4096 * 4096:
+                            raise ValueError('Isaac RGB-D stream is out of sync')
+                        color = receive_exactly(connection, width * height * 3)
+                        depth = receive_exactly(connection, width * height * 4)
+                        self.publish_rgbd(stamp, width, height, (fx, fy, cx, cy), color, depth)
+                except (ConnectionError, ValueError, struct.error) as error:
+                    self.get_logger().warning(f'Isaac RGB-D stream reset: {error}')
+
+    def publish_rgbd(self, seconds, width, height, intrinsics, color, depth):
+        stamp = stamp_message(seconds)
+        fx, fy, cx, cy = map(float, intrinsics)
+        for key, encoding, step, data in (('color', 'rgb8', width * 3, color),
+                                          ('depth', '32FC1', width * 4, depth)):
+            image = Image(height=height, width=width, encoding=encoding, is_bigendian=0, step=step)
+            image.header.stamp, image.header.frame_id = stamp, self.camera_frame
+            image.data = data
+            self.camera_publishers[key].publish(image)
+        info = CameraInfo(height=height, width=width, distortion_model='plumb_bob', d=[0.0] * 5)
+        info.header.stamp, info.header.frame_id = stamp, self.camera_frame
+        info.k = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        info.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        info.p = [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
+        self.camera_publishers['info'].publish(info)
+        self.rgbd_frames += 1
+        if self.rgbd_frames == 1:
+            self.get_logger().info(f'Isaac RGB-D frames received ({width}x{height})')
 
     def check_health(self):
         age = time.monotonic() - self.last_packet_wall
@@ -252,6 +329,8 @@ class IsaacBridge(Node):
                                ('127.0.0.1', self.port + 1))
         finally:
             self.socket.close()
+            if hasattr(self, 'rgbd_server'):
+                self.rgbd_server.close()
             super().destroy_node()
 
 
